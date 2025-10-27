@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:app_links/app_links.dart';
 import 'package:dio/dio.dart';
 import 'package:admin_app/config/router/routes.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 /// -------------------------------
 /// 🔹 DeepLinkHandler
@@ -10,59 +11,99 @@ import 'package:admin_app/config/router/routes.dart';
 class DeepLinkHandler {
   static final AppLinks _appLinks = AppLinks();
   static StreamSubscription<Uri>? _sub;
+  static bool _initialized = false;
+  static Uri? _pendingLink;
+
+  /// Get initial link without handling it
+  static Future<Uri?> getInitialLink() async {
+    try {
+      return await _appLinks.getInitialLink();
+    } catch (e) {
+      return null;
+    }
+  }
 
   /// Initialize deep links
   static Future<void> init(BuildContext context) async {
-    try {
-      // لو التطبيق مفتوح لأول مرة من لينك
-      final initialLink = await _appLinks.getInitialLink();
-      if (initialLink != null) {
-        _handleUri(context, initialLink);
-      }
-
-      // لو التطبيق شغال وجاه لينك جديد
-      _sub = _appLinks.uriLinkStream.listen((uri) {
-        _handleUri(context, uri);
-      });
-    } catch (e) {
-      print('❌ Failed to init deep links: $e');
-    }
-  }
-
-  /// Handle the incoming Uri
-  static void _handleUri(BuildContext context, Uri uri) {
-    print('🔗 Deep link opened: $uri');
-
-    final token = uri.pathSegments.isNotEmpty ? uri.pathSegments.last : null;
-
-    if (token == null) {
-      print('⚠️ No token found in link');
+    if (_initialized) {
       return;
     }
 
-    print('✅ Extracted token: $token');
 
-    // Navigate safely without stacking multiple pages
-    if (Navigator.canPop(context)) {
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(
-          builder: (_) => TokenHandlerPage(token: token),
-        ),
+    
+    try {
+      // ✅ Check if app opened initially by link
+      final initialLink = await _appLinks.getInitialLink();
+      
+      if (initialLink != null) {
+       
+        _pendingLink = initialLink;
+        // ignore: use_build_context_synchronously
+        await _handleUri(context, initialLink);
+      } else {
+      }
+
+      // ✅ Listen for new links while app is running
+      _sub = _appLinks.uriLinkStream.listen(
+        (uri) {
+          // ignore: use_build_context_synchronously
+          _handleUri(context, uri);
+        },
+        onError: (err) => print('❌ Deep link stream error: $err'),
       );
-    } else {
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (_) => TokenHandlerPage(token: token),
-        ),
-      );
+
+      _initialized = true;
+    
+    } catch (e) {
     }
   }
 
-  /// Dispose the subscription
+  /// Handle the incoming URI and extract token
+  static Future<void> _handleUri(BuildContext context, Uri uri) async {
+    if (uri.pathSegments.isNotEmpty) {
+    }
+
+    String? tokenUrl;
+
+
+    if (uri.scheme == 'mycrm' && uri.host == 'invite') {
+      
+      if (uri.pathSegments.isNotEmpty) {
+        tokenUrl = uri.pathSegments.first;
+      
+      } else if (uri.path.isNotEmpty && uri.path != '/') {
+        tokenUrl = uri.path.replaceFirst('/', '');
+  
+      } else {
+      }
+    } else {
+    }
+
+    if (tokenUrl == null || tokenUrl.isEmpty) {
+   
+      return;
+    }
+    if (!context.mounted) {
+      return;
+    }
+
+    try {
+     await Navigator.pushReplacementNamed(
+      context,
+     Routes.tokenHandlerPage,
+     arguments: tokenUrl
+
+);
+
+    // ignore: empty_catches
+    } catch (e) {
+    }
+  }
+
   static void dispose() {
     _sub?.cancel();
+    _initialized = false;
+    _pendingLink = null;
   }
 }
 
@@ -79,43 +120,82 @@ class TokenHandlerPage extends StatefulWidget {
 
 class _TokenHandlerPageState extends State<TokenHandlerPage> {
   bool _loading = true;
-  String _message = "Processing...";
+  String _message = "Verifying your invite...";
 
   @override
   void initState() {
-    super.initState();
-    _sendTokenToServer();
+    super.initState();   
+    if (widget.token.isEmpty) {
+      print('❌ ERROR: Token is EMPTY in TokenHandlerPage!');
+      setState(() {
+        _message = "Invalid invite link - no token provided";
+        _loading = false;
+      });
+      return;
+    }else{
+   _verifyToken(widget.token);
+    }
+    
+    
   }
 
-  Future<void> _sendTokenToServer() async {
+  /// ✅ Verify unique token with backend
+  Future<void> _verifyToken(String token) async {
     try {
+      final url = 'http://192.168.1.4:5000/api/auth/login/$token';   
       final response = await Dio().get(
-        'http://192.168.1.88:5000/api/auth/login/${widget.token}',
+        url,
+        options: Options(
+          validateStatus: (status) => status! < 500,
+        ),
       );
+      if (response.statusCode == 200) {
+        final data = response.data;
+        final role = data['user']?['role']?['name']?.toString().toLowerCase() ?? '';
+        final jwt = data['token'];
+        final userName = data['user']?['name'] ?? 'User';
+       final prefs = await SharedPreferences.getInstance();
+        await prefs.setString('auth_token', jwt ?? '');
+        await prefs.setString('user_role', role);
+        await prefs.setString('user_name', userName);
 
-      print('✅ Server Response: ${response.data}');
-      final role = response.data.toString().toLowerCase();
+        if (!mounted) return;
+        
+        setState(() => _message = "Welcome, $userName! Redirecting...");
+        await Future.delayed(const Duration(seconds: 1));
 
-      setState(() {
-        _message = "Token verified. Redirecting...";
-      });
+        if (!mounted) return;
 
-      await Future.delayed(const Duration(seconds: 1));
-
-      if (!mounted) return;
-
-      switch (role) {
-        case 'admin':
-          Navigator.pushReplacementNamed(context, Routes.home);
-          break;
-        default:
-          Navigator.pushReplacementNamed(context, Routes.logInView);
+        switch (role) {
+          case 'admin':
+            Navigator.pushReplacementNamed(context, Routes.home);
+            break;
+          case 'sales':
+          case 'supervisor':
+          case 'reader':
+            Navigator.pushReplacementNamed(context, Routes.logInView);
+            break;
+          default:
+            Navigator.pushReplacementNamed(context, Routes.logInView);
+        }
+      } else {
+        if (!mounted) return;
+        setState(() {
+          _message = "Invalid or expired invite link.";
+          _loading = false;
+        });
       }
-    } catch (e) {
-      print('❌ Error verifying token: $e');
+    } catch (e) {     
+      if (!mounted) return;
       setState(() {
-        _message = "Error verifying token.";
+        _message = "Error verifying invite. Please try again.";
         _loading = false;
+      });
+      
+      Future.delayed(const Duration(seconds: 2), () {
+        if (mounted) {
+          Navigator.pushReplacementNamed(context, Routes.logInView);
+        }
       });
     }
   }
@@ -127,13 +207,49 @@ class _TokenHandlerPageState extends State<TokenHandlerPage> {
         child: _loading
             ? Column(
                 mainAxisAlignment: MainAxisAlignment.center,
-                children: const [
-                  CircularProgressIndicator(),
-                  SizedBox(height: 16),
-                  Text("Verifying token..."),
+                children: [
+                  const CircularProgressIndicator(),
+                  const SizedBox(height: 24),
+                  Text(
+                    _message,
+                    style: const TextStyle(fontSize: 16),
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 16),
+                  if (widget.token.isNotEmpty)
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 32),
+                      child: Text(
+                        'Token: ${widget.token.substring(0, widget.token.length > 16 ? 16 : widget.token.length)}...',
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: Colors.grey[600],
+                          fontFamily: 'monospace',
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                    ),
                 ],
               )
-            : Text(_message),
+            : Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(
+                    Icons.error_outline,
+                    size: 64,
+                    color: Colors.red[300],
+                  ),
+                  const SizedBox(height: 16),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 32),
+                    child: Text(
+                      _message,
+                      style: const TextStyle(fontSize: 16),
+                      textAlign: TextAlign.center,
+                    ),
+                  ),
+                ],
+              ),
       ),
     );
   }

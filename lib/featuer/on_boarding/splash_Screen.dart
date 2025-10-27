@@ -7,7 +7,6 @@ import 'package:admin_app/test_unilink/test_case.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
-
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
 
@@ -17,11 +16,17 @@ class SplashScreen extends StatefulWidget {
 
 class _SplashScreenState extends State<SplashScreen> {
   double _opacity = 0.0;
+  bool _deepLinkHandled = false;
 
   @override
   void initState() {
     super.initState();
-  DeepLinkHandler.init(context);
+    
+    // ✅ Initialize deep link handler AFTER first frame
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      print('🎯 SplashScreen: Initializing DeepLinkHandler...');
+      _initializeDeepLinks();
+    });
 
     // Start fade-in animation
     Timer(const Duration(milliseconds: 300), () {
@@ -30,16 +35,35 @@ class _SplashScreenState extends State<SplashScreen> {
       }
     });
 
-    // Check token and navigate after delay
-    Timer(const Duration(seconds: 2), _checkLoginStatus);
+    // Check token and navigate after delay (only if no deep link)
+    Timer(const Duration(seconds: 2), () {
+      if (!_deepLinkHandled && mounted) {
+        _checkLoginStatus();
+      }
+    });
+  }
+
+  Future<void> _initializeDeepLinks() async {
+    try {
+      await DeepLinkHandler.init(context);
+      
+      // Check if a deep link was handled
+      // If yes, the DeepLinkHandler will navigate to TokenHandlerPage
+      // and we don't want to do the normal splash navigation
+      final initialLink = await DeepLinkHandler.getInitialLink();
+      if (initialLink != null) {
+        print('✅ Deep link detected, skipping normal navigation');
+        setState(() => _deepLinkHandled = true);
+      }
+    } catch (e) {
+      print('❌ Error initializing deep links: $e');
+    }
   }
 
   Future<void> _checkLoginStatus() async {
-    // Ensure LocalData is initialized
-    // (In main.dart, you should already have: await LocalData.init();)
-    final token = LocalData.accessToken;
-
     if (!mounted) return;
+
+    final token = LocalData.accessToken;
 
     if (token != null && token.isNotEmpty) {
       // ✅ User already logged in
@@ -48,6 +72,12 @@ class _SplashScreenState extends State<SplashScreen> {
       // ❌ Not logged in yet
       Navigator.pushReplacementNamed(context, Routes.onBoardView);
     }
+  }
+
+  @override
+  void dispose() {
+    DeepLinkHandler.dispose();
+    super.dispose();
   }
 
   @override
@@ -69,15 +99,13 @@ class _SplashScreenState extends State<SplashScreen> {
                 fit: BoxFit.contain,
               ),
               SizedBox(height: 20.h),
+              // Optional: Show loading indicator
+              if (!_deepLinkHandled)
+                const CircularProgressIndicator(),
             ],
           ),
         ),
       ),
     );
   }
-  @override
-void dispose() {
-  DeepLinkHandler.dispose();
-  super.dispose();
-}
 }

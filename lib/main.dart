@@ -27,17 +27,18 @@ class MyApp extends StatelessWidget {
     FlutterNativeSplash.remove();
     
     return ScreenUtilInit(
+   
     // Your design size (width, height)
       minTextAdapt: true,
       splitScreenMode: true,
       builder: (context, child) {
         return MultiBlocProvider(
           providers: [
-    BlocProvider<AuthCubit>(
-      create: (context) => getIt<AuthCubit>(),
-    ),
-    BlocProvider<InvitationCubit>(create:(context)=> getIt<InvitationCubit>() )
-  ],
+            BlocProvider<AuthCubit>(
+                create: (context) => getIt<AuthCubit>(),
+                 ),
+             BlocProvider<InvitationCubit>(create:(context)=> getIt<InvitationCubit>() )
+                      ],
           child: MaterialApp(
             onGenerateRoute: AppRouter().onGenerateRoute,
             initialRoute: Routes.splashScreen,

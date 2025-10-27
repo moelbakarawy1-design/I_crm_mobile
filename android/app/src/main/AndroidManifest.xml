@@ -33,7 +33,7 @@
                 <!-- الرابط يكون بالشكل mycrm://invite/TOKEN -->
                 <data android:scheme="mycrm" 
                  android:host="invite" 
-                 android:pathPattern=".*" />
+                 android:pathPrefix="/" />
             </intent-filter>
 
         </activity>

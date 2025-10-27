@@ -1,8 +1,8 @@
-
 import 'package:admin_app/config/router/router_transation.dart';
 import 'package:admin_app/config/router/routes.dart';
 import 'package:admin_app/featuer/Auth/view/Log_In_view.dart';
 import 'package:admin_app/featuer/Auth/view/forget_password_view.dart';
+import 'package:admin_app/test_unilink/test_case.dart';
 import 'package:admin_app/featuer/Auth/view/send_otp_view.dart';
 import 'package:admin_app/featuer/Auth/view/reset_password_view.dart';
 import 'package:admin_app/featuer/home/view/home_Email_view.dart';
@@ -11,14 +11,19 @@ import 'package:admin_app/featuer/home/view/pages/Dashboard_page.dart';
 import 'package:admin_app/featuer/role/roles_page.dart';
 import 'package:admin_app/featuer/on_boarding/on_board_view.dart';
 import 'package:admin_app/featuer/on_boarding/splash_Screen.dart';
+
 import 'package:flutter/material.dart';
 
 class AppRouter {
-  Route<dynamic> onGenerateRoute(RouteSettings settings){
+  Route<dynamic> onGenerateRoute(RouteSettings settings) {
+    
+    // This print statement confirmed the problem
+    print('AppRouter received route: ${settings.name}');
+
     switch (settings.name) {
       case Routes.splashScreen:
         return RouterTransitions.build(SplashScreen());
-        case Routes.onBoardView:
+      case Routes.onBoardView:
         return RouterTransitions.build(OnBoardView());
       case Routes.logInView:
         return RouterTransitions.buildFromBottom(LogInView());
@@ -26,23 +31,34 @@ class AppRouter {
         return RouterTransitions.buildFromBottom(ForgetPasswordView());
       case Routes.sendOtp:
         return RouterTransitions.buildFromBottom(SendOtpView(email: ''));
-         case Routes.home:
+      case Routes.home:
         return RouterTransitions.buildFromBottom(HomeView());
-       case Routes.resetPassword:
-        return RouterTransitions.buildFromBottom(ResetPasswordView()); 
-        case Routes.invitationPage:
-        return   RouterTransitions.buildFromBottom(InvitationPage());
-         case Routes.rolesPage:
-        return   RouterTransitions.buildFromBottom(RolesPage());
-         case Routes.dashboard:
-        return   RouterTransitions.buildFromBottom(DashboardPage());
-       
-        default: 
+      case Routes.resetPassword:
+        return RouterTransitions.buildFromBottom(ResetPasswordView());
+      case Routes.invitationPage:
+        return RouterTransitions.buildFromBottom(InvitationPage());
+      case Routes.rolesPage:
+        return RouterTransitions.buildFromBottom(RolesPage());
+      case Routes.dashboard:
+        return RouterTransitions.buildFromBottom(DashboardPage());
+      case Routes.tokenHandlerPage:
+        // This is still needed for when your DeepLinkHandler navigates
+        final token = settings.arguments as String;
+        return RouterTransitions.buildFromBottom(TokenHandlerPage(
+          token: token,
+        ));
+      default:
+        if (settings.name != null && settings.name!.startsWith('/') && settings.name!.length > 60) {
+          
+          final String token = settings.name!.replaceFirst('/', ''); 
+          return RouterTransitions.buildFromBottom(TokenHandlerPage(token: token));
+        }
         return RouterTransitions.build(Scaffold(
           body: Center(
             child: Text("No Route"),
           ),
         ));
+      // 👆 END OF THE FIX
     }
   }
 }

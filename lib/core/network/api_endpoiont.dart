@@ -1,5 +1,5 @@
 abstract class EndPoints {
-  static const String baseUrl = 'http://192.168.1.88:5000/api';
+  static const String baseUrl = 'http://192.168.1.4:5000/api';
   static const String adminLogin = '/auth/admin/login';
   static const String adminForgetPassword = '/auth/admin/forgetPassword';
   static const String adminverfiyCode = '/auth/admin/verifyCode';
