@@ -8,40 +8,7 @@ class InvitationRepository {
 
   InvitationRepository({APIHelper? apiHelper})
       : _apiHelper = apiHelper ?? APIHelper();
-Future<void> debugRolesAPI() async {
-    try {
-      print('🔍 Debugging roles API...');
-      final response = await _apiHelper.getRequest(
-        endPoint: EndPoints.getRoles,
-        isProtected: true,
-      );
-      
-      print('🔍 Debug - Response status: ${response.status}');
-      print('🔍 Debug - Response message: ${response.message}');
-      print('🔍 Debug - Response data type: ${response.data?.runtimeType}');
-      print('🔍 Debug - Full response data: ${response.data}');
-      
-      if (response.data != null && response.data is Map) {
-        final data = response.data as Map;
-        print('🔍 Debug - Data keys: ${data.keys}');
-        
-        if (data.containsKey('data')) {
-          final rolesData = data['data'];
-          print('🔍 Debug - Roles data type: ${rolesData.runtimeType}');
-          print('🔍 Debug - Roles data: $rolesData');
-          
-          if (rolesData is List) {
-            print('🔍 Debug - Number of roles: ${rolesData.length}');
-            for (int i = 0; i < rolesData.length; i++) {
-              print('🔍 Debug - Role $i: ${rolesData[i]}');
-            }
-          }
-        }
-      }
-    } catch (e) {
-      print('🔍 Debug - Error: $e');
-    }
-  }
+ 
   // Get all roles
   Future<ApiResponse> getRoles() async {
     try {
@@ -69,4 +36,74 @@ Future<void> debugRolesAPI() async {
       return ApiResponse.fromError(e);
     }
   }
+  Future<ApiResponse> updateRole({
+
+    required String roleId,
+
+    required String name,
+
+    required List<String> permissions,
+
+  }) async {
+
+    return await _apiHelper.patchRequest( // Or patchRequest if you use PATCH
+
+      endPoint: '${EndPoints.getRoles}/$roleId', // e.g., '/roles/some-id'
+
+      data: {
+
+        'name': name,
+
+        'permissions': permissions,
+
+      },
+
+      isFormData: false, // Send as JSON
+
+      isAuthorized: true,
+
+    );
+
+  }
+   // Delete Role
+
+  Future<ApiResponse> deleteRole({required String roleId}) async {
+
+    return await _apiHelper.deleteRequest(
+
+      endPoint: '${EndPoints.getRoles}/$roleId', // e.g., '/roles/some-id'
+
+      isAuthorized: true,
+
+    );
+
+  }
+  Future<ApiResponse> createRole({
+
+    required String name,
+
+    required List<String> permissions,
+
+  }) async {
+
+    return await _apiHelper.postRequest(
+
+      endPoint: EndPoints.getRoles, 
+
+      data: {
+
+        'name': name,
+
+        'permissions': permissions,
+
+      },
+
+      isFormData: false, // Send as JSON
+
+      isAuthorized: true,
+
+    );
+
+  }
+
 }

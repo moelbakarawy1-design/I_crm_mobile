@@ -6,4 +6,7 @@ abstract class EndPoints {
   static const String adminresetPassword = '/auth/admin/resetPassword/:token';
   static const String getRoles = '/roles';
   static const String sendInvite = '/auth/invite';
+  static const String refreshToken = '/auth/invite';
+ 
+
 }

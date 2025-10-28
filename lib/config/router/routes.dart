@@ -11,6 +11,9 @@ class Routes {
     static const String rolesPage = '/RolesPage';
     static const String dashboard = '/DashboardPage';
     static const String tokenHandlerPage = '/TokenHandlerPage';
+    static const String createRolePage = '/CreateRolePage';
+    static const String editRolePage = '/EditRolePage';
+
 
 
 

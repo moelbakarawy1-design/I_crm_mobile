@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:admin_app/core/theme/app_text_style.dart';
 import 'package:flutter/material.dart';
 import 'package:app_links/app_links.dart';
 import 'package:dio/dio.dart';
@@ -126,7 +127,6 @@ class _TokenHandlerPageState extends State<TokenHandlerPage> {
   void initState() {
     super.initState();   
     if (widget.token.isEmpty) {
-      print('❌ ERROR: Token is EMPTY in TokenHandlerPage!');
       setState(() {
         _message = "Invalid invite link - no token provided";
         _loading = false;
@@ -220,12 +220,8 @@ class _TokenHandlerPageState extends State<TokenHandlerPage> {
                     Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 32),
                       child: Text(
-                        'Token: ${widget.token.substring(0, widget.token.length > 16 ? 16 : widget.token.length)}...',
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: Colors.grey[600],
-                          fontFamily: 'monospace',
-                        ),
+                        'Verifying your invite...',
+                        style: AppTextStyle.setpoppinsBlack(fontSize: 16, fontWeight: FontWeight.w600),
                         textAlign: TextAlign.center,
                       ),
                     ),

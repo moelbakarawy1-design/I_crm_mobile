@@ -1,3 +1,4 @@
+import 'package:admin_app/config/router/routes.dart';
 import 'package:admin_app/core/theme/app_text_style.dart';
 import 'package:admin_app/featuer/role/widget/role_details_sheet.dart';
 import 'package:admin_app/featuer/role/widget/role_options_sheet.dart';
@@ -58,9 +59,7 @@ class RoleCard extends StatelessWidget {
                 ),
                 IconButton(
                   icon: SvgPicture.asset('assets/svg/edit-2.svg'),
-                  onPressed: () => ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Edit role feature coming soon')),
-                  ),
+                  onPressed: () => Navigator.pushNamed(context, Routes.editRolePage,arguments: role,)
                 ),
                 IconButton(
                   icon: const Icon(Icons.more_vert, color: Color(0xFF9E9E9E)),

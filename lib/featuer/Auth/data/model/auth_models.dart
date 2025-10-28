@@ -20,12 +20,14 @@ class LoginResponse {
   final String message;
   final String? token;
   final AdminData? admin;
+  final String? refreshToken;
 
   LoginResponse({
     required this.success,
     required this.message,
     this.token,
     this.admin,
+    this.refreshToken
   });
 
   factory LoginResponse.fromJson(Map<String, dynamic> json) {
@@ -33,6 +35,7 @@ class LoginResponse {
       success: json['success'] ?? false,
       message: json['message'] ?? '',
       token: json['token'],
+      refreshToken: json['refreshToken'],
       admin: json['admin'] != null ? AdminData.fromJson(json['admin']) : null,
     );
   }
@@ -113,11 +116,13 @@ class VerifyOtpResponse {
   final bool success;
   final String message;
   final String? token;
+  final String? refreshToken;
 
   VerifyOtpResponse({
     required this.success,
     required this.message,
     this.token,
+    this.refreshToken
   });
 
   factory VerifyOtpResponse.fromJson(Map<String, dynamic> json) {
@@ -125,6 +130,7 @@ class VerifyOtpResponse {
       success: json['success'] ?? false,
       message: json['message'] ?? '',
       token: json['token'],
+      refreshToken: json['refreshToken'],
     );
   }
 }

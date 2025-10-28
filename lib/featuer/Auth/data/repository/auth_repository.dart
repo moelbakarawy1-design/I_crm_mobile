@@ -20,7 +20,9 @@ class AuthRepository {
     if (response.status && response.data != null) {
   final loginData = LoginResponse.fromJson(response.data);
   if (loginData.token != null) {
-    await LocalData.saveTokens(accessToken: loginData.token!);
+    await LocalData.saveTokens(accessToken: loginData.token!,
+    refreshToken: loginData.refreshToken, 
+    );
   }
   
 }
@@ -50,7 +52,7 @@ class AuthRepository {
    if (response.status && response.data != null) {
   final otpData = VerifyOtpResponse.fromJson(response.data);
   if (otpData.token != null) {
-    await LocalData.saveTokens(accessToken: otpData.token!);
+    await LocalData.saveTokens(accessToken: otpData.token!, refreshToken:otpData.refreshToken );
   }
 }
 
@@ -69,7 +71,46 @@ class AuthRepository {
       isAuthorized: false,
     );
   }
+  Future<bool> refreshToken() async {
+    final String? currentRefreshToken = LocalData.refreshToken;
 
+    // If no refresh token exists, we can't refresh.
+    if (currentRefreshToken == null) {
+      return false;
+    }
+
+    try {
+      final response = await _apiHelper.postRequest(
+        endPoint: EndPoints.refreshToken, 
+        data: {'refreshToken': currentRefreshToken},
+        isFormData: false, 
+        isAuthorized: false, 
+      );
+
+      // If refresh was successful
+      if (response.status && response.data != null) {
+        // Assume your refresh response returns new tokens
+        // e.g., { "accessToken": "...", "refreshToken": "..." }
+        final newAccessToken = response.data['accessToken'];
+        final newRefreshToken = response.data['refreshToken'];
+
+        // Save the new tokens
+        await LocalData.saveTokens(
+          accessToken: newAccessToken,
+          refreshToken: newRefreshToken,
+        );
+        return true; // Success!
+      } else {
+        // Refresh failed (e.g., refresh token expired)
+        await logout(); // Log the user out
+        return false;
+      }
+    } catch (e) {
+      // Any error during refresh means we should log out
+      await logout();
+      return false;
+    }
+  }
   // Logout
   Future<void> logout() async {
   await LocalData.clear();

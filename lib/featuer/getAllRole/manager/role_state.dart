@@ -50,3 +50,23 @@ class InvitationFailure extends InvitationState {
   @override
   List<Object?> get props => [errorMessage];
 }
+class CreateRoleLoading extends InvitationState {}
+class CreateRoleSuccess extends InvitationState {}
+class CreateRoleFailure extends InvitationState {
+  final String errorMessage;
+  const CreateRoleFailure(this.errorMessage);
+}
+// --- Update Role States ---
+class UpdateRoleLoading extends InvitationState {}
+class UpdateRoleSuccess extends InvitationState {}
+class UpdateRoleFailure extends InvitationState {
+  final String errorMessage;
+  const UpdateRoleFailure(this.errorMessage);
+}
+// --- Delete Role States ---
+class DeleteRoleLoading extends InvitationState {}
+class DeleteRoleSuccess extends InvitationState {}
+class DeleteRoleFailure extends InvitationState {
+  final String errorMessage;
+  const DeleteRoleFailure(this.errorMessage);
+}
