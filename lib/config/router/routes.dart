@@ -13,8 +13,14 @@ class Routes {
     static const String tokenHandlerPage = '/TokenHandlerPage';
     static const String createRolePage = '/CreateRolePage';
     static const String editRolePage = '/EditRolePage';
-
-
-
+    static const String changePasswordView = '/ChangePasswordView';
+    static const String settingsPage = '/SettingsPage';
+    static const String chatScreen = '/ChatScreen';
+    static const String individualScreen = '/IndividualScreen';
+    static const String  createChatScreen =  '/CreateChatScreen';
+    static const String tasksScreen = '/TasksScreen';
+    static const String addTaskDialog = '/AddTaskDialog';
+    static const String editTaskDialog = '/EditTaskDialog';
+    static const String viewTaskDialog = '/ViewTaskDialog';
 
 }

@@ -9,12 +9,9 @@ class LoginLoading extends AuthState {}
 
 class LoginSuccess extends AuthState {
   final String message;
-  final AdminData? admin;
+  final UserModel? user;
 
-  LoginSuccess({
-    required this.message,
-    this.admin,
-  });
+LoginSuccess({required this.message, this.user});
 }
 
 class LoginError extends AuthState {
@@ -71,6 +68,28 @@ class ResetPasswordError extends AuthState {
 
   ResetPasswordError({required this.message});
 }
+class ChangePasswordLoading extends AuthState {} 
+class ChangePasswordSuccess extends AuthState
+{}
+class ChangePasswordFailure extends AuthState {
+  final String errorMessage;
+  ChangePasswordFailure(this.errorMessage);
+}
+// Add these to your AuthState file
 
-// General States
-class AuthLogout extends AuthState {}
+// --- Logout All States ---
+class LogoutAllLoading extends AuthState {}
+
+class LogoutAllSuccess extends AuthState {}
+
+class LogoutAllFailure extends AuthState {
+  final String errorMessage;
+  LogoutAllFailure(this.errorMessage);
+}
+
+class LogoutLoading extends AuthState {}
+class LogoutSuccess extends AuthState {}
+class LogoutFailure extends AuthState {
+  final String errorMessage;
+  LogoutFailure(this.errorMessage);
+}

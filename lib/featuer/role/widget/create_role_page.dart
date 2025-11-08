@@ -4,9 +4,11 @@ import 'package:admin_app/core/widgets/cusstom_btn_widget.dart';
 import 'package:admin_app/core/widgets/custom_textField_widget.dart';
 import 'package:admin_app/featuer/getAllRole/manager/role_cubit.dart';
 import 'package:admin_app/featuer/getAllRole/manager/role_state.dart';
+import 'package:admin_app/featuer/role/helper/enum_permission.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+
 
 class CreateRolePage extends StatefulWidget {
   const CreateRolePage({super.key});
@@ -19,15 +21,8 @@ class _CreateRolePageState extends State<CreateRolePage> {
   final _formKey = GlobalKey<FormState>();
   final _nameController = TextEditingController();
 
-  late List<String> _availablePermissions;
-  final Set<String> _selectedPermissions = {};
-
-  @override
-  void initState() {
-    super.initState();
-    // FIXED: Changed InvitationCubit to RoleCubit to match your import
-    _availablePermissions = context.read<InvitationCubit>().allUniquePermissions;
-  }
+  // ✅ Use enum instead of strings
+  final Set<Permission> _selectedPermissions = {};
 
   @override
   void dispose() {
@@ -36,9 +31,7 @@ class _CreateRolePageState extends State<CreateRolePage> {
   }
 
   void _submit() {
-    if (!_formKey.currentState!.validate()) {
-      return;
-    }
+    if (!_formKey.currentState!.validate()) return;
 
     if (_selectedPermissions.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -51,25 +44,32 @@ class _CreateRolePageState extends State<CreateRolePage> {
     }
 
     final name = _nameController.text;
+    final permissionStrings =
+        _selectedPermissions.map((p) => p.value).toList(); // ✅ Convert enum → string
 
-    // FIXED: Changed InvitationCubit to RoleCubit to match your import
     context.read<InvitationCubit>().createRole(
           name: name,
-          permissions: _selectedPermissions.toList(),
+          permissions: permissionStrings,
         );
   }
 
   @override
   Widget build(BuildContext context) {
+    // ✅ Get all permissions from enum instead of Cubit
+    final allPermissions = Permission.values;
+
     return Scaffold(
       backgroundColor: AppColor.mainWhite,
       appBar: AppBar(
-              backgroundColor: AppColor.primaryWhite,
-
+        backgroundColor: AppColor.primaryWhite,
         centerTitle: true,
-        title:  Text('Create New Role',style: AppTextStyle.setpoppinsBlack(fontSize: 15, fontWeight: FontWeight.w500),)),
+        title: Text(
+          'Create New Role',
+          style: AppTextStyle.setpoppinsBlack(
+              fontSize: 15, fontWeight: FontWeight.w500),
+        ),
+      ),
       body: BlocListener<InvitationCubit, InvitationState>(
-        // FIXED: Changed InvitationCubit/State to RoleCubit/State
         listener: (context, state) {
           if (state is CreateRoleSuccess) {
             Navigator.pop(context);
@@ -94,7 +94,6 @@ class _CreateRolePageState extends State<CreateRolePage> {
           child: ListView(
             padding: EdgeInsets.all(20.w),
             children: [
-              // --- IMPROVED: Using CustomTextFormField ---
               CustomTextFormField(
                 controller: _nameController,
                 labelText: 'Role Name',
@@ -104,7 +103,6 @@ class _CreateRolePageState extends State<CreateRolePage> {
               ),
               SizedBox(height: 24.h),
 
-              // --- IMPROVED: Using AppTextStyle ---
               Text(
                 'Permissions',
                 style: AppTextStyle.setpoppinsBlack(
@@ -112,15 +110,16 @@ class _CreateRolePageState extends State<CreateRolePage> {
               ),
               SizedBox(height: 8.h),
 
-              ..._availablePermissions.map((permission) {
+              // ✅ Build list of checkboxes from enum
+              ...allPermissions.map((permission) {
                 return CheckboxListTile(
                   title: Text(
-                    permission,
+                    permission.value,
                     style: AppTextStyle.setpoppinsBlack(
                         fontSize: 14, fontWeight: FontWeight.w400),
                   ),
                   value: _selectedPermissions.contains(permission),
-                  activeColor: AppColor.lightBlue, 
+                  activeColor: AppColor.lightBlue,
                   onChanged: (bool? isSelected) {
                     setState(() {
                       if (isSelected == true) {
@@ -134,16 +133,13 @@ class _CreateRolePageState extends State<CreateRolePage> {
               }),
 
               SizedBox(height: 32.h),
-
-              // --- IMPROVED: Using CustomButton with isLoading state ---
               BlocBuilder<InvitationCubit, InvitationState>(
-                // FIXED: Changed InvitationCubit/State to RoleCubit/State
                 builder: (context, state) {
                   return CustomButton(
                     text: 'Create Role',
                     onPressed: _submit,
                     isLoading: state is CreateRoleLoading,
-                    width: double.infinity, // Make button full width
+                    width: double.infinity,
                     height: 50.h,
                   );
                 },

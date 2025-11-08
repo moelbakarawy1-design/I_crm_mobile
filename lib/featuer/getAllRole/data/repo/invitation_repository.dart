@@ -36,74 +36,60 @@ class InvitationRepository {
       return ApiResponse.fromError(e);
     }
   }
+
+  // Update Role
   Future<ApiResponse> updateRole({
-
     required String roleId,
-
     required String name,
-
     required List<String> permissions,
-
   }) async {
-
-    return await _apiHelper.patchRequest( // Or patchRequest if you use PATCH
-
-      endPoint: '${EndPoints.getRoles}/$roleId', // e.g., '/roles/some-id'
-
-      data: {
-
-        'name': name,
-
-        'permissions': permissions,
-
-      },
-
-      isFormData: false, // Send as JSON
-
-      isAuthorized: true,
-
-    );
-
+    // ✅ Added try...catch block
+    try {
+      return await _apiHelper.patchRequest(
+        endPoint: '${EndPoints.getRoles}/$roleId', // e.g., '/roles/some-id'
+        data: {
+          'name': name,
+          'permissions': permissions,
+        },
+        isFormData: false, // Send as JSON
+        isAuthorized: true,
+      );
+    } catch (e) {
+      return ApiResponse.fromError(e);
+    }
   }
-   // Delete Role
 
+  // Delete Role
   Future<ApiResponse> deleteRole({required String roleId}) async {
-
-    return await _apiHelper.deleteRequest(
-
-      endPoint: '${EndPoints.getRoles}/$roleId', // e.g., '/roles/some-id'
-
-      isAuthorized: true,
-
-    );
-
+    // ✅ Added try...catch block
+    try {
+      return await _apiHelper.deleteRequest(
+        endPoint: '${EndPoints.getRoles}/$roleId', // e.g., '/roles/some-id'
+        isAuthorized: true,
+      );
+    } catch (e) {
+      return ApiResponse.fromError(e);
+    }
   }
+
+  // Create Role
   Future<ApiResponse> createRole({
-
     required String name,
-
     required List<String> permissions,
-
   }) async {
-
-    return await _apiHelper.postRequest(
-
-      endPoint: EndPoints.getRoles, 
-
-      data: {
-
-        'name': name,
-
-        'permissions': permissions,
-
-      },
-
-      isFormData: false, // Send as JSON
-
-      isAuthorized: true,
-
-    );
-
+    // ✅ Added try...catch block
+    try {
+      return await _apiHelper.postRequest(
+        endPoint: EndPoints.getRoles, 
+        data: {
+          'name': name,
+          'permissions': permissions,
+        },
+        isFormData: false, // Send as JSON
+        isAuthorized: true,
+      );
+    } catch (e) {
+      return ApiResponse.fromError(e);
+    }
   }
-
 }

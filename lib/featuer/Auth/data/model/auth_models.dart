@@ -16,53 +16,70 @@ class LoginRequest {
 }
 
 class LoginResponse {
-  final bool success;
+  final String status;
   final String message;
   final String? token;
-  final AdminData? admin;
   final String? refreshToken;
+  final UserModel? user;
 
   LoginResponse({
-    required this.success,
+    required this.status,
     required this.message,
     this.token,
-    this.admin,
-    this.refreshToken
+    this.refreshToken,
+    this.user,
   });
 
   factory LoginResponse.fromJson(Map<String, dynamic> json) {
     return LoginResponse(
-      success: json['success'] ?? false,
+      status: json['status'] ?? 'fail',
       message: json['message'] ?? '',
       token: json['token'],
       refreshToken: json['refreshToken'],
-      admin: json['admin'] != null ? AdminData.fromJson(json['admin']) : null,
+      user: json['user'] != null ? UserModel.fromJson(json['user']) : null,
     );
   }
 }
 
-class AdminData {
+class UserModel {
   final String id;
-  final String email;
   final String name;
-  final String? role;
+  final String? email;
+  final UserRoleModel? role; // ✅ change to object instead of String
 
-  AdminData({
+  UserModel({
     required this.id,
-    required this.email,
     required this.name,
+    this.email,
     this.role,
   });
 
-  factory AdminData.fromJson(Map<String, dynamic> json) {
-    return AdminData(
-      id: json['_id'] ?? json['id'] ?? '',
-      email: json['email'] ?? '',
+  factory UserModel.fromJson(Map<String, dynamic> json) {
+    return UserModel(
+      id: json['id'] ?? json['_id'] ?? '',
       name: json['name'] ?? '',
-      role: json['role'],
+      email: json['email'] ?? '',
+      role: json['role'] != null ? UserRoleModel.fromJson(json['role']) : null,
     );
   }
 }
+
+class UserRoleModel {
+  final String name;
+  final List<String> permissions;
+
+  UserRoleModel({required this.name, required this.permissions});
+
+  factory UserRoleModel.fromJson(Map<String, dynamic> json) {
+    return UserRoleModel(
+      name: json['name'] ?? '',
+      permissions: json['permissions'] != null
+          ? List<String>.from(json['permissions'])
+          : [],
+    );
+  }
+}
+
 
 class ForgetPasswordRequest {
   final String email;
@@ -168,5 +185,25 @@ class ResetPasswordResponse {
       success: json['success'] ?? false,
       message: json['message'] ?? '',
     );
+  }
+}
+ // cahnge password 
+class ChangePasswordRequest {
+  final String oldPassword;
+  final String newPassword;
+  final String newPasswordConfirm;
+
+  ChangePasswordRequest({
+    required this.oldPassword,
+    required this.newPassword,
+    required this.newPasswordConfirm,
+  });
+
+  Map<String, dynamic> toJson() {
+    return {
+      'oldPassword': oldPassword,
+      'newPassword': newPassword,
+      'newPasswordConfirm': newPasswordConfirm,
+    };
   }
 }

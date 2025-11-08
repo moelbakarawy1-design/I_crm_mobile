@@ -5,9 +5,11 @@ import 'package:admin_app/core/widgets/custom_textField_widget.dart';
 import 'package:admin_app/featuer/getAllRole/data/model/role_model.dart';
 import 'package:admin_app/featuer/getAllRole/manager/role_cubit.dart';
 import 'package:admin_app/featuer/getAllRole/manager/role_state.dart';
+import 'package:admin_app/featuer/role/helper/enum_permission.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+
 
 class EditRolePage extends StatefulWidget {
   final RoleModel role;
@@ -20,19 +22,21 @@ class EditRolePage extends StatefulWidget {
 class _EditRolePageState extends State<EditRolePage> {
   final _formKey = GlobalKey<FormState>();
   late TextEditingController _nameController;
-
-  late List<String> _availablePermissions;
-  final Set<String> _selectedPermissions = {};
-
+  final Set<Permission> _selectedPermissions = {};
 
   @override
   void initState() {
     super.initState();
     _nameController = TextEditingController(text: widget.role.name);
 
-    _availablePermissions = context.read<InvitationCubit>().allUniquePermissions;
-    _selectedPermissions.addAll(widget.role.permissions ?? []);
-   
+    final backendPermissions = widget.role.permissions ?? [];
+    for (final permStr in backendPermissions) {
+      final match = Permission.values.firstWhere(
+        (e) => e.value == permStr,
+        orElse: () => Permission.READ_USERS, 
+      );
+      _selectedPermissions.add(match);
+    }
   }
 
   @override
@@ -42,9 +46,7 @@ class _EditRolePageState extends State<EditRolePage> {
   }
 
   void _submit() {
-    if (!_formKey.currentState!.validate()) {
-      return;
-    }
+    if (!_formKey.currentState!.validate()) return;
 
     if (_selectedPermissions.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -55,29 +57,39 @@ class _EditRolePageState extends State<EditRolePage> {
       );
       return;
     }
-    // ---
 
     final name = _nameController.text;
+    final permissionStrings =
+        _selectedPermissions.map((p) => p.value).toList(); // ✅ enum → string
 
     context.read<InvitationCubit>().updateRole(
-          roleId: widget.role.id, // Pass the role ID
+          roleId: widget.role.id,
           name: name,
-          permissions: _selectedPermissions.toList(), // Use the Set
+          permissions: permissionStrings,
         );
   }
 
   @override
   Widget build(BuildContext context) {
+    final allPermissions = Permission.values; // ✅ All available permissions
+
     return Scaffold(
-        backgroundColor: AppColor.mainWhite,
+      backgroundColor: AppColor.mainWhite,
       appBar: AppBar(
         backgroundColor: AppColor.primaryWhite,
         centerTitle: true,
-        title: Text('Edit ${widget.role.name}',style: AppTextStyle.setpoppinsBlack(fontSize: 15, fontWeight: FontWeight.w500),)),
+        title: Text(
+          'Edit ${widget.role.name}',
+          style: AppTextStyle.setpoppinsBlack(
+            fontSize: 15,
+            fontWeight: FontWeight.w500,
+          ),
+        ),
+      ),
       body: BlocListener<InvitationCubit, InvitationState>(
         listener: (context, state) {
           if (state is UpdateRoleSuccess) {
-            Navigator.pop(context); // Go back to roles list
+            Navigator.pop(context);
             ScaffoldMessenger.of(context).showSnackBar(
               const SnackBar(
                 content: Text('Role updated successfully'),
@@ -115,11 +127,11 @@ class _EditRolePageState extends State<EditRolePage> {
               ),
               SizedBox(height: 8.h),
 
-              // --- IMPROVED: Replaced permissions text field with Checkboxes ---
-              ..._availablePermissions.map((permission) {
+              // ✅ Generate checkboxes dynamically from enum
+              ...allPermissions.map((permission) {
                 return CheckboxListTile(
                   title: Text(
-                    permission,
+                    permission.value,
                     style: AppTextStyle.setpoppinsBlack(
                         fontSize: 14, fontWeight: FontWeight.w400),
                   ),

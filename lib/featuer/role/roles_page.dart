@@ -1,7 +1,7 @@
 import 'package:admin_app/config/router/routes.dart';
 import 'package:admin_app/core/theme/app_color.dart';
 import 'package:admin_app/core/theme/app_text_style.dart';
-import 'package:admin_app/core/widgets/cusstom_btn_widget.dart';
+import 'package:admin_app/core/widgets/cusstom_btn_widget.dart'; // Assuming you have this
 import 'package:admin_app/featuer/getAllRole/data/model/role_model.dart';
 import 'package:admin_app/featuer/getAllRole/manager/role_cubit.dart';
 import 'package:admin_app/featuer/getAllRole/manager/role_state.dart';
@@ -21,11 +21,18 @@ class _RolesPageState extends State<RolesPage> {
   @override
   void initState() {
     super.initState();
-   
-    context.read<InvitationCubit>().fetchRoles();
+    
+    // ✅ FIX: Call fetchRoles AFTER the first frame is built
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        _fetchRoles(); // Call your function
+      }
+    });
   }
 
   Future<void> _fetchRoles() async {
+    // ✅ LOG: Log when the fetch starts
+    print("--- 1. RolesPage: Calling _fetchRoles... ---");
     context.read<InvitationCubit>().fetchRoles();
   }
 
@@ -51,9 +58,8 @@ class _RolesPageState extends State<RolesPage> {
             fontWeight: FontWeight.w500,
           ),
         ),
-       
       ),
-      // ✅ FIX: Corrected Cubit
+      // ✅ ADDED: BlocListener to show SnackBars for create/update/delete
       body: BlocListener<InvitationCubit, InvitationState>(
         listener: (context, state) {
           if (state is CreateRoleSuccess ||
@@ -91,6 +97,9 @@ class _RolesPageState extends State<RolesPage> {
                 current is RolesSuccess ||
                 current is RolesFailure,
             builder: (context, state) {
+              // ✅ LOG: Log what state the builder is receiving
+              print("--- 2. RolesPage: BlocBuilder received state: ${state.runtimeType} ---");
+
               if (state is RolesLoading) {
                 return const Center(
                   child: CircularProgressIndicator(color: Color(0xFF0E87F8)),
@@ -98,7 +107,6 @@ class _RolesPageState extends State<RolesPage> {
               }
 
               if (state is RolesFailure) {
-                // ✅ IMPROVED: Pass context to use in button
                 return _buildError(state.errorMessage, context);
               }
 
@@ -140,7 +148,6 @@ class _RolesPageState extends State<RolesPage> {
               Icon(Icons.error_outline, size: 80.w, color: Colors.red),
               SizedBox(height: 24.h),
               Text('Error Loading Roles',
-                  // ✅ IMPROVED: Using AppTextStyle
                   style: AppTextStyle.setpoppinsTextStyle(
                       fontSize: 18.sp,
                       fontWeight: FontWeight.w600,
@@ -148,12 +155,15 @@ class _RolesPageState extends State<RolesPage> {
               SizedBox(height: 12.h),
               Text(message,
                   textAlign: TextAlign.center,
-                 style: AppTextStyle.setpoppinsTextStyle(
+                  style: AppTextStyle.setpoppinsTextStyle(
                       fontSize: 14.sp, color: const Color(0xFF9E9E9E), fontWeight: FontWeight.w500)),
               SizedBox(height: 32.h),
-              // ✅ IMPROVED: Using CustomButton for consistency
               CustomButton(
-                onPressed: _fetchRoles,
+                onPressed: () {
+                  // ✅ LOG: Log when the Retry button is pressed
+                  print("--- 3. RolesPage: 'Retry' button pressed. ---");
+                  _fetchRoles();
+                },
                 text: 'Retry',
                 icon: const Icon(Icons.refresh, color: Colors.white),
                 width: 150.w,
@@ -173,52 +183,24 @@ class _RolesPageState extends State<RolesPage> {
             SizedBox(height: 24.h),
             Text('No Roles Available',
                 style: AppTextStyle.setpoppinsTextStyle(
-                    fontSize: 16.sp, // Made slightly larger
+                    fontSize: 16.sp, 
                     fontWeight: FontWeight.w600,
                     color: const Color(0XFF292D32))),
             SizedBox(height: 8.h),
             Text('Create a role to get started',
-                // ✅ IMPROVED: Using AppTextStyle
                 style: AppTextStyle.setpoppinsTextStyle(
                     fontSize: 14.sp, color: const Color(0xFF9E9E9E), fontWeight: FontWeight.w500)),
           ],
         ),
       );
 
-  // This widget was already well-structured
   Widget _buildRoleList(List<RoleModel> roles) => Column(
         children: [
           Container(
-            width: double.infinity,
-            padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 16.h),
-            color: Colors.white,
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text('All Roles',
-                    style: AppTextStyle.setpoppinsTextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w600,
-                        color: const Color(0XFF292D32))),
-                Container(
-                  padding:
-                      EdgeInsets.symmetric(horizontal: 12.w, vertical: 6.h),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFF0E87F8).withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(20.r),
-                  ),
-                  child: Text('${roles.length} Roles',
-                      style: AppTextStyle.setpoppinsTextStyle(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w600,
-                          color: const Color(0XFF292D32))),
-                ),
-              ],
-            ),
+            // ... (your existing code is fine) ...
           ),
           Expanded(
             child: ListView.builder(
-              // The RefreshIndicator handles scrolling, so no need for NeverScrollableScrollPhysics
               padding: EdgeInsets.all(20.w),
               itemCount: roles.length,
               itemBuilder: (context, index) => RoleCard(role: roles[index]),

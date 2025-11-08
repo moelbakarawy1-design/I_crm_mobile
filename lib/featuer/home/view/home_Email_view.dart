@@ -1,7 +1,6 @@
 import 'package:admin_app/core/widgets/CustomAppBar_widget.dart';
 import 'package:admin_app/featuer/home/view/pages/Dashboard_page.dart';
 import 'package:admin_app/featuer/home/view/pages/profile_page.dart';
-import 'package:admin_app/featuer/home/view/pages/setting_page.dart';
 import 'package:admin_app/featuer/home/view/widget/cusstom_drawer_widget.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -23,7 +22,6 @@ class _HomeViewState extends State<HomeView> {
   Widget build(BuildContext context) {
     final List<Widget> pages = [
       const DashboardPage(),
-      const SettingsPage(),
       const ProfilePage(),
     ];
 
@@ -72,11 +70,7 @@ class _HomeViewState extends State<HomeView> {
               activeIcon: Icon(Icons.bar_chart),
               label: 'Dashboard',
             ),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.settings_outlined),
-              activeIcon: Icon(Icons.settings),
-              label: 'Settings',
-            ),
+           
             BottomNavigationBarItem(
               icon: Icon(Icons.person_outline),
               activeIcon: Icon(Icons.person),
@@ -96,8 +90,6 @@ class _HomeViewState extends State<HomeView> {
       case 0:
         return 'Dashboard';
       case 1:
-        return 'Settings';
-      case 2:
         return 'Profile';
       default:
         return '';

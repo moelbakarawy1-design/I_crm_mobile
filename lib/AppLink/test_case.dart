@@ -6,14 +6,11 @@ import 'package:dio/dio.dart';
 import 'package:admin_app/config/router/routes.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-/// -------------------------------
-/// 🔹 DeepLinkHandler
-/// -------------------------------
+// DeepLinkHandler
 class DeepLinkHandler {
   static final AppLinks _appLinks = AppLinks();
   static StreamSubscription<Uri>? _sub;
   static bool _initialized = false;
-  static Uri? _pendingLink;
 
   /// Get initial link without handling it
   static Future<Uri?> getInitialLink() async {
@@ -24,7 +21,7 @@ class DeepLinkHandler {
     }
   }
 
-  /// Initialize deep links
+  // Initialize deep links
   static Future<void> init(BuildContext context) async {
     if (_initialized) {
       return;
@@ -33,12 +30,11 @@ class DeepLinkHandler {
 
     
     try {
-      // ✅ Check if app opened initially by link
+      // Check if app opened initially by link
       final initialLink = await _appLinks.getInitialLink();
       
       if (initialLink != null) {
        
-        _pendingLink = initialLink;
         // ignore: use_build_context_synchronously
         await _handleUri(context, initialLink);
       } else {
@@ -104,13 +100,12 @@ class DeepLinkHandler {
   static void dispose() {
     _sub?.cancel();
     _initialized = false;
-    _pendingLink = null;
   }
 }
 
-/// -------------------------------
-/// 🔹 TokenHandlerPage
-/// -------------------------------
+
+// 🔹 TokenHandlerPage
+
 class TokenHandlerPage extends StatefulWidget {
   final String token;
   const TokenHandlerPage({super.key, required this.token});

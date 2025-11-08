@@ -2,7 +2,6 @@ import 'package:admin_app/config/router/routes.dart';
 import 'package:admin_app/core/theme/app_color.dart';
 import 'package:admin_app/core/theme/app_text_style.dart';
 import 'package:admin_app/core/utils/App_assets_utils.dart';
-import 'package:admin_app/featuer/Auth/manager/cubit/auth_cubit.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_svg/flutter_svg.dart';
@@ -84,17 +83,19 @@ class _DrawerMenuState extends State<DrawerMenu> {
             ),
 
             /// Menu Items
-            buildMenuItem(
-              title: 'Dashboard',
-              iconPath: 'assets/svg/Home.svg',
-              onTap: () {
-                // Navigate to dashboard
-              },
-            ),
+            // buildMenuItem(
+            //   title: 'Dashboard',
+            //   iconPath: 'assets/svg/Home.svg',
+            //   onTap: () {
+            //     // Navigate to dashboard
+            //   },
+            // ),
             buildMenuItem(
               title: 'WhatsApp',
               iconPath: 'assets/svg/watsapp.svg',
-              onTap: () {},
+              onTap: () {
+                Navigator.pushNamed(context, Routes.chatScreen);
+              },
             ),
             buildMenuItem(
               title: 'Customers',
@@ -111,7 +112,9 @@ class _DrawerMenuState extends State<DrawerMenu> {
             buildMenuItem(
               title: 'Tasks',
               iconPath: 'assets/svg/task Store.svg',
-              onTap: () {},
+              onTap: () {
+            Navigator.pushNamed(context, Routes.tasksScreen);
+              },
             ),
             buildMenuItem(
               title: 'Role',
@@ -120,75 +123,17 @@ class _DrawerMenuState extends State<DrawerMenu> {
                 Navigator.pushNamed(context, Routes.rolesPage);
               },
             ),
+           
 
             const Spacer(),
-
-            /// Logout button
-            Padding(
-              padding: EdgeInsets.symmetric(horizontal: 12.w),
-              child: InkWell(
-                borderRadius: BorderRadius.circular(12.r),
-                onTap: () async {
-                  final shouldLogout = await showDialog<bool>(
-                    context: context,
-                    builder: (context) => AlertDialog(
-                      title: const Text('Confirm Logout'),
-                      content:
-                          const Text('Are you sure you want to log out?'),
-                      actions: [
-                        TextButton(
-                          onPressed: () => Navigator.pop(context, false),
-                          child: const Text('Cancel'),
-                        ),
-                        TextButton(
-                          onPressed: () => Navigator.pop(context, true),
-                          child: const Text('Logout'),
-                        ),
-                      ],
-                    ),
-                  );
-
-                  if (shouldLogout == true) {
-                    await AuthCubit.get(context).logout();
-                    if (context.mounted) {
-                      Navigator.pushNamedAndRemoveUntil(
-                        context,
-                        Routes.logInView,
-                        (route) => false,
-                      );
-                    }
-                  }
-                },
-                child: Container(
-                  height: 48.h,
-                  decoration: BoxDecoration(
-                    border: Border.all(color: const Color(0xFFD7E2EE)),
-                    borderRadius: BorderRadius.circular(10.r),
-                  ),
-                  child: Row(
-                    children: [
-                      SizedBox(width: 16.w),
-                      SvgPicture.asset(
-                        'assets/svg/Log Out.svg',
-                        width: 22.w,
-                        height: 22.h,
-                        colorFilter: const ColorFilter.mode(
-                            Colors.red, BlendMode.srcIn),
-                      ),
-                      SizedBox(width: 12.w),
-                      Text(
-                        'Logout',
-                        style: TextStyle(
-                          color: Colors.red,
-                          fontSize: 14.sp,
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
+ buildMenuItem(
+              title: 'Setting',
+              iconPath: 'assets/svg/setting-2.svg',
+              onTap: () {
+                Navigator.pushNamed(context, Routes.settingsPage);
+              },
             ),
+           
 
             SizedBox(height: 20.h),
           ],

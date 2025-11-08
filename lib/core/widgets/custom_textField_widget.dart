@@ -21,6 +21,8 @@ class CustomTextFormField extends StatelessWidget {
   final TextInputAction? textInputAction;
   final int? maxLength;
   final List<TextInputFormatter>? inputFormatters;
+  final Color? fillColor;
+  
 
   const CustomTextFormField({
     super.key,
@@ -41,6 +43,7 @@ class CustomTextFormField extends StatelessWidget {
     this.textInputAction,
     this.maxLength,
     this.inputFormatters,
+    this.fillColor
   });
 
   @override
@@ -57,7 +60,7 @@ class CustomTextFormField extends StatelessWidget {
         prefixIcon: prefixIcon,
         suffixIcon: suffixIcon,
         filled: true,
-        fillColor: Colors.white,
+        fillColor: fillColor ?? AppColor.mainWhite,
         contentPadding: const EdgeInsets.symmetric(
           horizontal: 14,
           vertical: 10,

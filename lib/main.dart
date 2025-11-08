@@ -1,20 +1,29 @@
 import 'package:admin_app/config/di/di.dart';
 import 'package:admin_app/config/router/app_router.dart';
 import 'package:admin_app/config/router/routes.dart';
+import 'package:admin_app/core/network/api_helper.dart';
 import 'package:admin_app/core/network/local_data.dart';
 import 'package:admin_app/featuer/Auth/manager/cubit/auth_cubit.dart';
+import 'package:admin_app/featuer/Task/manager/task_cubit.dart';
+import 'package:admin_app/featuer/User/manager/user_cubit.dart';
+import 'package:admin_app/featuer/chat/manager/message_cubit.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_native_splash/flutter_native_splash.dart';
-
 import 'featuer/getAllRole/manager/role_cubit.dart';
 
-void main() async {
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized(); 
   WidgetsBinding widgetsBinding = WidgetsFlutterBinding.ensureInitialized();
   FlutterNativeSplash.preserve(widgetsBinding: widgetsBinding); 
-await LocalData.init();
+  print('🚀 Initializing app...');
+  await LocalData.init();
   await DependencyInjection.init(); 
+  await APIHelper.init();
+  
+  
+  
   runApp(const MyApp());
 }
 
@@ -23,7 +32,6 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Remove the splash screen after the app is loaded
     FlutterNativeSplash.remove();
     
     return ScreenUtilInit(
@@ -37,7 +45,19 @@ class MyApp extends StatelessWidget {
             BlocProvider<AuthCubit>(
                 create: (context) => getIt<AuthCubit>(),
                  ),
-             BlocProvider<InvitationCubit>(create:(context)=> getIt<InvitationCubit>() )
+             BlocProvider<InvitationCubit>(create:(context)=> getIt<InvitationCubit>(),
+
+              ),
+               BlocProvider<MessagesCubit>(
+             create: (context) => getIt<MessagesCubit>(),
+           ),
+           BlocProvider<TaskCubit>(
+              create: (context) => getIt<TaskCubit>(),
+            ),
+            BlocProvider<GetAllUserCubit>(
+              create: (context) => getIt<GetAllUserCubit>(),
+            ),
+       
                       ],
           child: MaterialApp(
             onGenerateRoute: AppRouter().onGenerateRoute,

@@ -4,7 +4,11 @@ import 'package:admin_app/core/theme/app_text_style.dart';
 import 'package:admin_app/core/utils/App_assets_utils.dart';
 import 'package:admin_app/core/widgets/cusstom_btn_widget.dart';
 import 'package:admin_app/core/widgets/custom_textField_widget.dart';
+import 'package:admin_app/featuer/Auth/manager/cubit/auth_cubit.dart';
+import 'package:admin_app/featuer/Auth/manager/cubit/auth_states.dart';
+import 'package:admin_app/featuer/Auth/view/utils/dialog_utils.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
@@ -25,17 +29,13 @@ class _ForgetPasswordViewState extends State<ForgetPasswordView> {
     super.dispose();
   }
 
+  // --- 1. Update the handle method to call the Cubit ---
   void _handleForgotPassword() {
     if (_formKey.currentState!.validate()) {
-      // Add your forgot password logic here
-      print('Email: ${_emailController.text}');
-      
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Reset link sent to your email!')),
+      // Call the cubit method
+      AuthCubit.get(context).forgetPassword(
+        email: _emailController.text,
       );
-      
-      // Navigate to OTP page
-      Navigator.pushNamed(context, Routes.sendOtp);
     }
   }
 
@@ -59,87 +59,126 @@ class _ForgetPasswordViewState extends State<ForgetPasswordView> {
             ),
             Expanded(
               flex: 10,
-              child: Container(
-                width: double.infinity,
-                height: 716.h,
-                decoration: BoxDecoration(
-                  color: AppColor.mainWhite,
-                  borderRadius: BorderRadius.only(
-                    topLeft: Radius.circular(40.r),
-                    topRight: Radius.circular(40.r),
-                  ),
-                ),
-                child: SingleChildScrollView(
-                  padding: EdgeInsets.symmetric(
-                    horizontal: 30.w,
-                    vertical: 40.h,
-                  ),
-                  child: Form(
-                    key: _formKey,
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Forgot Password?',
-                          style: TextStyle(
-                            fontSize: 32.sp,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.black,
-                          ),
-                        ),
-                        SizedBox(height: 8.h),
-                        Text(
-                          'Please enter your email for sending OTP',
-                          style: AppTextStyle.setpoppinsBlack(fontSize: 14, fontWeight: FontWeight.w400)
-                        ),
-                        SizedBox(height: 32.h),
-                        Text(
-                          'Email',
-                          style: AppTextStyle.setpoppinsBlack(fontSize: 12, fontWeight: FontWeight.w500)
-                        ),
-                        SizedBox(height: 8.h),
-                        CustomTextFormField(
-                          controller: _emailController,
-                          hintText: 'youremail@yahoo.com',
-                          keyboardType: TextInputType.emailAddress,
-                          validator: FieldValidator.email,
-                          textInputAction: TextInputAction.done,
-                        ),
-                        SizedBox(height: 24.h),
-                        CustomButton(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w700,
-                          text: 'Send Code',
-                          onPressed: _handleForgotPassword,
-                          width: double.infinity,
-                          backgroundColor: const Color(0xFF1A1A1A),
-                        ),
-                        SizedBox(height: 24.h),
-                        Center(
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Text(
-                                'Remember Password?',
-                                style: AppTextStyle.setpoppinsSecondlightGrey(fontSize: 14, fontWeight: FontWeight.w400)
-                              ),
-                              SizedBox(width: 6.w,),
-                              GestureDetector(
-                                onTap: () {
-                                  Navigator.pop(context);
-                                },
-                                child: Text(
-                                  'Back to Sign',
-                                  style: AppTextStyle.setpoppinsBlack(fontSize: 14, fontWeight: FontWeight.w500)
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
+              // --- 2. Add BlocConsumer to listen for states ---
+              child: BlocConsumer<AuthCubit, AuthState>(
+                listener: (context, state) {
+                  if (state is ForgetPasswordLoading) {
+                    // Show a loading dialog
+                    DialogUtils.showLoadingDialog(
+                        context, 'Sending Code...');
+                  } 
+                  else if (state is ForgetPasswordSuccess) {
+                   
+                    Navigator.pushNamed(
+                      context,
+                      Routes.sendOtp,
+                      arguments: _emailController.text,
+                    );
+                  } else if (state is ForgetPasswordError) {
+                    Navigator.of(context, rootNavigator: true).pop();
+
+                    SnackbarUtils.showErrorSnackbar(
+                      context,
+                      state.message,
+                    );
+                  }
+                },
+                builder: (context, state) {
+                  bool isLoading = state is ForgetPasswordLoading;
+
+                  return Container(
+                    width: double.infinity,
+                    height: 716.h,
+                    decoration: BoxDecoration(
+                      color: AppColor.mainWhite,
+                      borderRadius: BorderRadius.only(
+                        topLeft: Radius.circular(40.r),
+                        topRight: Radius.circular(40.r),
+                      ),
                     ),
-                  ),
-                ),
+                    child: SingleChildScrollView(
+                      padding: EdgeInsets.symmetric(
+                        horizontal: 30.w,
+                        vertical: 40.h,
+                      ),
+                      child: Form(
+                        key: _formKey,
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Forgot Password?',
+                              style: TextStyle(
+                                fontSize: 32.sp,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.black,
+                              ),
+                            ),
+                            SizedBox(height: 8.h),
+                            Text(
+                              'Please enter your email for sending OTP',
+                              style: AppTextStyle.setpoppinsBlack(
+                                  fontSize: 14, fontWeight: FontWeight.w400),
+                            ),
+                            SizedBox(height: 32.h),
+                            Text(
+                              'Email',
+                              style: AppTextStyle.setpoppinsBlack(
+                                  fontSize: 12, fontWeight: FontWeight.w500),
+                            ),
+                            SizedBox(height: 8.h),
+                            CustomTextFormField(
+                              controller: _emailController,
+                              hintText: 'youremail@yahoo.com',
+                              keyboardType: TextInputType.emailAddress,
+                              validator: FieldValidator.email,
+                              textInputAction: TextInputAction.done,
+                            ),
+                            SizedBox(height: 24.h),
+                            CustomButton(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w700,
+                              text: 'Send Code',
+                              // Disable button when loading
+                              onPressed:
+                                  isLoading ? null : _handleForgotPassword,
+                              width: double.infinity,
+                              backgroundColor: const Color(0xFF1A1A1A),
+                            ),
+                            SizedBox(height: 24.h),
+                            Center(
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Text(
+                                    'Remember Password?',
+                                    style: AppTextStyle.setpoppinsSecondlightGrey(
+                                        fontSize: 14,
+                                        fontWeight: FontWeight.w400),
+                                  ),
+                                  SizedBox(
+                                    width: 6.w,
+                                  ),
+                                  GestureDetector(
+                                    onTap: () {
+                                      Navigator.pop(context);
+                                    },
+                                    child: Text(
+                                      'Back to Sign',
+                                      style: AppTextStyle.setpoppinsBlack(
+                                          fontSize: 14,
+                                          fontWeight: FontWeight.w500),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  );
+                },
               ),
             ),
           ],

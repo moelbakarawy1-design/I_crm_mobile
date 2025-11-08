@@ -1,6 +1,6 @@
  <manifest xmlns:android="http://schemas.android.com/apk/res/android">
     <application
-        android:label="admin_app"
+        android:label="I_CRM"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
 
@@ -30,7 +30,6 @@
                 <action android:name="android.intent.action.VIEW" />
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.BROWSABLE" />
-                <!-- الرابط يكون بالشكل mycrm://invite/TOKEN -->
                 <data android:scheme="mycrm" 
                  android:host="invite" 
                  android:pathPrefix="/" />
@@ -42,7 +41,7 @@
             android:name="flutterEmbedding"
             android:value="2" />
     </application>
-
+     <uses-permission android:name="android.permission.CAMERA" />
     <!-- Required for package visibility -->
     <queries>
         <intent>

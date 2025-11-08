@@ -12,7 +12,7 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
     super.key,
     required this.title,
     this.onMenuPressed,
-    this.leading
+    this.leading,
   });
 
   @override
@@ -23,28 +23,35 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
         color: AppColor.mainWhite,
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.25), // #00000040
-            offset: const Offset(0, 4),
+            color: Colors.black.withOpacity(0.1), // softer shadow
+            offset: const Offset(0, 2),
             blurRadius: 4,
           ),
         ],
       ),
       child: SafeArea(
-        child: Row(
-          children: [
-            IconButton(
-              icon: const Icon(Icons.menu, color: AppColor.grey),
-              onPressed: onMenuPressed,
-            ),
-            Expanded(
-              child: Text(
-                title,
-                textAlign: TextAlign.center,
-                style:AppTextStyle.setpoppinsTextStyle(fontSize: 14, fontWeight: FontWeight.w400, color: AppColor.blue,)
+        child: Padding(
+          padding: EdgeInsets.symmetric(horizontal: 16.w),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              // Left menu icon
+              IconButton(
+                icon: const Icon(Icons.menu, color: AppColor.grey),
+                onPressed: onMenuPressed,
               ),
-            ),
-            const SizedBox(width: 48), // keep title centered
-          ],
+
+              // Right-aligned title
+              Text(
+                title,
+                style: AppTextStyle.setpoppinsTextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w500,
+                  color: AppColor.mainBlue,
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
