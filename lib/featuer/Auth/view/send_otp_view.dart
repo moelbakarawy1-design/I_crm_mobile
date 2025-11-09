@@ -1,24 +1,22 @@
-import 'dart:async'; 
+import 'dart:async'; // Import for Timer
 
 import 'package:admin_app/config/router/routes.dart';
+import 'package:admin_app/featuer/Auth/manager/cubit/auth_cubit.dart';
 import 'package:admin_app/featuer/Auth/manager/cubit/auth_states.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:admin_app/featuer/Auth/view/utils/dialog_utils.dart';
 import 'package:admin_app/core/theme/app_color.dart';
 import 'package:admin_app/core/theme/app_text_style.dart';
 import 'package:admin_app/core/utils/App_assets_utils.dart';
 import 'package:admin_app/core/widgets/cusstom_btn_widget.dart';
 import 'package:admin_app/core/widgets/custom_textField_widget.dart';
-import 'package:admin_app/featuer/Auth/manager/cubit/auth_cubit.dart';
-import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_svg/svg.dart';
 
 class SendOtpView extends StatefulWidget {
-  final String email;
-
-  const SendOtpView({super.key, required this.email});
-
+  final String? resendCodeToken;
+  const SendOtpView({super.key, required this.resendCodeToken,});
   @override
   State<SendOtpView> createState() => _SendOtpViewState();
 }
@@ -40,7 +38,7 @@ class _SendOtpViewState extends State<SendOtpView> {
 
   @override
   void dispose() {
-    _timer?.cancel(); // Cancel timer on dispose
+    _timer?.cancel();
     _otpController.dispose();
     super.dispose();
   }
@@ -50,7 +48,7 @@ class _SendOtpViewState extends State<SendOtpView> {
       _canResend = false;
       _remainingTime = 60;
     });
-    _timer?.cancel(); // Cancel any existing timer
+    _timer?.cancel();
     _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
       if (mounted) {
         setState(() {
@@ -67,24 +65,28 @@ class _SendOtpViewState extends State<SendOtpView> {
     });
   }
 
-  // --- 1. Update Verify method to call Cubit ---
   void _handleVerifyOtp() {
-    if (_formKey.currentState!.validate()) {
-      // Call cubit to verify
-      AuthCubit.get(context).verifyOtp(
-        email: widget.email,
-        code: _otpController.text,
-      );
-    }
+  if (_formKey.currentState!.validate()) {
+    AuthCubit.get(context).verifyOtp(
+      code: _otpController.text.trim(),
+    );
   }
+}
 
-  // --- 2. Update Resend method to call Cubit ---
   void _resendOtp() {
-    if (_canResend) {
-      // Call cubit to resend (using forgetPassword)
-      AuthCubit.get(context).forgetPassword(email: widget.email);
+  if (_canResend) {
+    if (widget.resendCodeToken != null && widget.resendCodeToken!.isNotEmpty) {
+      AuthCubit.get(context).resendOtp(
+        resendCodeToken: widget.resendCodeToken!,
+      );
+    } else {
+      // Show an error if token is missing
+      SnackbarUtils.showErrorSnackbar(context, 'Resend token is missing.');
     }
   }
+}
+
+
 
   @override
   Widget build(BuildContext context) {
@@ -121,33 +123,27 @@ class _SendOtpViewState extends State<SendOtpView> {
             ),
             Expanded(
               flex: 12,
-              // --- 3. Add BlocConsumer to listen for states ---
               child: BlocConsumer<AuthCubit, AuthState>(
                 listener: (context, state) {
-                  // --- Verify OTP States ---
                   if (state is VerifyOtpLoading) {
                     DialogUtils.showLoadingDialog(context, 'Verifying Code...');
                   } else if (state is VerifyOtpSuccess) {
                     Navigator.of(context, rootNavigator: true)
-                        .pop(); // Pop dialog
-                    SnackbarUtils.showSuccessSnackbar(
-                        context, state.message);
-
-                    // Navigate to reset password page and PASS THE TOKEN
+                        .pop(); 
+                
                     Navigator.pushNamed(
                       context,
                       Routes.resetPassword,
-                      arguments: state.token, // Pass the token!
+                      arguments: state.token
+                       
                     );
                   } else if (state is VerifyOtpError) {
                     Navigator.of(context, rootNavigator: true)
-                        .pop(); // Pop dialog
+                        .pop(); 
                     SnackbarUtils.showErrorSnackbar(context, state.message);
                   }
 
-                  // --- Resend OTP States (ForgetPassword) ---
                   else if (state is ForgetPasswordLoading) {
-                    // Show a simple snackbar for resend loading
                     SnackbarUtils.showSuccessSnackbar(
                         context, 'Sending new code...',
                         );
@@ -163,9 +159,7 @@ class _SendOtpViewState extends State<SendOtpView> {
                   }
                 },
                 builder: (context, state) {
-                  // Disable button if verifying
                   bool isVerifying = state is VerifyOtpLoading;
-                  // Disable resend if not allowed or loading
                   bool isResending = state is ForgetPasswordLoading;
 
                   return Container(
@@ -194,7 +188,7 @@ class _SendOtpViewState extends State<SendOtpView> {
                             ),
                             SizedBox(height: 8.h),
                             Text(
-                              'Please enter code sent to ${widget.email}', // Show email
+                              'Please enter code sent to ', // Show email
                               style: AppTextStyle.setpoppinsBlack(
                                   fontSize: 14, fontWeight: FontWeight.w400),
                             ),
@@ -209,7 +203,6 @@ class _SendOtpViewState extends State<SendOtpView> {
                               controller: _otpController,
                               hintText: 'Enter 6-digit OTP',
                               keyboardType: TextInputType.number,
-                              
                               textInputAction: TextInputAction.done,
                               maxLength: 6,
                             ),
@@ -245,7 +238,8 @@ class _SendOtpViewState extends State<SendOtpView> {
                                   ] else
                                     GestureDetector(
                                       onTap:
-                                          isResending ? null : _resendOtp,
+                                            (!isResending && widget.resendCodeToken != null) ? _resendOtp : null,
+
                                       child: Text(
                                         'Resend OTP',
                                         style: TextStyle(
@@ -309,4 +303,3 @@ class _SendOtpViewState extends State<SendOtpView> {
     );
   }
 }
-

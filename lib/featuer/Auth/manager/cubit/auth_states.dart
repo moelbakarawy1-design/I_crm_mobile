@@ -11,7 +11,7 @@ class LoginSuccess extends AuthState {
   final String message;
   final UserModel? user;
 
-LoginSuccess({required this.message, this.user});
+  LoginSuccess({required this.message, this.user});
 }
 
 class LoginError extends AuthState {
@@ -23,11 +23,15 @@ class LoginError extends AuthState {
 // Forget Password States
 class ForgetPasswordLoading extends AuthState {}
 
+// --- FIXED ---
+// Added resendCodeToken
 class ForgetPasswordSuccess extends AuthState {
   final String message;
+  final String? resendCodeToken;
 
-  ForgetPasswordSuccess({required this.message});
+  ForgetPasswordSuccess({required this.message, this.resendCodeToken});
 }
+// --- END FIX ---
 
 class ForgetPasswordError extends AuthState {
   final String message;
@@ -59,18 +63,19 @@ class ResetPasswordLoading extends AuthState {}
 
 class ResetPasswordSuccess extends AuthState {
   final String message;
-
   ResetPasswordSuccess({required this.message});
 }
 
 class ResetPasswordError extends AuthState {
   final String message;
-
   ResetPasswordError({required this.message});
 }
-class ChangePasswordLoading extends AuthState {} 
-class ChangePasswordSuccess extends AuthState
-{}
+
+
+class ChangePasswordLoading extends AuthState {}
+
+class ChangePasswordSuccess extends AuthState {}
+
 class ChangePasswordFailure extends AuthState {
   final String errorMessage;
   ChangePasswordFailure(this.errorMessage);
@@ -88,8 +93,21 @@ class LogoutAllFailure extends AuthState {
 }
 
 class LogoutLoading extends AuthState {}
+
 class LogoutSuccess extends AuthState {}
+
 class LogoutFailure extends AuthState {
   final String errorMessage;
   LogoutFailure(this.errorMessage);
+}
+class ResendOtpLoading extends AuthState {}
+
+class ResendOtpSuccess extends AuthState {
+  final String message;
+  ResendOtpSuccess({required this.message});
+}
+
+class ResendOtpError extends AuthState {
+  final String message;
+  ResendOtpError({required this.message});
 }

@@ -139,7 +139,7 @@ class _AddControllerPageState extends State<AddControllerPage> {
                          hintText: 'Enter email',
                          labelText: 'Email',
                          keyboardType: TextInputType.emailAddress,
-                         validator:FieldValidator.email,
+                        //  validator:FieldValidator.email,
                        ),
                         SizedBox(height: 15.h),
                         // Role Dropdown           

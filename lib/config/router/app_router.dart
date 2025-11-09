@@ -47,7 +47,11 @@ class AppRouter {
       case Routes.forgetPassword:
         return RouterTransitions.buildFromBottom(ForgetPasswordView());
       case Routes.sendOtp:
-        return RouterTransitions.buildFromBottom(SendOtpView(email: ''));
+  final resendCodeToken = settings.arguments as String?;
+  return RouterTransitions.buildFromBottom(
+    SendOtpView(resendCodeToken: resendCodeToken),
+  );
+
       case Routes.home:
         return RouterTransitions.buildFromBottom(HomeView());
       case Routes.resetPassword:

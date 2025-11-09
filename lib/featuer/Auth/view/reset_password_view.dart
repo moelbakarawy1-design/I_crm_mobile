@@ -13,9 +13,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_svg/svg.dart';
 
 class ResetPasswordView extends StatefulWidget {
-  // --- 1. Add token as a required parameter ---
-  // You must pass this token when you navigate to this page,
-  // typically from your OTP verification screen.
+
   final String token;
 
   const ResetPasswordView({super.key, required this.token});
@@ -53,16 +51,15 @@ class _ResetPasswordViewState extends State<ResetPasswordView> {
 
   // --- 2. Update the handle method to call the Cubit ---
   void _handleResetPassword() {
-    if (_formKey.currentState!.validate()) {
-      // Call the cubit method
-      AuthCubit.get(context).resetPassword(
-        token: widget.token, // Pass the token from the widget
-        password: _newPasswordController.text,
-        confirmPassword: _confirmPasswordController.text,
-      );
-      Navigator.pushNamed(context, Routes.sendOtp);
-    }
+  if (_formKey.currentState!.validate()) {
+    AuthCubit.get(context).resetPassword(
+      token: widget.token,
+      password: _newPasswordController.text,
+      confirmPassword: _confirmPasswordController.text,
+    );
   }
+}
+
 
   @override
   Widget build(BuildContext context) {
@@ -101,22 +98,16 @@ class _ResetPasswordViewState extends State<ResetPasswordView> {
                       DialogUtils.showLoadingDialog(
                           context, 'Resetting Password...');
                     } else if (state is ResetPasswordSuccess) {
-                      // Pop the loading dialog
-                      Navigator.of(context, rootNavigator: true).pop();
+  Navigator.of(context, rootNavigator: true).pop(); // close loading
+  SnackbarUtils.showSuccessSnackbar(context, state.message);
 
-                      // Show success message
-                      SnackbarUtils.showSuccessSnackbar(
-                        context,
-                        state.message,
-                      );
-
-                      // Navigate back to login page
-                      Navigator.pushNamedAndRemoveUntil(
-                        context,
-                        Routes.logInView,
-                        (route) => false,
-                      );
-                    } else if (state is ResetPasswordError) {
+  Navigator.pushNamedAndRemoveUntil(
+    context,
+    Routes.logInView,
+    (route) => false,  
+  );
+}
+ else if (state is ResetPasswordError) {
                       // Pop the loading dialog
                       Navigator.of(context, rootNavigator: true).pop();
 

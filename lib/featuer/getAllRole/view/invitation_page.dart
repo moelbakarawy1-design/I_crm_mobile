@@ -1,6 +1,7 @@
 import 'package:admin_app/core/network/local_invitation.dart';
 import 'package:admin_app/core/theme/app_color.dart';
 import 'package:admin_app/core/theme/app_text_style.dart';
+import 'package:admin_app/core/widgets/CustomAppBar_widget.dart';
 import 'package:admin_app/featuer/getAllRole/manager/role_cubit.dart';
 import 'package:admin_app/featuer/getAllRole/view/screens/AddController_screen.dart';
 import 'package:admin_app/featuer/getAllRole/view/widget/show_dilog_widget.dart';
@@ -92,9 +93,8 @@ class _InvitationPageState extends State<InvitationPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-    
-      ),
+            appBar:CustomAppBar(title: 'Send Invite',onMenuPressed: () => Navigator.pop(context),),
+
       backgroundColor: const Color(0xFFF8FAFC),
       body: Padding(
         padding: EdgeInsets.all(16.w),

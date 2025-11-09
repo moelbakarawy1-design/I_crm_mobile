@@ -166,6 +166,8 @@ class _TokenHandlerPageState extends State<TokenHandlerPage> {
             Navigator.pushReplacementNamed(context, Routes.home);
             break;
           case 'sales':
+           Navigator.pushReplacementNamed(context, Routes.salsedashboard);
+           break;
           case 'supervisor':
           case 'reader':
             Navigator.pushReplacementNamed(context, Routes.logInView);

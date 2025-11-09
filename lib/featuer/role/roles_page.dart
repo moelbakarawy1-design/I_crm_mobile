@@ -1,6 +1,7 @@
 import 'package:admin_app/config/router/routes.dart';
 import 'package:admin_app/core/theme/app_color.dart';
 import 'package:admin_app/core/theme/app_text_style.dart';
+import 'package:admin_app/core/widgets/CustomAppBar_widget.dart';
 import 'package:admin_app/core/widgets/cusstom_btn_widget.dart'; // Assuming you have this
 import 'package:admin_app/featuer/getAllRole/data/model/role_model.dart';
 import 'package:admin_app/featuer/getAllRole/manager/role_cubit.dart';
@@ -40,25 +41,8 @@ class _RolesPageState extends State<RolesPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFFF5F6FA),
-      appBar: AppBar(
-        centerTitle: true,
-        backgroundColor: Colors.white,
-        elevation: 0,
-        leading: IconButton(
-          onPressed: () {
-            Navigator.pushNamed(context, Routes.home);
-          },
-          icon: const Icon(Icons.menu, color: Color(0xFF1A1A1A)),
-        ),
-        title: Text(
-          'Role',
-          style: AppTextStyle.setpoppinsTextStyle(
-            color: AppColor.mainBlack,
-            fontSize: 15,
-            fontWeight: FontWeight.w500,
-          ),
-        ),
-      ),
+            appBar:CustomAppBar(title: 'Role',onMenuPressed: () => Navigator.pop(context),),
+
       // ✅ ADDED: BlocListener to show SnackBars for create/update/delete
       body: BlocListener<InvitationCubit, InvitationState>(
         listener: (context, state) {

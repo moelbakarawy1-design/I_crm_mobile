@@ -1,6 +1,7 @@
 import 'package:admin_app/config/router/routes.dart'; // Make sure Routes is imported
 import 'package:admin_app/core/theme/app_color.dart';
 import 'package:admin_app/core/theme/app_text_style.dart'; // Assuming you use this
+import 'package:admin_app/core/widgets/CustomAppBar_widget.dart';
 import 'package:admin_app/featuer/Auth/manager/cubit/auth_states.dart'; // Import Auth States
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -19,20 +20,7 @@ class SettingsPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColor.mainWhite, // Light background color
-      appBar: AppBar(
-        backgroundColor: AppColor.secondaryWhite,
-        elevation: 1,
-        centerTitle: false, // Title aligned left
-        title: Text(
-          'Settings',
-          style: TextStyle(
-            color: Colors.blue, // Keep AppBar title blue for consistency
-            fontSize: 18.sp,
-            fontWeight: FontWeight.w600,
-          ),
-        ),
-      ),
-      // ✅ 1. Added BlocListener to handle navigation and errors
+      appBar:CustomAppBar(title: 'settings',onMenuPressed: () => Navigator.pop(context),),
       body: BlocListener<AuthCubit, AuthState>(
         listener: (context, state) {
           // --- Handle Regular Logout ---

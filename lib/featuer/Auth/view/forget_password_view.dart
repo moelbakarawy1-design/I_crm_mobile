@@ -68,11 +68,12 @@ class _ForgetPasswordViewState extends State<ForgetPasswordView> {
                         context, 'Sending Code...');
                   } 
                   else if (state is ForgetPasswordSuccess) {
-                   
+                  
+                   Navigator.of(context,rootNavigator: true).pop();
                     Navigator.pushNamed(
                       context,
                       Routes.sendOtp,
-                      arguments: _emailController.text,
+                      arguments: state.resendCodeToken,
                     );
                   } else if (state is ForgetPasswordError) {
                     Navigator.of(context, rootNavigator: true).pop();

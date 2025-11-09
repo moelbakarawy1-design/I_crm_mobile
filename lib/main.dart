@@ -17,13 +17,9 @@ Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized(); 
   WidgetsBinding widgetsBinding = WidgetsFlutterBinding.ensureInitialized();
   FlutterNativeSplash.preserve(widgetsBinding: widgetsBinding); 
-  print('🚀 Initializing app...');
   await LocalData.init();
   await DependencyInjection.init(); 
   await APIHelper.init();
-  
-  
-  
   runApp(const MyApp());
 }
 
@@ -36,7 +32,6 @@ class MyApp extends StatelessWidget {
     
     return ScreenUtilInit(
    
-    // Your design size (width, height)
       minTextAdapt: true,
       splitScreenMode: true,
       builder: (context, child) {

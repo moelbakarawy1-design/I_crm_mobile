@@ -14,6 +14,7 @@ abstract class EndPoints {
   static const String getAllTask = '/tasks';
     static const String getAllUsers = '/users';
     static const String createTask = '/tasks';
+static const String resendOtp = '/auth/admin/resendCode';
 
   static String getMessagesByChatId(String chatId) => '/chats/$chatId/messages';
   static const socketUrl = 'http://192.168.1.88:5000';

@@ -80,7 +80,6 @@ class UserRoleModel {
   }
 }
 
-
 class ForgetPasswordRequest {
   final String email;
 
@@ -95,52 +94,55 @@ class ForgetPasswordRequest {
   }
 }
 
+// --- FIXED ---
+// Updated to match your Postman response
 class ForgetPasswordResponse {
-  final bool success;
+  final String status;
   final String message;
+  final String? resendCodeToken; // Added this field
 
   ForgetPasswordResponse({
-    required this.success,
+    required this.status,
     required this.message,
+    this.resendCodeToken,
   });
 
   factory ForgetPasswordResponse.fromJson(Map<String, dynamic> json) {
     return ForgetPasswordResponse(
-      success: json['success'] ?? false,
+      status: json['status'] ?? 'fail', // Changed from 'success' (bool)
       message: json['message'] ?? '',
+      resendCodeToken: json['resendCodeToken'], // Added this
     );
   }
 }
+// --- END FIX ---
 
 class VerifyOtpRequest {
-  final String email;
   final String code;
 
   VerifyOtpRequest({
-    required this.email,
     required this.code,
   });
 
   Map<String, dynamic> toJson() {
     return {
-      'email': email,
       'code': code,
     };
   }
 }
 
+// This is the VerifyOtpResponse you provided.
 class VerifyOtpResponse {
-  final bool success;
+  final bool success; 
   final String message;
   final String? token;
   final String? refreshToken;
 
-  VerifyOtpResponse({
-    required this.success,
-    required this.message,
-    this.token,
-    this.refreshToken
-  });
+  VerifyOtpResponse(
+      {required this.success,
+      required this.message,
+      this.token,
+      this.refreshToken});
 
   factory VerifyOtpResponse.fromJson(Map<String, dynamic> json) {
     return VerifyOtpResponse(
@@ -187,7 +189,8 @@ class ResetPasswordResponse {
     );
   }
 }
- // cahnge password 
+
+// cahnge password
 class ChangePasswordRequest {
   final String oldPassword;
   final String newPassword;

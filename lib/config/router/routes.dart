@@ -22,5 +22,6 @@ class Routes {
     static const String addTaskDialog = '/AddTaskDialog';
     static const String editTaskDialog = '/EditTaskDialog';
     static const String viewTaskDialog = '/ViewTaskDialog';
+    static const String  salsedashboard ='/Salsedashboard';
 
 }

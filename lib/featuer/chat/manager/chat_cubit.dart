@@ -23,23 +23,28 @@ class ChatCubit extends Cubit<ChatState> {
     emit(ChatLoading());
     try {
       final chatModel = await chatRepository.getAllChats();
+      if (isClosed) return;
       allChats = chatModel;
       emit(ChatListLoaded(chatModel));
       _setupSocketListeners(); // ✅ نربط السوكت بعد تحميل الشات
     } catch (e) {
+      if (isClosed) return;
       emit(ChatError(e.toString()));
     }
   }
 
   //  تحميل رسائل محادثة معينة
   Future<void> loadMessages(String chatId) async {
+    if (isClosed) return;
     emit(MessagesLoading());
     currentChatId = chatId;
     try {
       final response = await messagesRepository.getMessages(chatId);
       currentMessages = response.data ?? [];
+      if (isClosed) return;
       emit(MessagesLoaded(currentMessages));
     } catch (e) {
+      if (isClosed) return;
       emit(MessagesError(e.toString()));
     }
   }
@@ -93,6 +98,7 @@ class ChatCubit extends Cubit<ChatState> {
 
   //  عند استقبال رسالة جديدة
   void _handleNewMessage(dynamic data) {
+    if (isClosed) return;
     try {
       final newMessage = MessageData.fromJson(data['data'] ?? data);
       final chatId = newMessage.chatId;
@@ -101,6 +107,7 @@ class ChatCubit extends Cubit<ChatState> {
       //  لو المستخدم فاتح نفس المحادثة، ضيفها مباشرة
       if (chatId == currentChatId) {
         currentMessages.add(newMessage);
+        if (isClosed) return;
         emit(MessagesLoaded(List.from(currentMessages)));
       }
 
@@ -115,6 +122,7 @@ class ChatCubit extends Cubit<ChatState> {
             timestamp: newMessage.timestamp,
           ));
         }
+        if (isClosed) return;
         emit(ChatListLoaded(allChats!));
       }
 
@@ -126,6 +134,7 @@ class ChatCubit extends Cubit<ChatState> {
 
   //  تحديث حالة الرسالة
   void _handleStatusUpdate(dynamic data) {
+    if (isClosed) return;
     try {
       final msgId = data['waMessageId'];
       final newStatus = data['status'];
@@ -136,6 +145,7 @@ class ChatCubit extends Cubit<ChatState> {
             currentMessages.indexWhere((msg) => msg.waMessageId == msgId);
         if (index != -1) {
           currentMessages[index].status = newStatus;
+          if (isClosed) return;
           emit(MessagesLoaded(List.from(currentMessages)));
         }
       }
