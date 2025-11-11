@@ -105,3 +105,22 @@ class DeleteTaskFailure extends TaskState {
   @override
   List<Object?> get props => [message];
 }
+// --- Update Task Status ---
+class UpdateTaskStatusLoading extends TaskState {}
+
+class UpdateTaskStatusSuccess extends TaskState {
+  final String message;
+  const UpdateTaskStatusSuccess(this.message);
+
+  @override
+  List<Object?> get props => [message];
+}
+
+class UpdateTaskStatusFailure extends TaskState {
+  final String message;
+  const UpdateTaskStatusFailure(this.message);
+
+  @override
+  List<Object?> get props => [message];
+}
+

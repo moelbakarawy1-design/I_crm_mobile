@@ -8,7 +8,7 @@ class MessageCard extends StatelessWidget {
     return ConstrainedBox(
       constraints:
       BoxConstraints(
-maxHeight: MediaQuery.of(context).size.width -45
+     maxHeight: MediaQuery.of(context).size.width -45
     ),
     child: Card(color:Color(0xFFdcf8c6) ,),
      );

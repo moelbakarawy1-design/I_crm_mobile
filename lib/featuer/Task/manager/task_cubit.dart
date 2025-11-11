@@ -71,6 +71,7 @@ class TaskCubit extends Cubit<TaskState> {
     String? description,
     List<String>? assignedTo,
     DateTime? endDate,
+    String? status
   }) async {
     try {
       emit(UpdateTaskLoading());
@@ -80,6 +81,7 @@ class TaskCubit extends Cubit<TaskState> {
       if (description != null) data['description'] = description;
       if (assignedTo != null) data['assignedTo'] = assignedTo;
       if (endDate != null) data['endDate'] = endDate.toIso8601String();
+      if (status != null) data['status'] = status;
 
       final String message = await _tasksRepository.updateTask(
         taskId: taskId,
@@ -102,4 +104,18 @@ class TaskCubit extends Cubit<TaskState> {
       emit(DeleteTaskFailure(e.toString()));
     }
   }
+  // 🔹 Update only the task status
+Future<void> updateTaskStatus(String taskId, String newStatus) async {
+  try {
+    emit(UpdateTaskStatusLoading());
+    final String message = await _tasksRepository.updateTaskStatus(
+      taskId: taskId,
+      newStatus: newStatus,
+    );
+    emit(UpdateTaskStatusSuccess(message));
+  } catch (e) {
+    emit(UpdateTaskStatusFailure(e.toString()));
+  }
+}
+
 }

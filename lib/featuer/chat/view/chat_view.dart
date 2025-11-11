@@ -1,7 +1,6 @@
 import 'package:admin_app/core/theme/app_color.dart';
 import 'package:admin_app/core/theme/app_text_style.dart';
 import 'package:admin_app/featuer/chat/view/pages/caht_page.dart';
-import 'package:admin_app/featuer/chat/view/pages/camera_page.dart';
 import 'package:flutter/material.dart';
 
 
@@ -19,7 +18,7 @@ class _ChatScreenState extends State<ChatScreen> with SingleTickerProviderStateM
   @override
   void initState() {
     super.initState();
-    _controller = TabController(length: 3, vsync: this, initialIndex: 1);
+    _controller = TabController(length: 2, vsync: this, initialIndex: 0);
   }
 
   @override
@@ -55,7 +54,6 @@ class _ChatScreenState extends State<ChatScreen> with SingleTickerProviderStateM
           labelColor: AppColor.mainWhite,
           controller: _controller,
           tabs: const [
-            Tab(icon: Icon(Icons.camera_alt,color: AppColor.mainWhite,)),
             Tab(text: "Chats"),
             Tab(text: "Call"),
           ],
@@ -65,7 +63,6 @@ class _ChatScreenState extends State<ChatScreen> with SingleTickerProviderStateM
         controller: _controller,
         children: 
        [
-     CameraPage(),
      CahtPage(),
      Text('Call'),
        ]

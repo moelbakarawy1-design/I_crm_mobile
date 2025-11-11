@@ -1,3 +1,4 @@
+import 'package:admin_app/config/router/routes.dart';
 import 'package:admin_app/core/theme/app_color.dart';
 import 'package:admin_app/core/theme/app_text_style.dart';
 import 'package:admin_app/featuer/chat/data/model/chat_model12.dart';
@@ -5,6 +6,7 @@ import 'package:admin_app/featuer/chat/data/repo/MessagesRepository.dart';
 import 'package:admin_app/featuer/chat/manager/message_cubit.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 class IndividualScreen extends StatefulWidget {
   final Data chatModel;
@@ -209,7 +211,7 @@ class _IndividualScreenState extends State<IndividualScreen> {
                 ),
               ),
 
-              // ======== Message Input ========
+              // Message Input 
               Container(
                 padding:
                     const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
@@ -241,17 +243,28 @@ class _IndividualScreenState extends State<IndividualScreen> {
                           ),
                         ),
                       ),
-                      IconButton(
-                        icon: const Icon(Icons.send, color: Color(0xff075E54)),
-                        onPressed: () {
-                          final msg = _messageController.text.trim();
-                          if (msg.isNotEmpty) {
-                            context
-                                .read<MessagesCubit>()
-                                .sendMessage(widget.chatModel.id ?? '', msg);
-                            _messageController.clear();
-                          }
-                        },
+                      Row(
+
+                        children:[
+                              IconButton(                       
+                          icon: const Icon(Icons.camera_alt, color: Color(0xff075E54)),
+                          onPressed: () {
+                          Navigator.pushNamed(context, Routes.cameraPage);
+                          },
+                        ),
+                        SizedBox(width: 6.w,),
+                          IconButton(                       
+                          icon: const Icon(Icons.send, color: Color(0xff075E54)),
+                          onPressed: () {
+                            final msg = _messageController.text.trim();
+                            if (msg.isNotEmpty) {
+                              context
+                                  .read<MessagesCubit>()
+                                  .sendMessage(widget.chatModel.id ?? '', msg);
+                              _messageController.clear();
+                            }
+                          },
+                        ),] 
                       ),
                     ],
                   ),

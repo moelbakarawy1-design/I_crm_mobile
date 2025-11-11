@@ -5,11 +5,9 @@ import 'package:admin_app/core/widgets/custom_textField_widget.dart';
 import 'package:admin_app/featuer/Task/data/model/getAllTask_model.dart';
 import 'package:admin_app/featuer/Task/manager/task_cubit.dart';
 import 'package:admin_app/featuer/Task/manager/task_state.dart';
-import 'package:admin_app/featuer/User/data/model/getAllUser_model.dart'
-    as UserModel;
+import 'package:admin_app/featuer/Task/view/widget/assign_user_dropdown.dart';
 import 'package:admin_app/featuer/User/manager/user_cubit.dart';
 import 'package:admin_app/featuer/User/manager/user_state.dart';
-import 'package:dropdown_search/dropdown_search.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -18,8 +16,9 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:intl/intl.dart';
 
 class EditTaskDialog extends StatefulWidget {
-  final TaskSummary task; // The task to edit
-  const EditTaskDialog({super.key, required this.task});
+  final TaskSummary task; 
+  
+  const EditTaskDialog({super.key, required this.task, });
 
   @override
   State<EditTaskDialog> createState() => _EditTaskDialogState();
@@ -38,8 +37,8 @@ class _EditTaskDialogState extends State<EditTaskDialog> {
     super.initState();
     _titleController = TextEditingController(text: widget.task.title);
     _descriptionController =
-        TextEditingController(text: widget.task.title);
-   
+        TextEditingController(text: widget.task.description);
+
     _selectedUserIds =
       [];
     _deadline = widget.task.endDate != null
@@ -97,7 +96,7 @@ class _EditTaskDialogState extends State<EditTaskDialog> {
     }
 
     return Scaffold(
-     appBar: const CustomAppBar(title: 'Task'),
+     appBar: const CustomAppBar(title: 'Edit Task'),
       backgroundColor: const Color(0xFFF1F5F9),
       body: Dialog(
         insetPadding: EdgeInsets.symmetric(horizontal: 25.w, vertical: 45.h),
@@ -146,49 +145,30 @@ class _EditTaskDialogState extends State<EditTaskDialog> {
                     SizedBox(height: 15.h),
       
                     // ✅ --- User Selection Dropdown ---
-                    BlocBuilder<GetAllUserCubit, GetAllUserState>(
-                      builder: (context, state) {
-                        if (state is GetAllUserLoading) {
-                          return const Center(child: CircularProgressIndicator());
-                        } else if (state is GetAllUserSuccess) {
-                          final users = state.userModel.data ?? [];
-                          return DropdownSearch<UserModel.Data>.multiSelection(
-                            items: (filter, infiniteScrollProps)=> users, // Set items directly
-                            itemAsString: (UserModel.Data? user) =>
-                                user?.name ?? 'Unknown',
-                            compareFn: (UserModel.Data? a, UserModel.Data? b) =>
-                                a?.id == b?.id,
-      
-                            // ✅ --- Set initial selected items ---
-                            selectedItems: users
-                                .where((u) =>
-                                    _selectedUserIds.contains(u.id.toString()))
-                                .toList(),
-      
-                            onChanged: (List<UserModel.Data> selectedUsers) {
-                              setState(() {
-                                _selectedUserIds = selectedUsers
-                                    .map((e) => e.id.toString())
-                                    .toList();
-                              });
-                            },
-                            decoratorProps: DropDownDecoratorProps(
-                              decoration: InputDecoration(
-                                labelText: "Select user(s)",
-                                border: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(8)),
-                              ),
-                            ),
-                            popupProps: const PopupPropsMultiSelection.menu(
-                              showSearchBox: true,
-                            ),
-                          );
-                        } else if (state is GetAllUserFailure) {
-                          return const Text('Failed to load users');
-                        }
-                        return const SizedBox.shrink();
-                      },
-                    ),
+                   BlocBuilder<GetAllUserCubit, GetAllUserState>(
+              builder: (context, state) {
+               if (state is GetAllUserLoading) {
+               return const Center(child: CircularProgressIndicator());
+               } else if (state is GetAllUserSuccess) {
+                  return AssignUserDropdown(
+                   selectedUserIds: _selectedUserIds,
+                   onSelectionChanged: (ids) {
+                setState(() {
+                  _selectedUserIds = ids;
+                });
+              },
+            );
+
+    } else if (state is GetAllUserFailure) {
+      return Text(
+        'Failed to load users: ${state.message}',
+        style: const TextStyle(color: Colors.red),
+      );
+    } else {
+      return const SizedBox.shrink();
+    }
+  },
+),
                     SizedBox(height: 20.h),
       
                     // Deadline
@@ -206,8 +186,7 @@ class _EditTaskDialogState extends State<EditTaskDialog> {
                         ),
                       ),
                     ),
-                    SizedBox(height: 20.h),
-      
+                    SizedBox(height: 20.h,),     
                     // Task title
                     CustomTextFormField(
                       hintText: 'Task Title',

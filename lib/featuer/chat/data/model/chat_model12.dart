@@ -114,7 +114,7 @@ class Messages {
   String? content;
   String? timestamp;
 
-  Messages({this.id, this.content, this.timestamp});
+  Messages({this.id, this.content, this.timestamp, String? senderType, String? waMessageId});
 
   Messages.fromJson(Map<String, dynamic> json) {
     id = json['id'];

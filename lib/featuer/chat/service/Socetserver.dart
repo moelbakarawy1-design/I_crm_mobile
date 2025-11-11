@@ -40,7 +40,7 @@ class SocketService {
         EndPoints.socketUrl,
         IO.OptionBuilder()
             .setTransports(['websocket'])
-            // .disableAutoConnect()
+             .disableAutoConnect()
             .enableReconnection()
             .setReconnectionAttempts(3)
             .setAuth({'token': token})

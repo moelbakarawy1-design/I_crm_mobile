@@ -25,7 +25,8 @@ class TaskSummary {
   String? status;
   String? startDate;
   String? endDate;
-  List<AssignedTo>? assignedTo; // This list comes from the main API call
+  String? description;
+  List<AssignedTo>? assignedTo; 
 
   TaskSummary({
     this.id,
@@ -33,6 +34,7 @@ class TaskSummary {
     this.status,
     this.startDate,
     this.endDate,
+    this.description,
     this.assignedTo,
   });
 
@@ -50,12 +52,13 @@ class TaskSummary {
       status: json['status'],
       startDate: json['startDate'],
       endDate: json['endDate'],
+      description: json['description'],
       assignedTo: assignedToList,
     );
   }
 }
 
-// --- MODEL 2: For the single task details ---
+// MODEL 2: For the single task details ---
 
 class GetTaskIdModel {
   bool? success;

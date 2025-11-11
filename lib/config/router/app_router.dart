@@ -10,6 +10,7 @@ import 'package:admin_app/featuer/Task/view/screen/add_task_screen.dart';
 import 'package:admin_app/featuer/Task/view/screen/edit_task_dialog.dart';
 import 'package:admin_app/featuer/Task/view/screen/view_task_dialog.dart';
 import 'package:admin_app/featuer/Task/view/task_screen_view.dart';
+import 'package:admin_app/featuer/chat/view/pages/camera_page.dart';
 import 'package:admin_app/featuer/getAllRole/data/model/role_model.dart';
 import 'package:admin_app/featuer/getAllRole/data/repo/invitation_repository.dart';
 import 'package:admin_app/featuer/getAllRole/manager/role_cubit.dart';
@@ -51,7 +52,8 @@ class AppRouter {
   return RouterTransitions.buildFromBottom(
     SendOtpView(resendCodeToken: resendCodeToken),
   );
-
+ case Routes.cameraPage:
+ return RouterTransitions.buildFromBottom(CameraPage());
       case Routes.home:
         return RouterTransitions.buildFromBottom(HomeView());
       case Routes.resetPassword:

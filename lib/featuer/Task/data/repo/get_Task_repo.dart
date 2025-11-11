@@ -19,7 +19,10 @@ abstract class BaseTasksRepository {
     required Map<String, dynamic> data,
   });
   Future<String> deleteTask(String taskId);
-}
+Future<String> updateTaskStatus({
+    required String taskId,
+    required String newStatus,
+  });}
 
 // 2️⃣ Implementation
 class TasksRepository implements BaseTasksRepository {
@@ -147,4 +150,29 @@ print('PATCH 📤 Sending data: $data');
       throw Exception('Error deleting task: ${e.toString()}');
     }
   }
+  // 🔹 Update Task Status
+Future<String> updateTaskStatus({
+  required String taskId,
+  required String newStatus,
+}) async {
+  try {
+    final ApiResponse response = await _apiHelper.patchRequest(
+      endPoint: '${EndPoints.getAllTask}/status/$taskId',
+      data: {"status": newStatus},
+      isFormData: false,
+    );
+
+    print('📤 PATCH (status) data: {"status": $newStatus}');
+    print('📥 Response: ${response.statusCode} - ${response.message}');
+
+    if (response.status == true) {
+      return response.message;
+    } else {
+      throw Exception(response.message);
+    }
+  } catch (e) {
+    throw Exception('Error updating task status: ${e.toString()}');
+  }
+}
+
 }

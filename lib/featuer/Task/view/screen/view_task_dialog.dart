@@ -1,10 +1,10 @@
 import 'package:admin_app/config/router/routes.dart';
-import 'package:admin_app/core/theme/app_color.dart';
 import 'package:admin_app/core/theme/app_text_style.dart';
 import 'package:admin_app/core/widgets/CustomAppBar_widget.dart';
 import 'package:admin_app/core/widgets/cusstom_btn_widget.dart';
 import 'package:admin_app/featuer/Task/data/model/getAllTask_model.dart';
 import 'package:admin_app/featuer/Task/manager/task_cubit.dart';
+import 'package:admin_app/featuer/Task/view/screen/utils/helper_Utils.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -14,6 +14,7 @@ import 'package:intl/intl.dart';
 
 class ViewTaskDialog extends StatelessWidget {
   final TaskSummary task;
+
   const ViewTaskDialog({super.key, required this.task});
 
 
@@ -21,7 +22,10 @@ class ViewTaskDialog extends StatelessWidget {
     Navigator.pushNamed(
       context,
       Routes.editTaskDialog,
-      arguments: task,
+      arguments: 
+        task,
+        
+      
     );
   }
 
@@ -66,7 +70,7 @@ class ViewTaskDialog extends StatelessWidget {
     }
 
     return Scaffold(
-      appBar: const CustomAppBar(title: 'Task'),
+      appBar: const CustomAppBar(title: 'View Task'),
       backgroundColor: const Color(0xFFF1F5F9),
       body: Dialog(
         insetPadding: EdgeInsets.symmetric(horizontal: 25.w, vertical: 45.h),
@@ -97,9 +101,6 @@ class ViewTaskDialog extends StatelessWidget {
                   ],
                 ),
                 SizedBox(height: 20.h),
-
-                // ✅ --- Removed BlocBuilder, data is already here ---
-
                 // Title
                 Container(
                   width: double.infinity,
@@ -113,8 +114,7 @@ class ViewTaskDialog extends StatelessWidget {
                       style: AppTextStyle.setpoppinsSecondaryBlack(fontSize: 9, fontWeight: FontWeight.w400)),
                 ),
                 SizedBox(height: 15.h),
-
-          
+                //description
                Container(
                   width: double.infinity,
                   padding: EdgeInsets.all(12.w),
@@ -123,12 +123,11 @@ class ViewTaskDialog extends StatelessWidget {
                     borderRadius: BorderRadius.circular(8.r),
                     border: Border.all(color: const Color(0xFFE0E0E0)),
                   ),
-                  child: Text(task.title ?? 'No Title',
+                  child: Text(task.description ?? 'No Title',
                       style: const TextStyle(fontSize: 16)),
                 ),
                 SizedBox(height: 15.h),
-
-
+                //assignedTo
                 Container(
                   width: double.infinity,
                   padding: EdgeInsets.all(12.w),
@@ -145,12 +144,11 @@ class ViewTaskDialog extends StatelessWidget {
                           spacing: 6.0,
                           runSpacing: 6.0,
                           children: task.assignedTo!
-                              .map((user) => _buildUserChip(user))
+                              .map((user) => buildUserChip(user))
                               .toList(),
                         ),
                 ),
                 SizedBox(height: 15.h),
-
                 // Date
                 Container(
                   width: double.infinity,
@@ -170,35 +168,33 @@ class ViewTaskDialog extends StatelessWidget {
                   ),
                 ),
                 SizedBox(height: 25.h),
-
-                // Buttons
                // Buttons
-CustomButton(
-  width: 332.w ,
-  text: 'Edit Task',
-  backgroundColor: Colors.blue,
-  textColor: Colors.white,
-  borderRadius: 8,
-  height: 40.h,
-  onPressed: () {
-    Navigator.pop(context); // Close this view dialog
-    _showEditTaskDialog(context, task); // Open edit dialog
-  },
-),
-SizedBox(height: 10.h),
-SizedBox(
-  width: double.infinity,
-  child: CustomButton(
-    text: 'Delete Task',
-    backgroundColor: Colors.red,
-    textColor: Colors.white,
-    borderRadius: 30,
-    height: 45.h,
-    onPressed: () {
-      _showDeleteConfirmationDialog(context, task.id!);
-    },
-  ),
-),
+                CustomButton(
+                  width: 332.w ,
+                  text: 'Edit Task',
+                  backgroundColor: Colors.blue,
+                  textColor: Colors.white,
+                  borderRadius: 8,
+                  height: 40.h,
+                  onPressed: () {
+                    Navigator.pop(context); // Close this view dialog
+                    _showEditTaskDialog(context, task); // Open edit dialog
+                    },
+                  ),
+                     SizedBox(height: 10.h),
+                  SizedBox(
+                    width: double.infinity,
+                    child: CustomButton(
+                      text: 'Delete Task',
+                      backgroundColor: Colors.red,
+                      textColor: Colors.white,
+                      borderRadius: 30,
+                      height: 45.h,
+                      onPressed: () {
+                        _showDeleteConfirmationDialog(context, task.id!);
+                      },
+                    ),
+                  ),
 
               ],
             ),
@@ -208,50 +204,5 @@ SizedBox(
     );
   }
 
-  // ✅ --- Helper Widget to build user chips ---
-  Widget _buildUserChip(AssignedTo user) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10.0, vertical: 8.0),
-      margin: const EdgeInsets.only(bottom: 8.0), // Adds space between users
-      decoration: BoxDecoration(
-        color: const Color(0xFFF6FAFD),
-        borderRadius: BorderRadius.circular(8.0),
-        border: Border.all(color: const Color(0xFFE0E0E0)),
-      ),
-      child: Row(
-        children: [
-          // Icon
-          const CircleAvatar(
-            radius: 16,
-            backgroundColor: AppColor.mainBlack,
-            child: Icon(Icons.person, color: Colors.white, size: 18),
-          ),
-          const SizedBox(width: 10),
-          // Name and Email Column
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  user.name ?? 'Unknown User',
-                  style: const TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w500,
-                    color: Colors.black,
-                  ),
-                ),
-                Text(
-                  user.email ?? 'No email',
-                  style: const TextStyle(
-                    fontSize: 12,
-                    color: Colors.grey,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
+ 
 }

@@ -1,8 +1,7 @@
 import 'dart:async';
-import 'package:admin_app/core/theme/app_color.dart';
 import 'package:admin_app/featuer/chat/view/pages/PreviewScreen_page.dart';
-import 'package:flutter/material.dart';
 import 'package:camera/camera.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 class CameraPage extends StatefulWidget {
@@ -18,6 +17,11 @@ class _CameraPageState extends State<CameraPage> with WidgetsBindingObserver {
   int _selectedCameraIndex = 0;
   bool _isCameraInitialized = false;
   bool _noCameraFound = false;
+  double _currentZoomLevel = 1.0;
+  double _maxZoom = 1.0;
+  double _minZoom = 1.0;
+  Offset? _focusPoint;
+  bool _isTakingPicture = false;
 
   @override
   void initState() {
@@ -35,13 +39,11 @@ class _CameraPageState extends State<CameraPage> with WidgetsBindingObserver {
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
-    if (_controller == null || !_controller!.value.isInitialized) {
-      return;
-    }
+    if (_controller == null || !_controller!.value.isInitialized) return;
 
     if (state == AppLifecycleState.inactive) {
       _controller?.dispose();
-    } else if (state == AppLifecycleState.resumed) {
+    } else if (state == AppLifecycleState.resumed && _cameras.isNotEmpty) {
       _initializeCamera(_cameras[_selectedCameraIndex]);
     }
   }
@@ -53,7 +55,6 @@ class _CameraPageState extends State<CameraPage> with WidgetsBindingObserver {
         if (mounted) setState(() => _noCameraFound = true);
         return;
       }
-      // Initialize with the first camera (usually back)
       await _initializeCamera(_cameras[_selectedCameraIndex]);
     } on CameraException catch (e) {
       print("Error setting up cameras: ${e.code}: ${e.description}");
@@ -69,11 +70,14 @@ class _CameraPageState extends State<CameraPage> with WidgetsBindingObserver {
     _controller = CameraController(
       cameraDescription,
       ResolutionPreset.high,
-      enableAudio: false, 
+      enableAudio: false,
+      imageFormatGroup: ImageFormatGroup.jpeg,
     );
 
     try {
       await _controller!.initialize();
+      _maxZoom = await _controller!.getMaxZoomLevel();
+      _minZoom = await _controller!.getMinZoomLevel();
       if (mounted) {
         setState(() => _isCameraInitialized = true);
       }
@@ -86,113 +90,160 @@ class _CameraPageState extends State<CameraPage> with WidgetsBindingObserver {
   Future<void> _onTakePicturePressed() async {
     if (_controller == null ||
         !_controller!.value.isInitialized ||
-        _controller!.value.isTakingPicture) {
+        _controller!.value.isTakingPicture ||
+        _isTakingPicture) {
       return;
     }
 
     try {
-
+      setState(() => _isTakingPicture = true);
       final XFile file = await _controller!.takePicture();
 
-      print('Picture saved to: ${file.path}');
-
- 
-     
-      Navigator.push(context, MaterialPageRoute(
-        builder: (context) => PreviewScreen(imagePath: file.path),
-      ));
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Picture saved to: ${file.path}')),
+      if (!mounted) return;
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => PreviewScreen(imagePath: file.path),
+        ),
       );
+
+      setState(() => _isTakingPicture = false);
     } on CameraException catch (e) {
       print("Error taking picture: ${e.code}: ${e.description}");
+      setState(() => _isTakingPicture = false);
     }
   }
 
   void _onSwitchCameraPressed() {
-    if (_cameras.length < 2) return; 
-
+    if (_cameras.length < 2) return;
     _selectedCameraIndex = (_selectedCameraIndex + 1) % _cameras.length;
-
     _initializeCamera(_cameras[_selectedCameraIndex]);
+  }
+
+  void _onViewFinderTap(TapDownDetails details, BoxConstraints constraints) {
+    if (_controller == null) return;
+
+    final offset = Offset(
+      details.localPosition.dx / constraints.maxWidth,
+      details.localPosition.dy / constraints.maxHeight,
+    );
+
+    _controller!.setFocusPoint(offset);
+    setState(() => _focusPoint = details.localPosition);
+    Future.delayed(const Duration(seconds: 1), () {
+      setState(() => _focusPoint = null);
+    });
   }
 
   @override
   Widget build(BuildContext context) {
     if (_noCameraFound) {
-      return const Center(
-        child: Text(
-          'No camera found.\nPlease check app permissions.',
-          textAlign: TextAlign.center,
+      return const Scaffold(
+        body: Center(
+          child: Text('No camera found.\nPlease check permissions.'),
         ),
       );
     }
 
     if (!_isCameraInitialized) {
-      return const Center(child: CircularProgressIndicator());
+      return const Scaffold(
+        backgroundColor: Colors.black,
+        body: Center(child: CircularProgressIndicator()),
+      );
     }
 
     return Scaffold(
       backgroundColor: Colors.black,
-      body: Stack(
-        fit: StackFit.expand,
-        children: [
-          Center(
-            child: AspectRatio(
-              aspectRatio: _controller!.value.aspectRatio,
-              child: CameraPreview(_controller!),
+      body: GestureDetector(
+        onScaleUpdate: (details) async {
+          final zoom = (_currentZoomLevel * details.scale)
+              .clamp(_minZoom, _maxZoom);
+          _currentZoomLevel = zoom;
+          await _controller!.setZoomLevel(zoom);
+        },
+        onHorizontalDragEnd: (details) {
+          _onSwitchCameraPressed(); // swipe to switch camera
+        },
+        child: Stack(
+          fit: StackFit.expand,
+          children: [
+            LayoutBuilder(
+              builder: (context, constraints) {
+                return GestureDetector(
+                  onTapDown: (details) =>
+                      _onViewFinderTap(details, constraints),
+                  child: CameraPreview(_controller!),
+                );
+              },
             ),
-          ),
-          _buildControlsOverlay(),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildControlsOverlay() {
-    return Column(
-      mainAxisAlignment: MainAxisAlignment.end,
-      children: [
-        Container(
-          color: Colors.black.withOpacity(0.5),
-          padding: EdgeInsets.symmetric(vertical: 20.h),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-            children: [
-              IconButton(
-                onPressed: _onSwitchCameraPressed,
-                icon: Icon(
-                  Icons.flip_camera_ios_outlined,
-                  color: AppColor.mainWhite,
-                  size: 30.sp,
-                ),
-              ),
-              GestureDetector(
-                onTap: _onTakePicturePressed,
-                child: Container(
-                  width: 70.r,
-                  height: 70.r,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: AppColor.mainWhite,
-                  ),
-                  child: Padding(
-                    padding: EdgeInsets.all(4.r),
-                    child: Container(
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        border: Border.all(color: Colors.black, width: 2.w),
+            if (_focusPoint != null)
+              Positioned(
+                left: _focusPoint!.dx - 20,
+                top: _focusPoint!.dy - 20,
+                child: AnimatedOpacity(
+                  opacity: 1.0,
+                  duration: const Duration(milliseconds: 300),
+                  child: Container(
+                    width: 40,
+                    height: 40,
+                    decoration: BoxDecoration(
+                      border: Border.all(
+                        color: Colors.yellow,
+                        width: 2,
                       ),
+                      shape: BoxShape.rectangle,
                     ),
                   ),
                 ),
               ),
-              SizedBox(width: 48.w), 
-            ],
-          ),
+            _buildOverlayControls(),
+          ],
         ),
-      ],
+      ),
+    );
+  }
+
+  Widget _buildOverlayControls() {
+    return SafeArea(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          // Top bar (close and flash icons)
+          Padding(
+            padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 10.h),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Icon(Icons.close, color: Colors.white, size: 28.sp),
+                IconButton(
+                  icon: const Icon(Icons.flip_camera_ios, color: Colors.white),
+                  onPressed: _onSwitchCameraPressed,
+                ),
+              ],
+            ),
+          ),
+
+          // Bottom bar (capture)
+          Padding(
+            padding: EdgeInsets.only(bottom: 30.h),
+            child: GestureDetector(
+              onTap: _onTakePicturePressed,
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 200),
+                width: _isTakingPicture ? 80.r : 70.r,
+                height: _isTakingPicture ? 80.r : 70.r,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  border: Border.all(
+                    color: Colors.white,
+                    width: 5.w,
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

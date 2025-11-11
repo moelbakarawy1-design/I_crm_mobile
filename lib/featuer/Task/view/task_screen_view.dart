@@ -1,7 +1,9 @@
 import 'package:admin_app/core/theme/app_text_style.dart';
 import 'package:admin_app/featuer/Task/data/model/getAllTask_model.dart' as TaskModel;
+import 'package:admin_app/featuer/Task/data/model/states_enum.dart';
 import 'package:admin_app/featuer/Task/manager/task_cubit.dart';
 import 'package:admin_app/featuer/Task/manager/task_state.dart';
+import 'package:admin_app/featuer/Task/view/screen/utils/helper_Utils.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:admin_app/featuer/Task/data/model/getAllTask_model.dart';
@@ -116,7 +118,7 @@ class _TasksScreenState extends State<TasksScreen> {
                       if (state.tasks.isEmpty) {
                         return const Center(child: Text('No tasks found.'));
                       }
-                      return _buildTasksContainer(state.tasks.cast<TaskModel.TaskSummary>());
+                      return buildTasksContainer(state.tasks.cast<TaskModel.TaskSummary>());
                     }
                     return const Center(child: Text('Loading Tasks...'));
                   },
@@ -129,7 +131,7 @@ class _TasksScreenState extends State<TasksScreen> {
     );
   }
 
-  Widget _buildTasksContainer(List<TaskSummary> tasks) {
+  Widget buildTasksContainer(List<TaskSummary> tasks) {
     return Container(
       width: 425.w,
       padding: const EdgeInsets.only(left: 8.0, right: 8.0, bottom: 8.0),
@@ -147,7 +149,7 @@ class _TasksScreenState extends State<TasksScreen> {
       ),
       child: Column(
         children: [
-          _buildTasksHeader(),
+          buildTasksHeader(),
           const Divider(height: 24),
           Expanded(
             child: ListView.separated(
@@ -162,10 +164,10 @@ class _TasksScreenState extends State<TasksScreen> {
               itemBuilder: (context, index) {
                 final task = tasks[index];
                 String formattedDate =
-                    _formatTaskDate(task.startDate, task.endDate);
+                    formatTaskDate(task.startDate, task.endDate);
                 Map<String, dynamic> statusInfo = _getStatusInfo(task.status);
-                return _buildTaskItem(
-                  task: task, // ✅ --- Pass the whole task object ---
+                return buildTaskItem(
+                  task: task, 
                   icon: statusInfo['icon'],
                   iconColor: statusInfo['color'],
                   date: formattedDate,
@@ -181,123 +183,111 @@ class _TasksScreenState extends State<TasksScreen> {
     );
   }
 
-  Widget _buildTasksHeader() {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 12.0),
+ 
+  Widget buildTaskItem({
+  required TaskSummary task,
+  required IconData icon,
+  required Color iconColor,
+  required String date,
+  required String title,
+  required String status,
+  required Color statusColor,
+}) {
+  final currentStatus = TaskStatusExtension.fromValue(task.status ?? 'IN_PROGRESS');
+
+  return InkWell(
+    onTap: () => _showViewTaskDialog(context, task), // 👈 Navigate to view details
+    borderRadius: BorderRadius.circular(8),
+    splashColor: AppColor.mainBlue.withOpacity(0.1),
+    child: Padding(
+      padding: const EdgeInsets.all( 16.0),
       child: Row(
         children: [
+          //  Date
           Expanded(
             flex: 2,
-            child: Text('Start date & deadline', textAlign: TextAlign.start, style: _headerStyle()),
+            child: Text(
+              date,
+              textAlign: TextAlign.start,
+              style: AppTextStyle.setpoppinsTextStyle(
+                fontSize: 8,
+                fontWeight: FontWeight.w400,
+                color: statusColor,
+              ),
+            ),
           ),
+
+          //  Title
           Expanded(
             flex: 4,
-            child: Text('Task Title', textAlign: TextAlign.center, style: _headerStyle()),
+            child: Text(
+              title,
+              textAlign: TextAlign.center,
+              style: AppTextStyle.setpoppinsTextStyle(
+                fontSize: 8,
+                fontWeight: FontWeight.w500,
+                color: AppColor.mainBlack,
+              ),
+            ),
           ),
+
+          // Status Dropdown
           Expanded(
             flex: 2,
-            child: Text('Status', textAlign: TextAlign.center, style: _headerStyle()),
+            child: DropdownButton<TaskStatus>(
+              value: currentStatus,
+              underline: const SizedBox.shrink(),
+              icon: const Icon(Icons.arrow_drop_down, size: 16),
+              isDense: true,
+              items: TaskStatus.values.map((status) {
+                return DropdownMenuItem<TaskStatus>(
+                  value: status,
+                  child: Text(
+                    status.label,
+                    style: AppTextStyle.setpoppinsTextStyle(
+                      fontSize: 8,
+                      fontWeight: FontWeight.w400,
+                      color: _getStatusInfo(status.value)['color'],
+                    ),
+                  ),
+                );
+              }).toList(),
+              onChanged: (newStatus) {
+                if (newStatus != null) {
+                  context.read<TaskCubit>().updateTaskStatus(
+                        task.id!,
+                        newStatus.value,
+                      );
+                }
+              },
+            ),
           ),
+
+          //  Edit Button
           Expanded(
             flex: 1,
-            child: Text('Edit', textAlign: TextAlign.right, style: _headerStyle()),
+            child: Align(
+              alignment: Alignment.centerRight,
+              child: InkWell(
+                onTap: () => _showEditTaskDialog(context, task),
+                child: SvgPicture.asset(
+                  'assets/svg/edit-2.svg',
+                  width: 12.w,
+                  height: 12.h,
+                  color: AppColor.mainBlue,
+                ),
+              ),
+            ),
           ),
         ],
       ),
-    );
-  }
-
-  Widget _buildTaskItem({
-    required TaskSummary task,
-    required IconData icon,
-    required Color iconColor,
-    required String date,
-    required String title,
-    required String status,
-    required Color statusColor,
-  }) {
-  
-    return InkWell(
-      onTap: () => _showViewTaskDialog(context, task),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 12.0),
-        child: Row(
-  children: [
-    // Date
-    Expanded(
-      flex: 2,
-      child: Padding(
-        padding: const EdgeInsets.all(8.0),
-        child: Text(
-          date,
-          textAlign: TextAlign.start,
-          style: AppTextStyle.setpoppinsTextStyle(
-            fontSize: 8,
-            fontWeight: FontWeight.w400,
-            color: statusColor,
-          ),
-        ),
-      ),
     ),
+  );
+}
 
-    // Title
-    Expanded(
-      flex: 4,
-      child: Text(
-        title,
-        textAlign: TextAlign.center,
-        style: AppTextStyle.setpoppinsTextStyle(
-          fontSize: 8,
-          fontWeight: FontWeight.w500,
-          color: AppColor.mainBlack,
-        ),
-      ),
-    ),
 
-    // Status
-    Expanded(
-      flex: 2,
-      child: Text(
-        status,
-        textAlign: TextAlign.center,
-        style: AppTextStyle.setpoppinsTextStyle(
-          fontSize: 8,
-          fontWeight: FontWeight.w400,
-          color: statusColor,
-        ),
-      ),
-    ),
 
-    // Edit icon
-    Expanded(
-      flex: 1,
-      child: Align(
-        alignment: Alignment.centerRight,
-        child: InkWell(
-          onTap: () => _showEditTaskDialog(context, task),
-          child: SvgPicture.asset(
-            'assets/svg/edit-2.svg',
-            width: 12.w,
-            height: 12.h,
-           color: AppColor.mainBlue,
-          ),
-        ),
-      ),
-    ),
-  ],
-)
-
-      ),
-    );
-  }
-
-  // ... (Your helper methods _headerStyle, _formatDateString, _formatTaskDate, _getStatusInfo are unchanged) ...
-  TextStyle _headerStyle() {
-    return AppTextStyle.setpoppinsTextStyle(
-        fontSize: 10, fontWeight: FontWeight.w500, color: AppColor.secondaryGrey);
-  }
-
-  String _formatDateString(String? dateString) {
+  String formatDateString(String? dateString) {
     if (dateString == null || dateString.isEmpty) {
       return 'N/A';
     }
@@ -310,24 +300,22 @@ class _TasksScreenState extends State<TasksScreen> {
     }
   }
 
-  String _formatTaskDate(String? start, String? end) {
-    final String startDate = _formatDateString(start);
-    final String endDate = _formatDateString(end);
+  String formatTaskDate(String? start, String? end) {
+    final String startDate = formatDateString(start);
+    final String endDate = formatDateString(end);
     return '$startDate to $endDate';
   }
 
   Map<String, dynamic> _getStatusInfo(String? status) {
-    status = status?.toLowerCase();
+  status = status?.toUpperCase();
 
-    if (status == 'in_progress') {
-      return {'icon': Icons.error_outline, 'color': Colors.red};
-    } else if (status == 'completed') {
-      return {'icon': Icons.check_circle_outline, 'color': Colors.green};
-    } else if (status == 'pending') {
-      return {'icon': Icons.hourglass_empty, 'color': Colors.blue};
-    } else {
-      // حالة افتراضية (مثل: cancelled)
-      return {'icon': Icons.info_outline, 'color': Colors.grey};
-    }
+  if (status == 'IN_PROGRESS') {
+    return {'icon': Icons.hourglass_empty, 'color': Colors.orange};
+  } else if (status == 'COMPLETED') {
+    return {'icon': Icons.check_circle_outline, 'color': Colors.green};
+  } else {
+    return {'icon': Icons.info_outline, 'color': Colors.grey};
   }
+}
+
 }
