@@ -154,7 +154,7 @@ class _IndividualScreenState extends State<IndividualScreen> {
 
     const SizedBox(height: 3),
 
-    // 💬 Message content
+    //  Message content
     Text(
       msg.content ?? '',
       style: AppTextStyle.setpoppinsBlack(
@@ -165,7 +165,7 @@ class _IndividualScreenState extends State<IndividualScreen> {
 
     const SizedBox(height: 4),
 
-    // 🕒 Time + status row
+    //  Time + status row
     Row(
       mainAxisSize: MainAxisSize.min,
       mainAxisAlignment:

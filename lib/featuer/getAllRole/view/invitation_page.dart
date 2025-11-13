@@ -352,12 +352,11 @@ class _InvitationPageState extends State<InvitationPage> {
                                 ),
                               ),
                               Padding(
-                                padding: const EdgeInsets.all(8.0),
+                                padding: const EdgeInsets.symmetric(horizontal: 16.0,vertical: 8),
                                 child: Row(
                                   mainAxisSize: MainAxisSize.min,
                                   children: [
-                                    InkWell(child: SvgPicture.asset('assets/svg/Component _edit.svg',width: 30.w,height: 30.h)),
-                                     SizedBox(width: 5.w,),
+                                   
                                     InkWell(child: SvgPicture.asset('assets/svg/Component _delete.svg',width: 30.w,height: 30.h,) ,onTap: () async {
                                           await _showDeleteConfirmationDialog(context, user);
                                       }, ),

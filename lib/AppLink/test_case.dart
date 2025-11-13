@@ -40,16 +40,8 @@ class DeepLinkHandler {
       } else {
       }
 
-      // ✅ Listen for new links while app is running
-      _sub = _appLinks.uriLinkStream.listen(
-        (uri) {
-          // ignore: use_build_context_synchronously
-          _handleUri(context, uri);
-        },
-        onError: (err) => print('❌ Deep link stream error: $err'),
-      );
+     
 
-      _initialized = true;
     
     } catch (e) {
     }
@@ -137,7 +129,7 @@ class _TokenHandlerPageState extends State<TokenHandlerPage> {
   /// ✅ Verify unique token with backend
   Future<void> _verifyToken(String token) async {
     try {
-      final url = 'http://192.168.1.4:5000/api/auth/login/$token';   
+      final url = 'http://192.168.1.88:5000/api/auth/login/$token';   
       final response = await Dio().get(
         url,
         options: Options(
@@ -165,15 +157,8 @@ class _TokenHandlerPageState extends State<TokenHandlerPage> {
           case 'admin':
             Navigator.pushReplacementNamed(context, Routes.home);
             break;
-          case 'sales':
-           Navigator.pushReplacementNamed(context, Routes.salsedashboard);
-           break;
-          case 'supervisor':
-          case 'reader':
-            Navigator.pushReplacementNamed(context, Routes.logInView);
-            break;
           default:
-            Navigator.pushReplacementNamed(context, Routes.logInView);
+            Navigator.pushReplacementNamed(context, Routes.home);
         }
       } else {
         if (!mounted) return;

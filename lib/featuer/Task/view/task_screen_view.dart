@@ -67,8 +67,12 @@ class _TasksScreenState extends State<TasksScreen> {
               controller: TextEditingController(),
               onAddPressed: () =>
                   Navigator.pushNamed(context, Routes.addTaskDialog),
-              onFilterPressed: () {},
-              onSearchChanged: (query) {},
+              onFilterPressed: (status) {
+               context.read<TaskCubit>().filterTasksByStatus(status?.value);
+              },
+              onSearchChanged: (query) {
+                context.read<TaskCubit>().searchTasksByName(query);
+              },
             ),
           ),
           const SizedBox(height: 10),
@@ -306,16 +310,38 @@ class _TasksScreenState extends State<TasksScreen> {
     return '$startDate to $endDate';
   }
 
-  Map<String, dynamic> _getStatusInfo(String? status) {
-  status = status?.toUpperCase();
 
-  if (status == 'IN_PROGRESS') {
-    return {'icon': Icons.hourglass_empty, 'color': Colors.orange};
-  } else if (status == 'COMPLETED') {
-    return {'icon': Icons.check_circle_outline, 'color': Colors.green};
-  } else {
-    return {'icon': Icons.info_outline, 'color': Colors.grey};
+Map<String, dynamic> _getStatusInfo(String? status) {
+  switch (status?.toUpperCase()) {
+    case 'IN_PROGRESS':
+      return {
+        'icon': Icons.hourglass_empty,
+        'color': Colors.orange,
+        'label': 'In Progress',
+      };
+
+    case 'COMPLETED':
+      return {
+        'icon': Icons.check_circle_outline,
+        'color': Colors.green,
+        'label': 'Completed',
+      };
+
+    case 'OVERDUE':
+      return {
+        'icon': Icons.warning_amber_rounded,
+        'color': Colors.red,
+        'label': 'Overdue',
+      };
+
+    default:
+      return {
+        'icon': Icons.info_outline,
+        'color': Colors.grey,
+        'label': 'Unknown',
+      };
   }
 }
+
 
 }

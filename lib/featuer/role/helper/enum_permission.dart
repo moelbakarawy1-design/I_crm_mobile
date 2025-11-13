@@ -59,7 +59,7 @@ extension PermissionExtension on Permission {
     }
   }
 
-  static Permission? fromString(String value) {
+  static Permission fromString(String value) {
     return Permission.values.firstWhere(
       (e) => e.value == value,
       orElse: () => throw Exception("Invalid permission: $value"),

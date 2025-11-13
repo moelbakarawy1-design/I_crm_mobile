@@ -1,3 +1,5 @@
+import 'package:admin_app/featuer/role/helper/enum_permission.dart';
+
 class LoginRequest {
   final String email;
   final String password;
@@ -45,7 +47,7 @@ class UserModel {
   final String id;
   final String name;
   final String? email;
-  final UserRoleModel? role; // ✅ change to object instead of String
+  final UserRoleModel? role;
 
   UserModel({
     required this.id,
@@ -62,24 +64,60 @@ class UserModel {
       role: json['role'] != null ? UserRoleModel.fromJson(json['role']) : null,
     );
   }
+
+  bool hasPermission(Permission permission) {
+    if (role == null) return false;
+    return role!.permissions.contains(permission) ||
+           role!.permissions.contains(Permission.ADMIN);
+  }
 }
+
 
 class UserRoleModel {
   final String name;
-  final List<String> permissions;
+  final List<Permission> permissions;
 
   UserRoleModel({required this.name, required this.permissions});
 
   factory UserRoleModel.fromJson(Map<String, dynamic> json) {
+    final List<dynamic> rawPermissions = json['permissions'] ?? [];
+
     return UserRoleModel(
       name: json['name'] ?? '',
-      permissions: json['permissions'] != null
-          ? List<String>.from(json['permissions'])
-          : [],
+      permissions: rawPermissions.map((p) {
+        try {
+          return PermissionExtension.fromString(p);
+        } catch (e) {
+          return Permission.READ_USERS; 
+        }
+      }).toList(),
+    );
+  }
+
+  /// Convert back to String list for sending to backend
+  List<String> toJsonPermissions() => permissions.map((e) => e.value).toList();
+}
+
+class NotAdminLogIn {
+  final String email;
+
+  NotAdminLogIn({required this.email});
+  Map<String, dynamic> toJson() => {'email': email};
+
+}
+class NotAdminLogInResponse {
+  final bool success;
+  final String message;
+
+  NotAdminLogInResponse({required this.success, required this.message});
+
+  factory NotAdminLogInResponse.fromJson(Map<String, dynamic> json) {
+    return NotAdminLogInResponse(
+      success: json['success'] ?? false,
+      message: json['message'] ?? '',
     );
   }
 }
-
 class ForgetPasswordRequest {
   final String email;
 

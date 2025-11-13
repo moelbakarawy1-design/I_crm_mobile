@@ -1,6 +1,7 @@
 enum TaskStatus {
   IN_PROGRESS,
   COMPLETED,
+  OVERDUE,
 }
 
 extension TaskStatusExtension on TaskStatus {
@@ -10,7 +11,8 @@ extension TaskStatusExtension on TaskStatus {
         return 'In Progress';
       case TaskStatus.COMPLETED:
         return 'Completed';
-      
+      case TaskStatus.OVERDUE:
+        return 'Overdue';
     }
   }
 
@@ -20,6 +22,8 @@ extension TaskStatusExtension on TaskStatus {
         return 'IN_PROGRESS';
       case TaskStatus.COMPLETED:
         return 'COMPLETED';
+      case TaskStatus.OVERDUE:
+        return 'OVERDUE';
     }
   }
 
@@ -27,6 +31,8 @@ extension TaskStatusExtension on TaskStatus {
     switch (value.toUpperCase()) {
       case 'COMPLETED':
         return TaskStatus.COMPLETED;
+      case 'OVERDUE':
+        return TaskStatus.OVERDUE;
       case 'IN_PROGRESS':
       default:
         return TaskStatus.IN_PROGRESS;

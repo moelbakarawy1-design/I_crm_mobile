@@ -23,19 +23,20 @@ class InvitationRepository {
   }
 
   // Send invitation
-  Future<ApiResponse> sendInvitation(InvitationModel invitation) async {
-    try {
-      final response = await _apiHelper.postRequest(
-        endPoint: EndPoints.sendInvite,
-        data: invitation.toJson(),
-        isFormData: false,
-        isAuthorized: true,
-      );
-      return response;
-    } catch (e) {
-      return ApiResponse.fromError(e);
-    }
+ Future<ApiResponse> sendInvitation(InvitationModel invitation) async {
+  try {
+    final response = await _apiHelper.postRequest(
+      endPoint: "${EndPoints.sendInvite}?client=flutter",
+      data: invitation.toJson(),
+      isFormData: false,
+      isAuthorized: true,
+    );
+    return response;
+  } catch (e) {
+    return ApiResponse.fromError(e);
   }
+}
+
 
   // Update Role
   Future<ApiResponse> updateRole({

@@ -208,6 +208,12 @@ Widget build(BuildContext context) {
                                 )
                               : null,
                         ),
+                        Align(
+                          alignment: AlignmentGeometry.center,
+                          child: TextButton(onPressed: (){
+                            Navigator.pushNamed(context, Routes.notAdminView);
+                          }, child: Text('Not Admin',style: AppTextStyle.setpoppinsBlack(fontSize: 12, fontWeight: FontWeight.w400, ))),
+                        )
                       ],
                     ),
                   ),

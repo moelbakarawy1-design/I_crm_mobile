@@ -31,65 +31,62 @@ class MessagesCubit extends Cubit<MessagesState> {
   MessagesCubit(this.messagesRepository) : super(MessagesInitial());
 
   /// --- Load existing messages + setup socket listeners ---
-  Future<void> getMessages(String chatId) async {
-    emit(MessagesLoading());
-    _currentChatId = chatId; 
+ Future<void> getMessages(String chatId) async {
+  emit(MessagesLoading());
+  _currentChatId = chatId;
 
-    try {
-      
-      final response = await messagesRepository.getMessages(chatId);
-      allMessages = response.data ?? []; 
-      emit(MessagesLoaded(List.from(allMessages)));
-
-      //  Connect socket
-      final connected = await socketService.connect();
-      if (!connected) {
-        print('❌ Socket connection failed.');
-        return;
-      }
-
-      //  Join chat room 
-      socketService.socket?.emit('join_chat', {'chatId': _currentChatId});
-      print('📡 Joined chat room: $_currentChatId');
-
-      //  Listen for all socket events 
-      socketService.socket?.onAny((event, data) {
-        print('📡 [SOCKET EVENT] $event => $data');
-      });
-
-      //  Setup listeners for new messages & updates
-      listenForSocketEvents(); 
-    } catch (e) {
-      emit(MessagesError(e.toString()));
+  try {
+    // ✅ Connect to socket first
+    final connected = await socketService.connect();
+    if (!connected) {
+      print('❌ Socket connection failed.');
+      return;
     }
+
+    // ✅ Join chat room before fetching messages
+    socketService.socket?.emit('join_chat', {'chatId': _currentChatId});
+    print('📡 Joined chat room: $_currentChatId');
+
+    // ✅ Listen for socket events early
+    listenForSocketEvents();
+
+    // 📨 Fetch existing messages
+    final response = await messagesRepository.getMessages(chatId);
+    allMessages = response.data ?? [];
+    emit(MessagesLoaded(List.from(allMessages)));
+
+  } catch (e) {
+    emit(MessagesError(e.toString()));
   }
+}
+
 
   /// --- Send a new message ---
-  Future<void> sendMessage(String chatId, String message) async {
-    if (message.trim().isEmpty) return;
+ Future<void> sendMessage(String chatId, String message) async {
+  if (message.trim().isEmpty) return;
+  
+  try {
+    // 🔹 Add message locally (optional loading state)
+    final newMsgData = await messagesRepository.sendMessage(chatId, message);
+    final newMessage = MessageData.fromJson(newMsgData['data'] ?? newMsgData);
 
-    try {
-      //  Send via API and get the returned message
-      final newMsgData = await messagesRepository.sendMessage(chatId, message);
-      
-      //  Parse the new message data
-      // (Assuming the API returns the message object, possibly nested in 'data')
-      final newMessage = MessageData.fromJson(newMsgData['data'] ?? newMsgData);
-
-      // ⭐️ FIXED: Add to list immediately for instant UI update
-      final exists = allMessages.any((msg) => msg.id == newMessage.id);
-      if (!exists) {
-        allMessages.add(newMessage);
-      }
-      
-      emit(MessagesLoaded(List.from(allMessages)));
-
-      await socketService.sendMessage(chatId, message);
-    } catch (e) {
-      emit(MessagesError(e.toString()));
-      emit(MessagesLoaded(List.from(allMessages))); 
+    final exists = allMessages.any((msg) => msg.id == newMessage.id);
+    if (!exists) {
+      allMessages.add(newMessage);
     }
+
+    // ✅ Send over socket FIRST (so the event gets sent before UI updates)
+    await socketService.sendMessage(chatId, message);
+
+    // ✅ Then emit state (UI updates after socket emit)
+    emit(MessagesLoaded(List.from(allMessages)));
+
+  } catch (e) {
+    emit(MessagesError(e.toString()));
+    emit(MessagesLoaded(List.from(allMessages)));
   }
+}
+
 
 
   void listenForSocketEvents() {

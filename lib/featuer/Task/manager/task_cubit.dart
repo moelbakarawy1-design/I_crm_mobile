@@ -8,12 +8,19 @@ class TaskCubit extends Cubit<TaskState> {
   final BaseTasksRepository _tasksRepository;
 
   TaskCubit(this._tasksRepository) : super(GetAllTasksInitial());
+List<TaskSummary> _allTasks = [];
+List<TaskSummary> _filteredTasks = [];
+
+List<TaskSummary> get allTasks => _allTasks;
+List<TaskSummary> get filteredTasks => _filteredTasks;
 
   // 🔹 Fetch all tasks
   Future<void> fetchTasks() async {
     try {
       emit(GetAllTasksLoading());
       final List<TaskSummary> tasks = await _tasksRepository.getAllTasks();
+      _allTasks = tasks;
+    _filteredTasks = tasks;
       emit(GetAllTasksSuccess(tasks));
     } catch (e) {
       emit(GetAllTasksError(e.toString()));
@@ -117,5 +124,30 @@ Future<void> updateTaskStatus(String taskId, String newStatus) async {
     emit(UpdateTaskStatusFailure(e.toString()));
   }
 }
+// 🔍 Search tasks by name
+void searchTasksByName(String query) {
+  if (query.isEmpty) {
+    _filteredTasks = _allTasks;
+  } else {
+    _filteredTasks = _allTasks
+        .where((task) =>
+            task.title?.toLowerCase().contains(query.toLowerCase()) ?? false)
+        .toList();
+  }
+  emit(GetAllTasksSuccess(_filteredTasks));
+}
+
+// ⚙️ Filter tasks by status
+void filterTasksByStatus(String? status) {
+  if (status == null || status.isEmpty) {
+    _filteredTasks = _allTasks;
+  } else {
+    _filteredTasks = _allTasks
+        .where((task) => task.status?.toUpperCase() == status.toUpperCase())
+        .toList();
+  }
+  emit(GetAllTasksSuccess(_filteredTasks));
+}
+
 
 }

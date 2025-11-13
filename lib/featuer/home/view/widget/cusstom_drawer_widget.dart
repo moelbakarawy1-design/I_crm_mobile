@@ -24,7 +24,7 @@ class _DrawerMenuState extends State<DrawerMenu> {
     final bool isSelected = selectedItem == title;
 
     return Padding(
-      padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 4.h),
+      padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 8.h),
       child: InkWell(
         borderRadius: BorderRadius.circular(12.r),
         onTap: () {
@@ -33,7 +33,7 @@ class _DrawerMenuState extends State<DrawerMenu> {
         },
         child: Container(
           width: 273.w,
-          height: 48.h,
+          height: 50.h,
           decoration: BoxDecoration(
             color: isSelected ? AppColor.mainBlue : Colors.white,
             border: Border.all(

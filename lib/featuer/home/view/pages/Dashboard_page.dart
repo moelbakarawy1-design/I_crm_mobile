@@ -26,8 +26,8 @@ class DashboardPage extends StatelessWidget {
       child: Column(
         children: [
           Container(
-            margin: const EdgeInsets.all(16),
-            padding: const EdgeInsets.all(16),
+            margin:  EdgeInsets.all(16.w),
+            padding:  EdgeInsets.all(16.w),
             decoration: BoxDecoration(
               color: AppColor.mainWhite,
               border: Border.all(color: Colors.grey.shade300),
@@ -49,19 +49,19 @@ class DashboardPage extends StatelessWidget {
                     ),
                     OutlinedButton.icon(
                       onPressed: () {},
-                      icon: const Icon(Icons.calendar_today_outlined, size: 16),
+                      icon:  Icon(Icons.calendar_today_outlined, ),
                       label: const Text('Weekly'),
                       style: OutlinedButton.styleFrom(
                         foregroundColor: Colors.black87,
                         side: BorderSide(color: Colors.grey.shade300),
                         padding:
-                            const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                             EdgeInsets.symmetric(horizontal: 10.w, vertical: 6.h),
                         textStyle: const TextStyle(fontSize: 13),
                       ),
                     ),
                   ],
                 ),
-                const SizedBox(height: 10),
+                 SizedBox(height: 10.h),
           
                 // Chart
                 SizedBox(

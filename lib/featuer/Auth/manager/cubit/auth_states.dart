@@ -111,3 +111,18 @@ class ResendOtpError extends AuthState {
   final String message;
   ResendOtpError({required this.message});
 }
+
+
+class NotAdminLogInInitial extends AuthState {}
+
+class NotAdminLogInLoading extends AuthState {}
+
+class NotAdminLogInSuccess extends AuthState {
+  final String message;
+  NotAdminLogInSuccess({required this.message});
+}
+
+class NotAdminLogInError extends AuthState {
+  final String message;
+  NotAdminLogInError({required this.message});
+}

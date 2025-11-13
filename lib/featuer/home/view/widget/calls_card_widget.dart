@@ -116,7 +116,7 @@ class _CallsTodayCardState extends State<CallsTodayCard>
 
                     // Vertical Divider
                     Container(
-                      width: 1,
+                      width: 1.w,
                       height: 70.h,
                       color: AppColor.grey.withOpacity(0.5),
                     ),

@@ -2,6 +2,7 @@ import 'package:admin_app/config/router/router_transation.dart';
 import 'package:admin_app/config/router/routes.dart';
 import 'package:admin_app/featuer/Auth/view/ChangePasswordView.dart';
 import 'package:admin_app/featuer/Auth/view/Log_In_view.dart';
+import 'package:admin_app/featuer/Auth/view/NotAdmin_view.dart';
 import 'package:admin_app/featuer/Auth/view/forget_password_view.dart';
 import 'package:admin_app/AppLink/test_case.dart';
 import 'package:admin_app/featuer/Auth/view/send_otp_view.dart';
@@ -109,7 +110,8 @@ class AppRouter {
         return RouterTransitions.buildFromBottom(ViewTaskDialog(
            task: task,
         ));
-
+        case Routes.notAdminView:
+        return RouterTransitions.buildFromBottom(NotAdminView());
       // ✅ --- FIX: Use the 'TaskModel' prefix ---
       case Routes.editTaskDialog:
         final task = settings.arguments as TaskModel.TaskSummary;
@@ -122,18 +124,16 @@ class AppRouter {
       case Routes.createChatScreen:
         return RouterTransitions.buildFromBottom(CreateChatScreen());
       default:
-        if (settings.name != null &&
-            settings.name!.startsWith('/') &&
-            settings.name!.length > 60) {
-          final String token = settings.name!.replaceFirst('/', '');
-          return RouterTransitions.buildFromBottom(
-              TokenHandlerPage(token: token));
-        }
-        return RouterTransitions.build(Scaffold(
-          body: Center(
-            child: Text("No Route"),
-          ),
-        ));
+  if (settings.name != null) {
+    final token = settings.arguments ?? settings.name!.replaceFirst('/', '');
+    return RouterTransitions.buildFromBottom(
+      TokenHandlerPage(token: token.toString()),
+    );
+  }
+  return RouterTransitions.build(
+    Scaffold(body: Center(child: Text("No Route"))),
+  );
+
     }
   }
 }

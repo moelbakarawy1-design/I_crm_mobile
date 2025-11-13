@@ -136,4 +136,13 @@ Future<void> resetPassword({
       emit(LogoutAllFailure(e.toString()));
     }
   }
+   Future<void> notAdminLogIn(String email) async {
+    emit(NotAdminLogInLoading());
+    try {
+      final response = await _authRepository.notAdminLogIn(email);
+      emit(NotAdminLogInSuccess(message: response.message));
+    } catch (e) {
+      emit(NotAdminLogInError(message: e.toString()));
+    }
+  }
 }

@@ -284,4 +284,19 @@ class AuthRepository {
   }
 }
 
+Future<LoginResponse> notAdminLogIn(String email) async {
+    final response = await _apiHelper.postRequest(
+      endPoint: EndPoints.notAdmin, 
+      data: {'email': email},
+      isFormData: false,
+      isAuthorized: false,
+    );
+
+    if (response.status && response.data != null) {
+      return LoginResponse.fromJson(response.data);
+    } else {
+      throw Exception(response.message );
+    }
+  }
+
 }

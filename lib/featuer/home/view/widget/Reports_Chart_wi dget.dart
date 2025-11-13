@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:syncfusion_flutter_charts/charts.dart';
 
 class ReportsAnalyticsChart extends StatelessWidget {
@@ -15,11 +16,13 @@ class ReportsAnalyticsChart extends StatelessWidget {
     ];
 
     return Container(
-      margin: const EdgeInsets.all(16),
-      padding: const EdgeInsets.all(12),
+      width: 394.w,
+      height: 360.h,
+      margin:  EdgeInsets.all(16.w),
+      padding:  EdgeInsets.all(12.w),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(12.r),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withOpacity(0.1),
@@ -45,16 +48,16 @@ class ReportsAnalyticsChart extends StatelessWidget {
               ),
               Container(
                 padding:
-                    const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                     EdgeInsets.symmetric(horizontal: 10.w, vertical: 10.h),
                 decoration: BoxDecoration(
                   border: Border.all(color: Colors.grey.shade300),
                   borderRadius: BorderRadius.circular(6),
                 ),
                 child: Row(
-                  children: const [
+                  children:  [
                     Icon(Icons.calendar_today_outlined,
                         size: 16, color: Colors.grey),
-                    SizedBox(width: 6),
+                    SizedBox(width: 6.w),
                     Text(
                       "Weekly",
                       style:
@@ -66,49 +69,51 @@ class ReportsAnalyticsChart extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 8),
-
+    
           // Chart
-          SfCartesianChart(
-            margin: EdgeInsets.zero,
-            plotAreaBorderWidth: 0,
-            primaryXAxis: CategoryAxis(
-              majorGridLines: const MajorGridLines(width: 0),
-            ),
-            primaryYAxis: NumericAxis(
-              minimum: 0,
-              maximum: 4000,
-              interval: 1000,
-              axisLine: const AxisLine(width: 0),
-              majorTickLines: const MajorTickLines(size: 0),
-            ),
-            series:[
-              // Total Customers
-              SplineAreaSeries<_SalesData, String>(
-                dataSource: data,
-                color: Colors.blue.withOpacity(0.15),
-                borderColor: Colors.blue.shade200,
-                borderWidth: 2,
-                xValueMapper: (_SalesData d, _) => d.month,
-                yValueMapper: (_SalesData d, _) => d.total,
-                name: 'Total Customers',
+          Expanded(
+            child: SfCartesianChart(
+              margin: EdgeInsets.zero,
+              plotAreaBorderWidth: 0,
+              primaryXAxis: CategoryAxis(
+                majorGridLines: const MajorGridLines(width: 0),
               ),
-              // New Customers
-              SplineAreaSeries<_SalesData, String>(
-                dataSource: data,
-                color: Colors.orange.withOpacity(0.15),
-                borderColor: Colors.orange,
-                borderWidth: 2,
-                xValueMapper: (_SalesData d, _) => d.month,
-                yValueMapper: (_SalesData d, _) => d.newCustomers,
-                name: 'New Customers',
+              primaryYAxis: NumericAxis(
+                minimum: 0,
+                maximum: 4000,
+                interval: 1000,
+                axisLine: const AxisLine(width: 0),
+                majorTickLines: const MajorTickLines(size: 0),
               ),
-            ],
-            legend: Legend(
-              isVisible: true,
-              position: LegendPosition.bottom,
-              iconHeight: 12,
-              iconWidth: 12,
-              textStyle: const TextStyle(fontSize: 12),
+              series:[
+                // Total Customers
+                SplineAreaSeries<_SalesData, String>(
+                  dataSource: data,
+                  color: Colors.blue.withOpacity(0.15),
+                  borderColor: Colors.blue.shade200,
+                  borderWidth: 2,
+                  xValueMapper: (_SalesData d, _) => d.month,
+                  yValueMapper: (_SalesData d, _) => d.total,
+                  name: 'Total Customers',
+                ),
+                // New Customers
+                SplineAreaSeries<_SalesData, String>(
+                  dataSource: data,
+                  color: Colors.orange.withOpacity(0.15),
+                  borderColor: Colors.orange,
+                  borderWidth: 2,
+                  xValueMapper: (_SalesData d, _) => d.month,
+                  yValueMapper: (_SalesData d, _) => d.newCustomers,
+                  name: 'New Customers',
+                ),
+              ],
+              legend: Legend(
+                isVisible: true,
+                position: LegendPosition.bottom,
+                iconHeight: 12,
+                iconWidth: 12,
+                textStyle: const TextStyle(fontSize: 12),
+              ),
             ),
           ),
         ],

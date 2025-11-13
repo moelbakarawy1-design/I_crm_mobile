@@ -31,10 +31,10 @@ class MyApp extends StatelessWidget {
     FlutterNativeSplash.remove();
     
     return ScreenUtilInit(
-   
+    designSize: Size(375, 812),
       minTextAdapt: true,
       splitScreenMode: true,
-      builder: (context, child) {
+      builder: (context, _) {
         return MultiBlocProvider(
           providers: [
             BlocProvider<AuthCubit>(

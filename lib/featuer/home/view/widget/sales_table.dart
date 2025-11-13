@@ -12,7 +12,7 @@ class SalesTable extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.all(8.0),
+      padding:  EdgeInsets.all(8.0.w),
       child: Container(
         width: 330.w,
         height: 100.h,
@@ -41,12 +41,12 @@ class SalesTable extends StatelessWidget {
 
   Widget _buildTableHeader() {
     return Container(
-      padding: EdgeInsets.symmetric(vertical: 16, horizontal: 20),
+      padding: EdgeInsets.symmetric(vertical: 16.h, horizontal: 20.w),
       decoration: BoxDecoration(
         color: AppColor.mainWhite,
         borderRadius: BorderRadius.only(
-          topLeft: Radius.circular(12),
-          topRight: Radius.circular(12),
+          topLeft: Radius.circular(12.r),
+          topRight: Radius.circular(12.r),
         ),
       ),
       child: Row(
@@ -73,7 +73,7 @@ class SalesTable extends StatelessWidget {
 
   Widget _buildTableRow(SalesPerson person) {
     return Container(
-      padding: EdgeInsets.symmetric(vertical: 20, horizontal: 20),
+      padding: EdgeInsets.symmetric(vertical: 12.h, horizontal: 16.w),
       decoration: BoxDecoration(
         border: Border(
           bottom: BorderSide(

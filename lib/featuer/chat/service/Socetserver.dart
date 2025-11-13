@@ -107,18 +107,23 @@ class SocketService {
 
   /// 🟡 Send message event
   Future<void> sendMessage(String chatId, String message) async {
-    if (!(socket?.connected ?? false)) {
-      print('⏳ Socket not connected, trying to reconnect...');
-      await connect();
+  if (!(socket?.connected ?? false)) {
+    print('⏳ Socket not connected, waiting to connect...');
+    final connected = await connect();
+    if (!connected) {
+      print('❌ Failed to connect socket. Message not sent.');
+      return;
     }
-
-    socket?.emit('send_message', {
-      'chatId': chatId,
-      'message': message,
-    });
-
-    print('📤 Message sent via socket → $message');
   }
+
+  socket?.emit('send_message', {
+    'chatId': chatId,
+    'message': message,
+  });
+
+  print('📤 Message sent via socket → $message');
+}
+
 
   /// 🟢 Listen for new message
   void onNewMessage(Function(dynamic) callback) {
