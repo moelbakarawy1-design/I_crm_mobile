@@ -87,6 +87,44 @@ class MessagesCubit extends Cubit<MessagesState> {
   }
 }
 
+  /// --- Send audio message ---
+  Future<void> sendAudioMessage(String chatId, String audioFilePath) async {
+    if (audioFilePath.trim().isEmpty) return;
+    
+    try {
+      print('🎤 Starting audio message send...');
+      
+      // 🔹 Send audio file
+      final newMsgData = await messagesRepository.sendAudioMessage(chatId, audioFilePath);
+      
+      print('📦 Response data: $newMsgData');
+      
+      // Parse the response - handle both nested and flat structures
+      final messageJson = newMsgData['data'] ?? newMsgData;
+      final newMessage = MessageData.fromJson(messageJson);
+
+      print('✅ Audio message created: ${newMessage.id}');
+
+      final exists = allMessages.any((msg) => msg.id == newMessage.id);
+      if (!exists) {
+        allMessages.add(newMessage);
+        print('✅ Message added to list');
+      }
+
+      // ✅ Send over socket
+      await socketService.sendMessage(chatId, 'Audio message');
+
+      // ✅ Then emit state (UI updates after socket emit)
+      emit(MessagesLoaded(List.from(allMessages)));
+      print('✅ State emitted with audio message');
+
+    } catch (e) {
+      print('❌ Audio message error: $e');
+      emit(MessagesError(e.toString()));
+      emit(MessagesLoaded(List.from(allMessages)));
+    }
+  }
+
 
 
   void listenForSocketEvents() {

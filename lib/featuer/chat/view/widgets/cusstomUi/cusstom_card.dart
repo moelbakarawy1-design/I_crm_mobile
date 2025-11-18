@@ -8,12 +8,13 @@ import 'package:intl/intl.dart';
 class CusstomCard extends StatelessWidget {
   final String name;
   final String message;
-  final String? time; 
+  final String? time;
   final String? profilePicUrl;
   final int unreadCount;
-  final String? messageStatus; 
+  final String? messageStatus;
   final VoidCallback? onTap;
   final VoidCallback? onDelete;
+  final String? assignedTo;
 
   const CusstomCard({
     super.key,
@@ -25,6 +26,7 @@ class CusstomCard extends StatelessWidget {
     this.messageStatus,
     this.onTap,
     this.onDelete,
+    this.assignedTo,
   });
 
   /// Helper to format timestamp like WhatsApp
@@ -38,14 +40,14 @@ class CusstomCard extends StatelessWidget {
       final date = DateTime(dateTime.year, dateTime.month, dateTime.day);
 
       if (date == today) {
-        return DateFormat.jm().format(dateTime); 
+        return DateFormat.jm().format(dateTime);
       } else if (date == yesterday) {
         return "Yesterday";
       } else {
-        return DateFormat('MM/dd/yyyy').format(dateTime); 
+        return DateFormat('MM/dd/yyyy').format(dateTime);
       }
     } catch (e) {
-      return ""; 
+      return "";
     }
   }
 
@@ -54,14 +56,14 @@ class CusstomCard extends StatelessWidget {
       return const SizedBox.shrink();
     }
 
-    IconData iconData = Icons.done; 
+    IconData iconData = Icons.done;
     Color iconColor = Colors.grey.shade600;
 
     if (messageStatus == 'delivered') {
       iconData = Icons.done_all;
     } else if (messageStatus == 'read') {
       iconData = Icons.done_all;
-      iconColor = AppColor.lightBlue; 
+      iconColor = AppColor.lightBlue;
     }
 
     return Padding(
@@ -72,14 +74,17 @@ class CusstomCard extends StatelessWidget {
 
   Widget _buildUnreadBadge(BuildContext context) {
     if (unreadCount <= 0) {
-      return SizedBox(height: 20.r);
+      // ✅ [THE FIX IS HERE]
+      // This was returning SizedBox(height: 20.r), causing the overflow.
+      // Returning SizedBox.shrink() removes the unnecessary spacer.
+      return const SizedBox.shrink();
     }
 
     return Container(
       width: 20.r,
       height: 20.r,
       decoration: BoxDecoration(
-        color: AppColor.lightBlue, 
+        color: AppColor.lightBlue,
         shape: BoxShape.circle,
       ),
       child: Center(
@@ -96,8 +101,15 @@ class CusstomCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+   
+
     final String displayTime = _formatTimestamp(time);
     final bool hasUnread = unreadCount > 0;
+    final bool isAssigned =
+        assignedTo != null && assignedTo != 'Unassigned';
+    final bool isAudioMessage = 
+    RegExp(r'^\d+$').hasMatch(message) ||
+    message.toLowerCase() == 'audio';    
 
     return ListTile(
       contentPadding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 4.h),
@@ -113,7 +125,7 @@ class CusstomCard extends StatelessWidget {
       title: Text(
         name,
         style: AppTextStyle.setpoppinsBlack(
-          fontSize: 12.sp, 
+          fontSize: 12.sp,
           fontWeight: FontWeight.w600,
         ),
       ),
@@ -121,26 +133,57 @@ class CusstomCard extends StatelessWidget {
         children: [
           _buildStatusIcon(context),
           Expanded(
-            child: Text(
-              message,
+  child: isAudioMessage
+      ? Row(
+          children: [
+            Icon(
+              Icons.mic,
+              size: 14.sp,
+              color: hasUnread ? AppColor.lightBlue : Colors.grey.shade600,
+            ),
+            SizedBox(width: 4.w),
+            Text(
+              'Audio message',
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
               style: AppTextStyle.setpoppinsTextStyle(
-                fontSize: 10.sp, 
+                fontSize: 10.sp,
                 fontWeight: hasUnread ? FontWeight.w700 : FontWeight.w500,
-                
-                color: hasUnread
-                    ? AppColor.lightBlue
-                    : Colors.grey.shade600,
+                color: hasUnread ? AppColor.lightBlue : Colors.grey.shade600,
               ),
             ),
+          ],
+        )
+      : Text(
+          message,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          style: AppTextStyle.setpoppinsTextStyle(
+            fontSize: 10.sp,
+            fontWeight: hasUnread ? FontWeight.w700 : FontWeight.w500,
+            color: hasUnread ? AppColor.lightBlue : Colors.grey.shade600,
           ),
+        ),
+)
+
         ],
       ),
       trailing: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         crossAxisAlignment: CrossAxisAlignment.end,
         children: [
+          // "Assigned To" text
+          if (isAssigned)
+            Text(
+              ' $assignedTo',
+              style: AppTextStyle.setpoppinsTextStyle(
+                fontSize: 11.sp,
+                fontWeight: FontWeight.w600,
+                color: Colors.green, 
+              ),
+            ),         
+          if (isAssigned) SizedBox(height: 5.h),
+          // Time
           Text(
             displayTime,
             style: AppTextStyle.setpoppinsTextStyle(
@@ -150,11 +193,13 @@ class CusstomCard extends StatelessWidget {
             ),
           ),
           SizedBox(height: 5.h),
+
+          // Unread badge
           _buildUnreadBadge(context),
         ],
       ),
       onTap: onTap,
-      onLongPress: onDelete, 
+      onLongPress: onDelete,
     );
   }
 }

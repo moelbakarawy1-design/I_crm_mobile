@@ -30,3 +30,12 @@ class MessagesError extends ChatState {
   final String error;
   MessagesError(this.error);
 }
+class ChatActionLoading extends ChatState {}
+class ChatActionSuccess extends ChatState {
+  final String message;
+  ChatActionSuccess(this.message);
+}
+class ChatActionError extends ChatState {
+  final String message;
+  ChatActionError(this.message);
+}

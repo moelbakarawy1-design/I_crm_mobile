@@ -6,6 +6,7 @@ import 'package:admin_app/core/network/local_data.dart';
 import 'package:admin_app/featuer/Auth/manager/cubit/auth_cubit.dart';
 import 'package:admin_app/featuer/Task/manager/task_cubit.dart';
 import 'package:admin_app/featuer/User/manager/user_cubit.dart';
+import 'package:admin_app/featuer/chat/manager/chat_cubit.dart';
 import 'package:admin_app/featuer/chat/manager/message_cubit.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -52,7 +53,9 @@ class MyApp extends StatelessWidget {
             BlocProvider<GetAllUserCubit>(
               create: (context) => getIt<GetAllUserCubit>(),
             ),
-       
+           BlocProvider<ChatCubit>(
+              create: (context) => getIt<ChatCubit>(),
+            ),
                       ],
           child: MaterialApp(
             onGenerateRoute: AppRouter().onGenerateRoute,

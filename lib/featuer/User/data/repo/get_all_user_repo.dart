@@ -26,4 +26,55 @@ class GetAllUserRepo {
       return ApiResponse.fromError(error);
     }
   }
+  Future<ApiResponse> updateUser({
+    required String userId,
+    required String name,
+    required String email,
+    required String roleId,
+  }) async {
+    try {
+      final body = {
+        "name": name,
+        "email": email,
+        "roleId": roleId,
+      };
+
+      // Assuming 'EndPoints.users' is "users"
+      final String endpoint = '${EndPoints.getAllUsers}/$userId'; 
+
+      final response = await apiHelper.patchRequest(
+        endPoint: endpoint,
+        isFormData: false,
+        data: body,
+      );
+
+      return ApiResponse(
+        status: response.status,
+        statusCode: response.statusCode,
+        data: response.data,
+        message: response.message,
+      );
+    } catch (error) {
+      return ApiResponse.fromError(error);
+    }
+  }
+  Future<ApiResponse> deleteUser(String userId) async {
+  try {
+    final String endpoint = '${EndPoints.getAllUsers}/$userId';
+
+    final response = await apiHelper.deleteRequest(
+      endPoint: endpoint,
+    );
+
+    return ApiResponse(
+      status: response.status,
+      statusCode: response.statusCode,
+      data: response.data,
+      message: response.message,
+    );
+  } catch (error) {
+    return ApiResponse.fromError(error);
+  }
+}
+
 }

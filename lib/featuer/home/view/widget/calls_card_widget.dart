@@ -55,7 +55,7 @@ class _CallsTodayCardState extends State<CallsTodayCard>
         position: _slideAnimation,
         child: Container(
           width: 330.w,
-          height: 163.h,
+         
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(12),
             color: AppColor.mainWhite,
@@ -82,7 +82,8 @@ class _CallsTodayCardState extends State<CallsTodayCard>
               SizedBox(height: 18.h),
 
               // Two sections
-              Expanded(
+              Flexible(
+                
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                   children: [

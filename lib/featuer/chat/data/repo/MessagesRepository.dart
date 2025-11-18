@@ -1,7 +1,9 @@
 import 'package:admin_app/core/network/api_helper.dart';
 import 'package:admin_app/core/network/api_endpoiont.dart';
-import 'package:admin_app/featuer/chat/data/model/ChatMessagesModel.dart'; // ✅ Make sure this path is correct
+import 'package:admin_app/featuer/chat/data/model/ChatMessagesModel.dart';
 import 'package:admin_app/core/network/api_response.dart';
+import 'dart:io';
+import 'package:dio/dio.dart';
 
 class MessagesRepository {
   final APIHelper _apiHelper = APIHelper();
@@ -31,6 +33,68 @@ class MessagesRepository {
       return response.data;
     } else {
       throw Exception(response.message);
+    }
+  }
+
+  Future<Map<String, dynamic>> sendAudioMessage(String chatId, String audioFilePath) async {
+    try {
+      // Verify file exists
+      final audioFile = File(audioFilePath);
+      if (!audioFile.existsSync()) {
+        throw Exception("Audio file not found: $audioFilePath");
+      }
+
+      print('📤 Sending audio file: $audioFilePath');
+
+      // Get original filename
+      String filename = audioFile.path.split('/').last;
+      
+      print('📝 Filename: $filename');
+
+      // Determine MIME type based on file extension
+      String mimeType = 'audio/wav';
+      if (filename.endsWith('.wav')) {
+        mimeType = 'audio/wav';
+      } else if (filename.endsWith('.m4a')) {
+        mimeType = 'audio/mp4';
+      } else if (filename.endsWith('.mp4')) {
+        mimeType = 'audio/mp4';
+      } else if (filename.endsWith('.ogg')) {
+        mimeType = 'audio/ogg';
+      } else if (filename.endsWith('.opus')) {
+        mimeType = 'audio/opus';
+      } else if (filename.endsWith('.webm')) {
+        mimeType = 'audio/webm';
+      }
+
+     
+
+      final data = {
+        'file': await MultipartFile.fromFile(
+          audioFilePath,
+          filename: filename,
+          contentType: DioMediaType.parse(mimeType),
+        ),
+        'type': 'audio',
+      };
+
+      print('📝 Form data fields: file (audio: $filename, mimeType: $mimeType), type=audio');
+
+      final ApiResponse response = await _apiHelper.postRequest(
+        endPoint: '${EndPoints.getAllChat}/$chatId/messages',
+        isFormData: true,
+        data: data,
+      );
+
+      if (response.status) {
+        print('✅ Audio message sent successfully');
+        return response.data;
+      } else {
+        throw Exception(response.message);
+      }
+    } catch (e) {
+      print('❌ Error sending audio message: $e');
+      throw Exception("Failed to send audio: $e");
     }
   }
 

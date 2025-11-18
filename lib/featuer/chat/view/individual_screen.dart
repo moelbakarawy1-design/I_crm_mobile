@@ -4,14 +4,18 @@ import 'package:admin_app/core/theme/app_text_style.dart';
 import 'package:admin_app/featuer/chat/data/model/chat_model12.dart';
 import 'package:admin_app/featuer/chat/data/repo/MessagesRepository.dart';
 import 'package:admin_app/featuer/chat/manager/message_cubit.dart';
+import 'package:admin_app/featuer/chat/view/widgets/chat_inputField_widget.dart';
+import 'package:admin_app/featuer/chat/view/widgets/helper/Audio_messaging%20_helper.dart';
+import 'package:admin_app/featuer/chat/view/widgets/helper/Show_option_helper.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 
 class IndividualScreen extends StatefulWidget {
   final Data chatModel;
-
-  const IndividualScreen({super.key, required this.chatModel});
+  
+  const IndividualScreen({super.key, required this.chatModel,});
 
   @override
   State<IndividualScreen> createState() => _IndividualScreenState();
@@ -40,6 +44,11 @@ class _IndividualScreenState extends State<IndividualScreen> {
       child: Scaffold(
         backgroundColor: const Color(0xffECE5DD),
         appBar: AppBar(
+          actions: [
+           IconButton(onPressed: (){
+            showChatOptions(context, widget.chatModel.id??'');
+           }, icon:SvgPicture.asset('assets/svg/setting-2.svg',width: 30.w,height: 30.h,fit: BoxFit.scaleDown,  color: AppColor.mainWhite,))
+          ],
           leading: IconButton(
             onPressed: () => Navigator.pop(context),
             icon: const Icon(Icons.arrow_back_ios),
@@ -142,29 +151,18 @@ class _IndividualScreenState extends State<IndividualScreen> {
       ? CrossAxisAlignment.end
       : CrossAxisAlignment.start,
   children: [
-    // 👤 Sender name
+    //  Sender name
     Text(
       msg.from ?? (isMe ? "You" : "Customer"),
       style: AppTextStyle.setpoppinsTextStyle(
         fontSize: 10,
         fontWeight: FontWeight.w600, color: AppColor.secondaryBlack,
-        
       ),
     ),
-
     const SizedBox(height: 3),
-
     //  Message content
-    Text(
-      msg.content ?? '',
-      style: AppTextStyle.setpoppinsBlack(
-        fontSize: 11,
-        fontWeight: FontWeight.w400,
-      ),
-    ),
-
+    buildMessageContent(msg),
     const SizedBox(height: 4),
-
     //  Time + status row
     Row(
       mainAxisSize: MainAxisSize.min,
@@ -197,7 +195,6 @@ class _IndividualScreenState extends State<IndividualScreen> {
     ),
   ],
 ),
-
                             ),
                           );
                         },
@@ -210,66 +207,20 @@ class _IndividualScreenState extends State<IndividualScreen> {
                   },
                 ),
               ),
-
-              // Message Input 
-              Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
-                color: Colors.white,
-                child: SafeArea(
-                  child: Row(
-                    children: [
-                      IconButton(
-                        icon: const Icon(Icons.emoji_emotions_outlined,
-                            color: Colors.grey),
-                        onPressed: () {},
-                      ),
-                      Expanded(
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 15),
-                          decoration: BoxDecoration(
-                            color: Colors.grey[200],
-                            borderRadius: BorderRadius.circular(25),
-                          ),
-                          child: TextField(
-                            controller: _messageController,
-                            decoration: InputDecoration(
-                                hintText: "Type a message",
-                                border: InputBorder.none,
-                                labelStyle: AppTextStyle.setpoppinsBlack(
-                                    fontSize: 10, fontWeight: FontWeight.w500)),
-                            style: AppTextStyle.setpoppinsBlack(
-                                fontSize: 10, fontWeight: FontWeight.w600),
-                          ),
-                        ),
-                      ),
-                      Row(
-
-                        children:[
-                              IconButton(                       
-                          icon: const Icon(Icons.camera_alt, color: Color(0xff075E54)),
-                          onPressed: () {
-                          Navigator.pushNamed(context, Routes.cameraPage);
-                          },
-                        ),
-                        SizedBox(width: 6.w,),
-                          IconButton(                       
-                          icon: const Icon(Icons.send, color: Color(0xff075E54)),
-                          onPressed: () {
-                            final msg = _messageController.text.trim();
-                            if (msg.isNotEmpty) {
-                              context
-                                  .read<MessagesCubit>()
-                                  .sendMessage(widget.chatModel.id ?? '', msg);
-                              _messageController.clear();
-                            }
-                          },
-                        ),] 
-                      ),
-                    ],
-                  ),
-                ),
-              ),
+             ChatInputField(
+             onSendText: (msg) {
+             context.read<MessagesCubit>()
+             .sendMessage(widget.chatModel.id ?? '', msg);
+                       },
+                      
+                       onUploadFile: () { },
+                       onOpenCamera: () {
+                         Navigator.pushNamed(context, Routes.cameraPage);
+                       }, onSendAudio: (String filePath) {
+                         context.read<MessagesCubit>()
+                           .sendAudioMessage(widget.chatModel.id ?? '', filePath);
+                       },
+                     ),
             ],
           ),
         ),
@@ -285,6 +236,8 @@ class _IndividualScreenState extends State<IndividualScreen> {
         return 'DELIVERED ✓✓';
       case 'READ':
         return 'Seen ✓✓';
+      case 'FAILED':
+        return 'FAILED ✗';
       default:
         return status;
     }
@@ -298,6 +251,8 @@ class _IndividualScreenState extends State<IndividualScreen> {
         return Colors.blueGrey;
       case 'READ':
         return Colors.blue;
+      case 'FAILED':
+        return Colors.red;
       default:
         return Colors.grey;
     }

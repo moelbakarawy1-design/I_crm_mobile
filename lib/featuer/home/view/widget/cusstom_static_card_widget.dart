@@ -20,7 +20,7 @@ class StatisticCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       width: 330.w,
-      height: 150.h,
+      height: 180.h,
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(12.r),
@@ -32,7 +32,7 @@ class StatisticCard extends StatelessWidget {
           ),
         ],
       ),
-      padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
+      padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 6.h),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [

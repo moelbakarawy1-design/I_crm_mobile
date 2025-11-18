@@ -1,7 +1,6 @@
 import 'package:admin_app/core/theme/app_color.dart';
 import 'package:admin_app/featuer/home/data/model/sales_data.dart';
 import 'package:admin_app/featuer/home/view/widget/Reports_Chart_wi%20dget.dart';
-import 'package:admin_app/featuer/home/view/widget/calls_card_widget.dart';
 import 'package:admin_app/featuer/home/view/widget/cusstom_static_card_widget.dart';
 import 'package:admin_app/featuer/home/view/widget/sales_table.dart';
 import 'package:flutter/material.dart';
@@ -143,9 +142,7 @@ class DashboardPage extends StatelessWidget {
           SingleChildScrollView(child: SizedBox(
             height: 250.h,
             child: SalesTable(salesData:salesData ,))),
-         SizedBox(
-          height: 200.h,
-          child: CallsTodayCard()),
+         
           SizedBox(height: 15.h,),
           StatisticCard(title: 'Total Customers', value: '+2000', iconPath: 'assets/svg/Icon_cusstomer.svg',),
            SizedBox(height: 15.h,),

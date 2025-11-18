@@ -153,7 +153,37 @@ class ChatCubit extends Cubit<ChatState> {
       print("⚠️ Error updating message status: $e");
     }
   }
+// ✅ [NEW] Assign chat function
+  Future<void> assignChat(String chatId, String userId) async {
+    emit(ChatActionLoading()); // Show modal spinner
+    try {
+      final response = await chatRepository.assignChat(chatId, userId);
+      if (response.status == true) {
+        emit(ChatActionSuccess(response.message ));
+        await fetchAllChats(); // Refresh the list
+      } else {
+        emit(ChatActionError(response.message)); // Show error snackbar
+      }
+    } catch (e) {
+      emit(ChatActionError(e.toString()));
+    }
+  }
 
+  // ✅ [NEW] Rename chat function
+  Future<void> renameChat(String chatId, String newName) async {
+    emit(ChatActionLoading()); // Show modal spinner
+    try {
+      final response = await chatRepository.renameChat(chatId, newName);
+      if (response.status == true) {
+        emit(ChatActionSuccess(response.message ));
+        await fetchAllChats(); // Refresh the list to show new name
+      } else {
+        emit(ChatActionError(response.message)); // Show error snackbar
+      }
+    } catch (e) {
+      emit(ChatActionError(e.toString()));
+    }
+  }
   @override
   Future<void> close() {
     socketService.disconnect();

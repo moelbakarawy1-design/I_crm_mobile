@@ -16,6 +16,7 @@ class SplashScreen extends StatefulWidget {
 
 class _SplashScreenState extends State<SplashScreen> {
   double _opacity = 0.0;
+  Offset _offset = const Offset(0, 0.5);
   bool _deepLinkHandled = false;
 
   @override
@@ -24,7 +25,10 @@ class _SplashScreenState extends State<SplashScreen> {
     
     Timer(const Duration(milliseconds: 300), () {
       if (mounted) {
-        setState(() => _opacity = 1.0);
+        setState(() {
+          _offset = Offset.zero;
+          _opacity = 1.0;
+        });
       }
     });
 
@@ -110,20 +114,25 @@ Future<void> _checkLoginStatus() async {
           opacity: _opacity,
           duration: const Duration(seconds: 1),
           curve: Curves.easeInOut,
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Image.asset(
-                AppAssetsUtils.mainLogo,
-                width: 200.w,
-                height: 200.h,
-                fit: BoxFit.contain,
-              ),
-      
-            ],
+          // 3. WRAP your Column with AnimatedSlide
+          child: AnimatedSlide(
+            offset: _offset,
+            duration: const Duration(seconds: 1),
+            curve: Curves.easeOutCubic, // A nice curve for motion
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Image.asset(
+                  AppAssetsUtils.mainLogo,
+                  width: 200.w,
+                  height: 200.h,
+                  fit: BoxFit.contain,
+                ),
+              ],
+            ),
           ),
         ),
       ),
-    );
+    ); 
   }
 }

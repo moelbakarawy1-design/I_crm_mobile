@@ -1,10 +1,10 @@
 import 'dart:async';
+import 'package:admin_app/core/network/local_data.dart';
 import 'package:admin_app/core/theme/app_text_style.dart';
 import 'package:flutter/material.dart';
 import 'package:app_links/app_links.dart';
 import 'package:dio/dio.dart';
 import 'package:admin_app/config/router/routes.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 // DeepLinkHandler
 class DeepLinkHandler {
@@ -112,54 +112,51 @@ class _TokenHandlerPageState extends State<TokenHandlerPage> {
 
   @override
   void initState() {
-    super.initState();   
+    super.initState();
     if (widget.token.isEmpty) {
       setState(() {
         _message = "Invalid invite link - no token provided";
         _loading = false;
       });
-      return;
-    }else{
-   _verifyToken(widget.token);
+    } else {
+      _verifyToken(widget.token);
     }
-    
-    
   }
 
-  /// ✅ Verify unique token with backend
   Future<void> _verifyToken(String token) async {
     try {
-      final url = 'http://192.168.1.88:5000/api/auth/login/$token';   
+      final url = 'http://192.168.1.88:5000/api/auth/login/$token';
       final response = await Dio().get(
         url,
-        options: Options(
-          validateStatus: (status) => status! < 500,
-        ),
+        options: Options(validateStatus: (status) => status! < 500),
       );
+
       if (response.statusCode == 200) {
         final data = response.data;
-        final role = data['user']?['role']?['name']?.toString().toLowerCase() ?? '';
-        final jwt = data['token'];
-        final userName = data['user']?['name'] ?? 'User';
-       final prefs = await SharedPreferences.getInstance();
-        await prefs.setString('auth_token', jwt ?? '');
-        await prefs.setString('user_role', role);
-        await prefs.setString('user_name', userName);
+        final jwt = data['token'] ?? '';
+        final user = data['user'] ?? {};
+        final role = user['role']?['name'] ?? '';
+        final userName = user['name'] ?? 'User';
+        final userId = user['id']?.toString() ?? '';
+        final userEmail = user['email'] ?? '';
+
+        // Save securely
+        await LocalData.saveTokens(accessToken: jwt);
+        await LocalData.saveUserData(
+          userId: userId,
+          userName: userName,
+          userEmail: userEmail,
+          userRole: role,
+        );
 
         if (!mounted) return;
-        
         setState(() => _message = "Welcome, $userName! Redirecting...");
-        await Future.delayed(const Duration(seconds: 1));
 
+        await Future.delayed(const Duration(seconds: 1));
         if (!mounted) return;
 
-        switch (role) {
-          case 'admin':
-            Navigator.pushReplacementNamed(context, Routes.home);
-            break;
-          default:
-            Navigator.pushReplacementNamed(context, Routes.home);
-        }
+        // Navigate based on role
+        Navigator.pushReplacementNamed(context, Routes.home);
       } else {
         if (!mounted) return;
         setState(() {
@@ -167,17 +164,15 @@ class _TokenHandlerPageState extends State<TokenHandlerPage> {
           _loading = false;
         });
       }
-    } catch (e) {     
+    } catch (e) {
       if (!mounted) return;
       setState(() {
         _message = "Error verifying invite. Please try again.";
         _loading = false;
       });
-      
+
       Future.delayed(const Duration(seconds: 2), () {
-        if (mounted) {
-          Navigator.pushReplacementNamed(context, Routes.logInView);
-        }
+        if (mounted) Navigator.pushReplacementNamed(context, Routes.logInView);
       });
     }
   }
@@ -194,19 +189,9 @@ class _TokenHandlerPageState extends State<TokenHandlerPage> {
                   const SizedBox(height: 24),
                   Text(
                     _message,
-                    style: const TextStyle(fontSize: 16),
+                    style: AppTextStyle.setpoppinsBlack(fontSize: 16, fontWeight: FontWeight.w600),
                     textAlign: TextAlign.center,
                   ),
-                  const SizedBox(height: 16),
-                  if (widget.token.isNotEmpty)
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 32),
-                      child: Text(
-                        'Verifying your invite...',
-                        style: AppTextStyle.setpoppinsBlack(fontSize: 16, fontWeight: FontWeight.w600),
-                        textAlign: TextAlign.center,
-                      ),
-                    ),
                 ],
               )
             : Column(
@@ -222,7 +207,7 @@ class _TokenHandlerPageState extends State<TokenHandlerPage> {
                     padding: const EdgeInsets.symmetric(horizontal: 32),
                     child: Text(
                       _message,
-                      style: const TextStyle(fontSize: 16),
+                      style: AppTextStyle.setpoppinsBlack(fontSize: 16, fontWeight: FontWeight.w600),
                       textAlign: TextAlign.center,
                     ),
                   ),

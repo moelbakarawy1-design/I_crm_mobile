@@ -24,7 +24,7 @@ class _DrawerMenuState extends State<DrawerMenu> {
     final bool isSelected = selectedItem == title;
 
     return Padding(
-      padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 8.h),
+      padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 6.h),
       child: InkWell(
         borderRadius: BorderRadius.circular(12.r),
         onTap: () {
@@ -32,7 +32,7 @@ class _DrawerMenuState extends State<DrawerMenu> {
           onTap();
         },
         child: Container(
-          width: 273.w,
+          width: double.infinity,
           height: 50.h,
           decoration: BoxDecoration(
             color: isSelected ? AppColor.mainBlue : Colors.white,
@@ -54,9 +54,15 @@ class _DrawerMenuState extends State<DrawerMenu> {
                 ),
               ),
               SizedBox(width: 12.w),
-              Text(
-                title,
-                style: AppTextStyle.setpoppinsTextStyle(fontSize: 12, fontWeight: FontWeight.w400,  color: isSelected ? AppColor.primaryWhite : AppColor.mainBlue,)
+              Flexible(
+                child: Text(
+                  title,
+                  style: AppTextStyle.setpoppinsTextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w400,
+                    color: isSelected ? AppColor.primaryWhite : AppColor.mainBlue,
+                  ),
+                ),
               ),
             ],
           ),
@@ -70,8 +76,8 @@ class _DrawerMenuState extends State<DrawerMenu> {
     return Drawer(
       backgroundColor: AppColor.mainWhite,
       child: SafeArea(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+        child: ListView(
+          padding: EdgeInsets.zero,
           children: [
             DrawerHeader(
               child: Image.asset(
@@ -81,15 +87,7 @@ class _DrawerMenuState extends State<DrawerMenu> {
                 fit: BoxFit.scaleDown,
               ),
             ),
-
-            /// Menu Items
-            // buildMenuItem(
-            //   title: 'Dashboard',
-            //   iconPath: 'assets/svg/Home.svg',
-            //   onTap: () {
-            //     // Navigate to dashboard
-            //   },
-            // ),
+            // Menu Items
             buildMenuItem(
               title: 'WhatsApp',
               iconPath: 'assets/svg/watsapp.svg',
@@ -98,9 +96,11 @@ class _DrawerMenuState extends State<DrawerMenu> {
               },
             ),
             buildMenuItem(
-              title: 'Customers',
+              title: 'Users',
               iconPath: 'assets/svg/profile.svg',
-              onTap: () {},
+              onTap: () {
+                Navigator.pushNamed(context, Routes.allUsersScreen);
+              },
             ),
             buildMenuItem(
               title: 'Access Control',
@@ -113,7 +113,7 @@ class _DrawerMenuState extends State<DrawerMenu> {
               title: 'Tasks',
               iconPath: 'assets/svg/task Store.svg',
               onTap: () {
-            Navigator.pushNamed(context, Routes.tasksScreen);
+                Navigator.pushNamed(context, Routes.tasksScreen);
               },
             ),
             buildMenuItem(
@@ -123,18 +123,15 @@ class _DrawerMenuState extends State<DrawerMenu> {
                 Navigator.pushNamed(context, Routes.rolesPage);
               },
             ),
-           
-
-            const Spacer(),
- buildMenuItem(
+            const SizedBox(height: 20),
+            // Settings at bottom
+            buildMenuItem(
               title: 'Setting',
               iconPath: 'assets/svg/setting-2.svg',
               onTap: () {
                 Navigator.pushNamed(context, Routes.settingsPage);
               },
             ),
-           
-
             SizedBox(height: 20.h),
           ],
         ),

@@ -18,4 +18,38 @@ class GetAllUserCubit extends Cubit<GetAllUserState> {
       emit(GetAllUserFailure(response.message));
     }
   }
+  Future<void> updateUser({
+    required String userId,
+    required String name,
+    required String email,
+    required String roleId,
+  }) async {
+    emit(UserUpdateLoading()); // Emit the update loading state
+
+    final response = await getAllUserRepo.updateUser(
+      userId: userId,
+      name: name,
+      email: email,
+      roleId: roleId,
+    );
+
+    if (response.status) {
+      emit(UserUpdateSuccess(response.message ));
+    } else {
+      emit(UserUpdateFailure(response.message ));
+    }
+  }
+  Future<void> deleteUser(String userId) async {
+  emit(UserDeleteLoading());
+
+  final response = await getAllUserRepo.deleteUser(userId);
+
+  if (response.status) {
+    emit(UserDeleteSuccess(response.message));
+    fetchAllUsers(); // refresh list
+  } else {
+    emit(UserDeleteFailure(response.message));
+  }
+}
+
 }

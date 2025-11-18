@@ -28,6 +28,8 @@ class MessageData {
   String? from;
   String? to;
   String? status;
+  String? type;
+  
 
   MessageData({
     this.id,
@@ -40,6 +42,7 @@ class MessageData {
     this.from,
     this.to,
     this.status,
+    this.type
   });
 
   MessageData.fromJson(Map<String, dynamic> json) {
@@ -53,5 +56,6 @@ class MessageData {
     from = json['from'];
     to = json['to'];
     status = json['status'];
+    type = json['type'];
   }
 }

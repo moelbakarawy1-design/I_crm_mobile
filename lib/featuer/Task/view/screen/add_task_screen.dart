@@ -2,14 +2,11 @@ import 'package:admin_app/core/widgets/CustomAppBar_widget.dart';
 import 'package:admin_app/core/widgets/cusstom_btn_widget.dart';
 import 'package:admin_app/core/widgets/custom_textField_widget.dart';
 import 'package:admin_app/core/theme/app_text_style.dart';
-import 'package:admin_app/featuer/Auth/manager/cubit/auth_cubit.dart';
-import 'package:admin_app/featuer/Auth/manager/cubit/auth_states.dart';
 import 'package:admin_app/featuer/Task/manager/task_cubit.dart';
 import 'package:admin_app/featuer/Task/manager/task_state.dart';
 import 'package:admin_app/featuer/Task/view/widget/assign_user_dropdown.dart';
 import 'package:admin_app/featuer/User/manager/user_cubit.dart';
 import 'package:admin_app/featuer/User/manager/user_state.dart';
-import 'package:admin_app/featuer/role/helper/enum_permission.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -68,21 +65,6 @@ class _AddTaskDialogState extends State<AddTaskDialog> {
 
 
  void _handleAddTask() {
-  final currentUser = AuthCubit.get(context).state is LoginSuccess
-      ? (AuthCubit.get(context).state as LoginSuccess).user
-      : null;
-
-  if (currentUser == null) return;
-
-  if (!currentUser.hasPermission(Permission.CREATE_TASK)) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('You do not have permission to create tasks'),
-        backgroundColor: Colors.red,
-      ),
-    );
-    return;
-  }
 
   if (_formKey.currentState!.validate()) {
     if (_deadline == null) {

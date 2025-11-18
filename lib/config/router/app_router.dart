@@ -11,10 +11,12 @@ import 'package:admin_app/featuer/Task/view/screen/add_task_screen.dart';
 import 'package:admin_app/featuer/Task/view/screen/edit_task_dialog.dart';
 import 'package:admin_app/featuer/Task/view/screen/view_task_dialog.dart';
 import 'package:admin_app/featuer/Task/view/task_screen_view.dart';
+import 'package:admin_app/featuer/User/view/get_All_user_view.dart';
 import 'package:admin_app/featuer/chat/view/pages/camera_page.dart';
 import 'package:admin_app/featuer/getAllRole/data/model/role_model.dart';
 import 'package:admin_app/featuer/getAllRole/data/repo/invitation_repository.dart';
 import 'package:admin_app/featuer/getAllRole/manager/role_cubit.dart';
+import 'package:admin_app/featuer/getAllRole/view/screens/AddController_screen.dart';
 import 'package:admin_app/featuer/home/view/home_Email_view.dart';
 import 'package:admin_app/featuer/getAllRole/view/invitation_page.dart';
 import 'package:admin_app/featuer/home/view/pages/Dashboard_page.dart';
@@ -79,6 +81,8 @@ class AppRouter {
         return RouterTransitions.buildFromBottom(EditRolePage(
           role: role,
         ));
+case Routes.addControllerPage:
+return RouterTransitions.buildFromBottom(AddControllerPage());
 
       case Routes.dashboard:
         return RouterTransitions.buildFromBottom(DashboardPage());
@@ -100,7 +104,8 @@ class AppRouter {
             chatModel: chatModel,
           ),
         );
-
+           case Routes.allUsersScreen:
+        return RouterTransitions.buildFromBottom(AllUsersScreen());
       case Routes.tasksScreen:
         return RouterTransitions.buildFromBottom(TasksScreen());
 

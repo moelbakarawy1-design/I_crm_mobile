@@ -2,7 +2,8 @@
     <application
         android:label="I_CRM"
         android:name="${applicationName}"
-        android:icon="@mipmap/ic_launcher">
+        android:icon="@mipmap/ic_launcher"
+        android:usesCleartextTraffic="true">
 
         <activity
             android:name=".MainActivity"
@@ -42,6 +43,7 @@
             android:value="2" />
     </application>
      <uses-permission android:name="android.permission.CAMERA" />
+     <uses-permission android:name="android.permission.RECORD_AUDIO" />
     <!-- Required for package visibility -->
     <queries>
         <intent>

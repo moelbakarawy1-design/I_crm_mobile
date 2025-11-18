@@ -49,7 +49,8 @@ class CahtPage extends StatelessWidget {
                     final String? messageTime =
                         lastMsg?.timestamp ?? chat.createdAt;
 
-                    
+                    final String assignedToName =
+                        chat.user?.name ?? 'Unassigned'; 
                     final int unreadCount = (chat.id.hashCode % 4 == 0)
                         ? (chat.id.hashCode % 3) + 1
                         : 0; 
@@ -59,18 +60,18 @@ class CahtPage extends StatelessWidget {
                         : (chat.id.hashCode % 3 == 0
                             ? 'read'
                             : 'delivered'); 
-
                     return CusstomCard(
                       name: chat.customer?.name ?? 'Unknown',
-                      message: messageContent,
+                      assignedTo: assignedToName, 
+                      message: lastMsg?.content == "AUDIO" ? "audio" : messageContent,
                       time: messageTime,
-                      unreadCount: unreadCount,
+                      // unreadCount: unreadCount,
                       messageStatus: messageStatus,
                       onTap: () {
                         Navigator.pushNamed(
                           context,
                           Routes.individualScreen,
-                          arguments: chat,
+                          arguments: chat, 
                         );
                       },
                       onDelete: () {

@@ -36,17 +36,17 @@ class SocketService {
         socket = null;
       }
 
-      socket = IO.io(
-        EndPoints.socketUrl,
-        IO.OptionBuilder()
-            .setTransports(['websocket'])
-             .disableAutoConnect()
-            .enableReconnection()
-            .setReconnectionAttempts(3)
-            .setAuth({'token': token})
-            .setExtraHeaders({'Authorization': 'Bearer $token'})
-            .build(),
-      );
+     socket = IO.io(
+  EndPoints.socketUrl,
+  IO.OptionBuilder()
+      .setTransports(['websocket'])
+      .disableAutoConnect()
+      .enableReconnection()
+      .setReconnectionAttempts(3)
+      .setAuth({'token': token})  
+      .build(),
+);
+
 
       // ✅ Listeners
       socket!.onConnect((_) {

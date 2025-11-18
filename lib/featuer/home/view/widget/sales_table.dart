@@ -41,7 +41,7 @@ class SalesTable extends StatelessWidget {
 
   Widget _buildTableHeader() {
     return Container(
-      padding: EdgeInsets.symmetric(vertical: 16.h, horizontal: 20.w),
+      padding: EdgeInsets.symmetric(vertical: 8.h, horizontal: 20.w),
       decoration: BoxDecoration(
         color: AppColor.mainWhite,
         borderRadius: BorderRadius.only(

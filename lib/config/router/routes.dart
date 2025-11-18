@@ -25,4 +25,6 @@ class Routes {
     static const String  salsedashboard ='/Salsedashboard';
     static const String  cameraPage ='/CameraPage';
     static const String  notAdminView ='/NotAdminView';
+    static const String allUsersScreen = '/AllUsersScreen';
+    static const String addControllerPage = '/AddControllerPage';
 }
