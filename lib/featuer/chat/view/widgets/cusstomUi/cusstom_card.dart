@@ -72,32 +72,6 @@ class CusstomCard extends StatelessWidget {
     );
   }
 
-  Widget _buildUnreadBadge(BuildContext context) {
-    if (unreadCount <= 0) {
-      // ✅ [THE FIX IS HERE]
-      // This was returning SizedBox(height: 20.r), causing the overflow.
-      // Returning SizedBox.shrink() removes the unnecessary spacer.
-      return const SizedBox.shrink();
-    }
-
-    return Container(
-      width: 20.r,
-      height: 20.r,
-      decoration: BoxDecoration(
-        color: AppColor.lightBlue,
-        shape: BoxShape.circle,
-      ),
-      child: Center(
-        child: Text(
-          '$unreadCount',
-          style: AppTextStyle.setpoppinsWhite(
-            fontSize: 10.sp,
-            fontWeight: FontWeight.w700,
-          ),
-        ),
-      ),
-    );
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -192,10 +166,8 @@ class CusstomCard extends StatelessWidget {
               color: hasUnread ? AppColor.lightBlue : Colors.grey.shade600,
             ),
           ),
-          SizedBox(height: 5.h),
 
-          // Unread badge
-          _buildUnreadBadge(context),
+        
         ],
       ),
       onTap: onTap,

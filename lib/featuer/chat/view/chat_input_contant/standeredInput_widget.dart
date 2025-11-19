@@ -1,4 +1,4 @@
-import 'package:admin_app/featuer/chat/view/widgets/chat_inputField_widget.dart';
+import 'package:admin_app/featuer/chat/view/chat_input_contant/chat_inputField_widget.dart';
 import 'package:flutter/material.dart';
 
 class StandardInputInterface extends StatelessWidget {
@@ -67,7 +67,7 @@ class StandardInputInterface extends StatelessWidget {
                 GestureDetector(
                   onLongPress: onRecordStart,
                   onLongPressUp: onRecordEnd,
-                  onTap: onRecordStart, // Optional: Tap to start recording toggle
+                  onTap: onRecordStart, 
                   child: const Padding(
                     padding: EdgeInsets.symmetric(horizontal: 8),
                     child: Icon(Icons.mic, color: kPrimaryColor),

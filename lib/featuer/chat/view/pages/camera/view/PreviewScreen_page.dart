@@ -22,15 +22,11 @@ class _PreviewScreenState extends State<PreviewScreen> {
   }
 
   void _sendImage() {
-    final String caption = _captionController.text;
-    print('Sending image: ${widget.imagePath} with caption: "$caption"');
-
-    
-   // context.read<ChatCubit>().sendImage(widget.imagePath, caption);
-   
-    Navigator.of(context)
-      ..pop()
-      ..pop();
+    final String caption = _captionController.text.trim();
+    Navigator.of(context).pop({
+      'imagePath': widget.imagePath,
+      'caption': caption,
+    });
   }
 
   @override
@@ -48,20 +44,12 @@ class _PreviewScreenState extends State<PreviewScreen> {
       body: Stack(
         fit: StackFit.expand,
         children: [
-          // The Image
           Center(
-            child: Image.file(
-              File(widget.imagePath),
-              fit: BoxFit.contain,
-            ),
+            child: Image.file(File(widget.imagePath), fit: BoxFit.contain),
           ),
-
           Positioned(
-            bottom: 0,
-            left: 0,
-            right: 0,
+            bottom: 0, left: 0, right: 0,
             child: Container(
-              // ignore: deprecated_member_use
               color: Colors.black.withOpacity(0.5),
               padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 10.h),
               child: Row(
@@ -69,7 +57,6 @@ class _PreviewScreenState extends State<PreviewScreen> {
                   Expanded(
                     child: Container(
                       decoration: BoxDecoration(
-                        // ignore: deprecated_member_use
                         color: Colors.white.withOpacity(0.2),
                         borderRadius: BorderRadius.circular(30.r),
                       ),
@@ -78,24 +65,17 @@ class _PreviewScreenState extends State<PreviewScreen> {
                         style: TextStyle(color: Colors.white, fontSize: 16.sp),
                         decoration: InputDecoration(
                           hintText: 'Add a caption...',
-                          hintStyle: TextStyle(
-                            color: Colors.white70,
-                            fontSize: 16.sp,
-                          ),
+                          hintStyle: TextStyle(color: Colors.white70, fontSize: 16.sp),
                           border: InputBorder.none,
-                          contentPadding: EdgeInsets.symmetric(
-                            horizontal: 20.w,
-                            vertical: 14.h,
-                          ),
+                          contentPadding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 14.h),
                         ),
-                        maxLines: null, 
                       ),
                     ),
                   ),
                   SizedBox(width: 10.w),
                   FloatingActionButton(
                     backgroundColor: AppColor.lightBlue,
-                    onPressed: _sendImage,
+                    onPressed: _sendImage, // Calls the function above
                     child: Icon(Icons.send, color: AppColor.mainWhite),
                   ),
                 ],

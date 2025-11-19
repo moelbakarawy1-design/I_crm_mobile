@@ -12,7 +12,7 @@ import 'package:admin_app/featuer/Task/view/screen/edit_task_dialog.dart';
 import 'package:admin_app/featuer/Task/view/screen/view_task_dialog.dart';
 import 'package:admin_app/featuer/Task/view/task_screen_view.dart';
 import 'package:admin_app/featuer/User/view/get_All_user_view.dart';
-import 'package:admin_app/featuer/chat/view/pages/camera_page.dart';
+import 'package:admin_app/featuer/chat/view/pages/camera/view/camera_page.dart';
 import 'package:admin_app/featuer/getAllRole/data/model/role_model.dart';
 import 'package:admin_app/featuer/getAllRole/data/repo/invitation_repository.dart';
 import 'package:admin_app/featuer/getAllRole/manager/role_cubit.dart';
@@ -32,7 +32,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 // ✅ --- IMPORT CHAT MODEL WITH A PREFIX ---
 import 'package:admin_app/featuer/chat/data/model/chat_model12.dart' as ChatModel;
 import 'package:admin_app/featuer/chat/view/chat_view.dart';
-import 'package:admin_app/featuer/chat/view/individual_screen.dart';
+import 'package:admin_app/featuer/chat/view/individualContatnt/individual_screen.dart';
 import 'package:admin_app/featuer/chat/view/pages/create_chatpage.dart';
 
 // ✅ --- IMPORT TASK MODEL WITH A PREFIX ---

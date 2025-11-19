@@ -1,17 +1,17 @@
-import 'package:admin_app/featuer/chat/view/widgets/chat_inputField_widget.dart';
-import 'package:audio_waveforms/audio_waveforms.dart';
+import 'package:admin_app/featuer/chat/view/chat_input_contant/chat_inputField_widget.dart';
+import 'package:admin_app/featuer/chat/view/Audio/LiveWaveformPainter_helper.dart';
 import 'package:flutter/material.dart';
 
 class RecordingInterface extends StatefulWidget {
   final Duration duration;
-  final RecorderController waveController;
+  final List<double> samples; // Raw amplitude data
   final VoidCallback onCancel;
   final VoidCallback onSend;
 
   const RecordingInterface({
     super.key,
     required this.duration,
-    required this.waveController,
+    required this.samples,
     required this.onCancel,
     required this.onSend,
   });
@@ -53,7 +53,7 @@ class _RecordingInterfaceState extends State<RecordingInterface> with SingleTick
           GestureDetector(
             onTap: widget.onCancel,
             child: const CircleAvatar(
-              backgroundColor: Color(0xFFFFCDD2), // Red[100]
+              backgroundColor: Color(0xFFFFCDD2),
               radius: 15,
               child: Icon(Icons.close, color: Color(0xFFD32F2F), size: 18),
             ),
@@ -78,17 +78,15 @@ class _RecordingInterfaceState extends State<RecordingInterface> with SingleTick
           ),
           const SizedBox(width: 12),
 
-          // Waveform
+          // Custom Waveform Painter
           Expanded(
-            child: AudioWaveforms(
-              enableGesture: false,
-              size: const Size(double.infinity, 30),
-              recorderController: widget.waveController,
-              waveStyle: WaveStyle(
-                waveColor: Colors.red.shade400,
-                extendWaveform: true,
-                spacing: 4.0,
-                showMiddleLine: false,
+            child: SizedBox(
+              height: 30,
+              child: CustomPaint(
+                painter: LiveWaveformPainter(
+                  samples: widget.samples, 
+                  color: Colors.red.shade400
+                ),
               ),
             ),
           ),

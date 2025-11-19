@@ -32,7 +32,7 @@ class ChatCubit extends Cubit<ChatState> {
       emit(ChatError(e.toString()));
     }
   }
-
+ 
   //  تحميل رسائل محادثة معينة
   Future<void> loadMessages(String chatId) async {
     if (isClosed) return;
@@ -189,4 +189,6 @@ class ChatCubit extends Cubit<ChatState> {
     socketService.disconnect();
     return super.close();
   }
+
+  
 }

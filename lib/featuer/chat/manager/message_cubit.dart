@@ -1,3 +1,4 @@
+import 'package:admin_app/core/network/api_endpoiont.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:admin_app/featuer/chat/data/model/ChatMessagesModel.dart';
 import 'package:admin_app/featuer/chat/data/repo/MessagesRepository.dart';
@@ -60,7 +61,73 @@ class MessagesCubit extends Cubit<MessagesState> {
   }
 }
 
+Future<void> sendVideoMessage(String chatId, String videoPath, String caption) async {
+    if (videoPath.isEmpty) return;
+    try {
+      print('🎥 Sending Video...');
 
+      // Call Repo
+      final newMsgData = await messagesRepository.sendVideoMessage(chatId, videoPath, caption);
+      
+      // Parse & Fix URL
+      var newMessage = MessageData.fromJson(newMsgData['data'] ?? newMsgData);
+      newMessage = _fixMessageUrl(newMessage); // 👈 مهم جداً عشان يظهر فالفيديجت فوراً
+
+      // Update List
+      allMessages.add(newMessage);
+
+      // Socket
+      await socketService.sendMessage(chatId, 'Video');
+
+      // Emit State
+      emit(MessagesLoaded(List.from(allMessages)));
+      print('✅ Video sent successfully');
+
+    } catch (e) {
+      print('❌ Error sending video: $e');
+      emit(MessagesError(e.toString()));
+      emit(MessagesLoaded(List.from(allMessages)));
+    }
+  }
+ MessageData _fixMessageUrl(MessageData msg) {
+    if (msg.content == null) return msg;
+    if (['image', 'video', 'audio', 'file', 'document'].contains(msg.type)) {
+      final content = msg.content.toString();
+      if (content.isNotEmpty && !content.startsWith('http') && !content.startsWith('/')) {
+        msg.content = '${EndPoints.baseUrl}/chats/media/$content';
+      }
+    }
+    return msg;
+  }
+  /// 3. دالة إرسال المستندات (منفصلة)
+  Future<void> sendDocumentMessage(String chatId, String filePath) async {
+    if (filePath.isEmpty) return;
+    try {
+      print('📄 Sending Document...');
+
+      // Call Repo
+      final newMsgData = await messagesRepository.sendDocumentMessage(chatId, filePath);
+      
+      // Parse & Fix URL
+      var newMessage = MessageData.fromJson(newMsgData['data'] ?? newMsgData);
+      newMessage = _fixMessageUrl(newMessage);
+
+      // Update List
+      allMessages.add(newMessage);
+
+      // Socket
+      await socketService.sendMessage(chatId, 'Attachment');
+
+      // Emit State
+      emit(MessagesLoaded(List.from(allMessages)));
+      print('✅ Document sent successfully');
+
+    } catch (e) {
+      print('❌ Error sending document: $e');
+      emit(MessagesError(e.toString()));
+      emit(MessagesLoaded(List.from(allMessages)));
+    }
+  }
   /// --- Send a new message ---
  Future<void> sendMessage(String chatId, String message) async {
   if (message.trim().isEmpty) return;
@@ -86,7 +153,35 @@ class MessagesCubit extends Cubit<MessagesState> {
     emit(MessagesLoaded(List.from(allMessages)));
   }
 }
+ Future<void> sendLocationMessage(String chatId, double lat, double long) async {
+    try {
+      print('📍 Sending Location...');
 
+      // 1. Send to API
+      final newMsgData = await messagesRepository.sendLocationMessage(chatId, lat, long);
+      
+      // 2. Parse Response
+      final messageJson = newMsgData['data'] ?? newMsgData;
+      final newMessage = MessageData.fromJson(messageJson);
+
+      // 3. Add to local list
+      final exists = allMessages.any((msg) => msg.id == newMessage.id);
+      if (!exists) {
+        allMessages.add(newMessage);
+      }
+
+      // 4. Notify Socket
+      await socketService.sendMessage(chatId, 'Location');
+
+      emit(MessagesLoaded(List.from(allMessages)));
+      print('✅ Location sent successfully');
+
+    } catch (e) {
+      print('❌ Error sending location: $e');
+      emit(MessagesError(e.toString()));
+      emit(MessagesLoaded(List.from(allMessages)));
+    }
+  }
   /// --- Send audio message ---
   Future<void> sendAudioMessage(String chatId, String audioFilePath) async {
     if (audioFilePath.trim().isEmpty) return;
@@ -202,7 +297,42 @@ class MessagesCubit extends Cubit<MessagesState> {
       emit(MessagesError(e.toString()));
     }
   }
+// In MessagesCubit.dart
 
+Future<void> sendImageMessage(String chatId, String imagePath, String caption) async {
+  if (imagePath.isEmpty) return;
+
+  try {
+    print('📸 Starting image upload...');
+
+    // 1. Send to API
+    final newMsgData = await messagesRepository.sendImageMessage(chatId, imagePath, caption);
+    
+    // 2. Parse Response
+    final messageJson = newMsgData['data'] ?? newMsgData;
+    final newMessage = MessageData.fromJson(messageJson);
+
+    // 3. Add to local list immediately
+    final exists = allMessages.any((msg) => msg.id == newMessage.id);
+    if (!exists) {
+      allMessages.add(newMessage);
+    }
+
+    // 4. Notify Socket (so other user sees "Image" in chat list)
+    await socketService.sendMessage(chatId, 'Image');
+
+    // 5. Update UI
+    emit(MessagesLoaded(List.from(allMessages)));
+    print('✅ Image sent and UI updated');
+
+  } catch (e) {
+    print('❌ Image message error: $e');
+    emit(MessagesError(e.toString()));
+    // Restore list if needed
+    emit(MessagesLoaded(List.from(allMessages)));
+  }
+  
+}
   /// --- Cleanup ---
   @override
   Future<void> close() {

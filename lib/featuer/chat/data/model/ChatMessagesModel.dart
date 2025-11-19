@@ -29,7 +29,7 @@ class MessageData {
   String? to;
   String? status;
   String? type;
-  
+  String? caption; 
 
   MessageData({
     this.id,
@@ -42,12 +42,13 @@ class MessageData {
     this.from,
     this.to,
     this.status,
-    this.type
+    this.type,
+    this.caption,
   });
 
   MessageData.fromJson(Map<String, dynamic> json) {
     id = json['id'];
-    waMessageId = json['waMessageId']; 
+    waMessageId = json['waMessageId'];
     chatId = json['chatId'];
     content = json['content'];
     senderType = json['senderType'];
@@ -57,5 +58,6 @@ class MessageData {
     to = json['to'];
     status = json['status'];
     type = json['type'];
+    caption = json['caption']; 
   }
 }
