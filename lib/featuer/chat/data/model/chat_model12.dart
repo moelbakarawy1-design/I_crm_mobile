@@ -11,13 +11,13 @@ class ChatModelNEW {
     if (json['data'] != null) {
       data = <Data>[];
       json['data'].forEach((v) {
-        data!.add( Data.fromJson(v));
+        data!.add(Data.fromJson(v));
       });
     }
   }
 
   Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data =  <String, dynamic>{};
+    final Map<String, dynamic> data = <String, dynamic>{};
     data['success'] = success;
     data['message'] = message;
     if (this.data != null) {
@@ -40,19 +40,19 @@ class Data {
     id = json['id'];
     createdAt = json['createdAt'];
     customer = json['customer'] != null
-        ?  Customer.fromJson(json['customer'])
+        ? Customer.fromJson(json['customer'])
         : null;
-    user = json['user'] != null ?  User.fromJson(json['user']) : null;
+    user = json['user'] != null ? User.fromJson(json['user']) : null;
     if (json['messages'] != null) {
       messages = <Messages>[];
       json['messages'].forEach((v) {
-        messages!.add( Messages.fromJson(v));
+        messages!.add(Messages.fromJson(v));
       });
     }
   }
 
   Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data =  <String, dynamic>{};
+    final Map<String, dynamic> data = <String, dynamic>{};
     data['id'] = id;
     data['createdAt'] = createdAt;
     if (customer != null) {
@@ -82,7 +82,7 @@ class Customer {
   }
 
   Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data =  <String, dynamic>{};
+    final Map<String, dynamic> data = <String, dynamic>{};
     data['id'] = id;
     data['name'] = name;
     data['phone'] = phone;
@@ -102,7 +102,7 @@ class User {
   }
 
   Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data =  <String, dynamic>{};
+    final Map<String, dynamic> data = <String, dynamic>{};
     data['name'] = name;
     data['id'] = id;
     return data;
@@ -113,20 +113,32 @@ class Messages {
   String? id;
   String? content;
   String? timestamp;
+  String? type; // ✅ Added type
+  String? caption; // ✅ Added caption (optional but useful)
 
-  Messages({this.id, this.content, this.timestamp, String? senderType, String? waMessageId});
+  Messages({
+    this.id, 
+    this.content, 
+    this.timestamp, 
+    this.type, 
+    this.caption,
+  });
 
   Messages.fromJson(Map<String, dynamic> json) {
     id = json['id'];
     content = json['content'];
     timestamp = json['timestamp'];
+    type = json['type']; // ✅ Parse type
+    caption = json['caption']; // ✅ Parse caption
   }
 
   Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data =  <String, dynamic>{};
+    final Map<String, dynamic> data = <String, dynamic>{};
     data['id'] = id;
     data['content'] = content;
     data['timestamp'] = timestamp;
+    data['type'] = type; // ✅ Save type
+    data['caption'] = caption; // ✅ Save caption
     return data;
   }
 }

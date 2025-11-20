@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:url_launcher/url_launcher.dart';
 
-// 📍 Location Widget
+// Location Widget
 class LocationMessageWidget extends StatelessWidget {
   final String locationContent; // Expected format: "lat,long"
 

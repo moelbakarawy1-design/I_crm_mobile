@@ -3,6 +3,7 @@ import 'package:admin_app/core/theme/app_color.dart';
 import 'package:admin_app/core/theme/app_text_style.dart';
 import 'package:admin_app/featuer/chat/data/model/ChatMessagesModel.dart';
 import 'package:admin_app/featuer/chat/view/Audio/message_content_helper.dart';
+import 'package:admin_app/featuer/chat/view/contacts/contact_message_widget.dart';
 import 'package:admin_app/featuer/chat/view/maps/special_message_widgets.dart'; 
 import 'package:admin_app/featuer/chat/view/video/widget/DocumentMessageWidget.dart';
 import 'package:admin_app/featuer/chat/view/video/widget/VideoMessageWidget.dart';
@@ -35,26 +36,43 @@ Widget buildMessageContent(MessageData msg) {
      } else if (c.endsWith('.pdf') || c.endsWith('.doc') || c.endsWith('.docx')) {
        type = 'file';
      }
+     // Detect Contact JSON signature
+     else if (msg.content != null && msg.content!.contains('"formatted_name"')) {
+       type = 'contacts';
+     }
   }
 
- 
-  //  LOCATION (New)
-
-  if (type == 'location') {
-    return LocationMessageWidget(
-      locationContent: msg.content ?? '', // Expecting "lat,long"
+  // ------------------------------------------------
+  // 👤 1. CONTACTS (New)
+  // ------------------------------------------------
+  if (type == 'contacts' || type == 'contact') {
+    return ContactMessageWidget(
+      content: msg.content ?? '[]', // Pass the JSON string
     );
   }
- 
-  //  VIDEO
- 
+
+  // ------------------------------------------------
+  // 📍 2. LOCATION
+  // ------------------------------------------------
+  else if (type == 'location') {
+    return LocationMessageWidget(
+      locationContent: msg.content ?? '', 
+    );
+  }
+
+  // ------------------------------------------------
+  // 🎥 3. VIDEO
+  // ------------------------------------------------
   else if (type == 'video') {
     return VideoMessageWidget(
       videoUrl: fullUrl, 
       caption: msg.caption,
     );
   }
-  // IMAGE
+
+  // ------------------------------------------------
+  // 🖼️ 4. IMAGE
+  // ------------------------------------------------
   else if (type == 'image') {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -94,19 +112,28 @@ Widget buildMessageContent(MessageData msg) {
       ],
     );
   } 
-  //   AUDIO
+
+  // ------------------------------------------------
+  // 🎤 5. AUDIO
+  // ------------------------------------------------
   else if (type == 'audio') {
     msg.content = fullUrl; 
     return AudioMessageWidget(message: msg); 
   } 
-  //  FILE / DOCUMENT
+
+  // ------------------------------------------------
+  // 📄 6. FILE / DOCUMENT
+  // ------------------------------------------------
   else if (type == 'file' || type == 'document') {
     return DocumentMessageWidget(
       fileName: "Document", 
       fileUrl: fullUrl, 
     );
   }
-  //  TEXT (Default - No Linkify)
+
+  // ------------------------------------------------
+  // 📝 7. TEXT (Default)
+  // ------------------------------------------------
   else {
     return Text(
       msg.content ?? '',

@@ -12,6 +12,22 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 class CahtPage extends StatelessWidget {
   const CahtPage({super.key});
 
+  // ✅ Helper to detect type if API misses it
+  String _inferType(String? type, String? content) {
+    if (type != null && ['video', 'image', 'audio', 'file', 'document', 'location', 'contacts'].contains(type.toLowerCase())) {
+      return type.toLowerCase();
+    }
+    if (content == null) return 'text';
+    
+    final c = content.toLowerCase();
+    if (c.endsWith('.mp4') || c.endsWith('.mov') || c.endsWith('.avi')) return 'video';
+    if (c.endsWith('.jpg') || c.endsWith('.png') || c.endsWith('.jpeg')) return 'image';
+    if (c.endsWith('.pdf') || c.endsWith('.doc') || c.endsWith('.docx')) return 'document';
+    if (c.endsWith('.mp3') || c.endsWith('.wav') || c.endsWith('.aac')) return 'audio';
+    
+    return 'text';
+  }
+
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
@@ -30,10 +46,7 @@ class CahtPage extends StatelessWidget {
 
                 if (chats.isEmpty) {
                   return const Center(
-                    child: Text(
-                      'No chats yet',
-                      style: TextStyle(color: Colors.grey),
-                    ),
+                    child: Text('No chats yet', style: TextStyle(color: Colors.grey)),
                   );
                 }
 
@@ -46,26 +59,26 @@ class CahtPage extends StatelessWidget {
                         : null;
 
                     final String messageContent = lastMsg?.content ?? 'No messages';
-                    final String? messageTime =
-                        lastMsg?.timestamp ?? chat.createdAt;
+                    final String? messageTime = lastMsg?.timestamp ?? chat.createdAt;
 
-                    final String assignedToName =
-                        chat.user?.name ?? 'Unassigned'; 
+                    // ✅ Determine Message Type
+                    final String msgType = _inferType(lastMsg?.type, messageContent);
+
+                    final String assignedToName = chat.user?.name ?? 'Unassigned'; 
                     final int unreadCount = (chat.id.hashCode % 4 == 0)
                         ? (chat.id.hashCode % 3) + 1
                         : 0; 
                     
                     final String? messageStatus = (unreadCount > 0)
                         ? null 
-                        : (chat.id.hashCode % 3 == 0
-                            ? 'read'
-                            : 'delivered'); 
+                        : (chat.id.hashCode % 3 == 0 ? 'read' : 'delivered'); 
+
                     return CusstomCard(
                       name: chat.customer?.name ?? 'Unknown',
                       assignedTo: assignedToName, 
-                      message: lastMsg?.content == "AUDIO" ? "audio" : messageContent,
+                      message: messageContent, // Pass raw content, card handles display
                       time: messageTime,
-                      // unreadCount: unreadCount,
+                      messageType: msgType, // ✅ Pass Type
                       messageStatus: messageStatus,
                       onTap: () {
                         Navigator.pushNamed(
@@ -85,10 +98,7 @@ class CahtPage extends StatelessWidget {
 
               if (state is ChatError) {
                 return Center(
-                  child: Text(
-                    'Error: ${state.message}',
-                    style: const TextStyle(color: Colors.red),
-                  ),
+                  child: Text('Error: ${state.message}', style: const TextStyle(color: Colors.red)),
                 );
               }
 
@@ -120,16 +130,13 @@ class CahtPage extends StatelessWidget {
           content: const Text("Are you sure you want to delete this chat?"),
           actions: [
             TextButton(
-              onPressed: () {
-                Navigator.pop(dialogContext);
-              },
+              onPressed: () => Navigator.pop(dialogContext),
               child: const Text("Cancel"),
             ),
             TextButton(
               onPressed: () {
                 Navigator.pop(dialogContext); 
-               
-                context.read<ChatCubit>().deleteChat(chatId);
+                cubit.deleteChat(chatId);
               },
               child: const Text("Delete", style: TextStyle(color: Colors.red)),
             ),

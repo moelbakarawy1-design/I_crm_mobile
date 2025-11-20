@@ -12,6 +12,7 @@ import 'package:admin_app/featuer/chat/view/widgets/Assign_user_rename_user.dart
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_contacts/flutter_contacts.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:image_picker/image_picker.dart';
@@ -27,11 +28,12 @@ class IndividualScreen extends StatefulWidget {
 class _IndividualScreenState extends State<IndividualScreen> {
   final ImagePicker _picker = ImagePicker();
 
+  // 📸 Pick Image
   Future<void> _pickImageFromGallery(BuildContext context) async {
     try {
       final XFile? image = await _picker.pickImage(
         source: ImageSource.gallery,
-        imageQuality: 80,
+        imageQuality: 80, 
       );
       
       if (image != null && context.mounted) {
@@ -58,18 +60,20 @@ class _IndividualScreenState extends State<IndividualScreen> {
       }
     }
   }
-Future<void> _pickLocation(BuildContext context) async {
+
+  // 📍 Pick Location
+  Future<void> _pickLocation(BuildContext context) async {
     final result = await Navigator.push(
       context,
       MaterialPageRoute(builder: (context) => const MapPickerPage()),
     );
 
-    // 2. Get Result and Send
+    // Get Result and Send
     if (result != null && result is Map && context.mounted) {
       final double lat = result['lat'];
       final double long = result['long'];
 
-      // 3. Call Cubit
+      // Call Cubit
       context.read<MessagesCubit>().sendLocationMessage(
         widget.chatModel.id ?? '', 
         lat, 
@@ -77,6 +81,150 @@ Future<void> _pickLocation(BuildContext context) async {
       );
     }
   }
+
+  // 📄 Pick Document
+  Future<void> _pickDocument(BuildContext context) async {
+    try {
+      FilePickerResult? result = await FilePicker.platform.pickFiles(
+        type: FileType.custom,
+        allowedExtensions: ['pdf', 'doc', 'docx', 'txt'],
+      );
+
+      if (result != null && result.files.single.path != null) {
+        if (context.mounted) {
+          context.read<MessagesCubit>().sendDocumentMessage(
+            widget.chatModel.id ?? '', 
+            result.files.single.path!
+          );
+        }
+      }
+    } catch (e) {
+      print("Error picking doc: $e");
+    }
+  }
+
+  // 🎥 Pick Video
+  Future<void> _pickVideo(BuildContext context) async {
+    try {
+      final XFile? video = await _picker.pickVideo(source: ImageSource.gallery);
+      if (video != null && context.mounted) {
+        context.read<MessagesCubit>().sendVideoMessage(
+          widget.chatModel.id ?? '', 
+          video.path, 
+          '' 
+        );
+      }
+    } catch (e) {
+      print("Error picking video: $e");
+    }
+  }
+
+  // 👤 ✅ Pick Contact (New Feature)
+   Future<void> _pickContact(BuildContext context) async {
+    try {
+      // 1. Check Permission
+      if (await FlutterContacts.requestPermission()) {
+        
+        // 2. Open Native Picker
+        // This function opens the native contact list and returns the selected contact
+        final Contact? contact = await FlutterContacts.openExternalPick();
+
+        if (contact != null && context.mounted) {
+          String name = contact.displayName;
+          String phone = "";
+
+          // 3. Get Phone Number
+          if (contact.phones.isNotEmpty) {
+            phone = contact.phones.first.number;
+          }
+
+          if (phone.isNotEmpty) {
+             print("👤 Selected: $name - $phone");
+             
+             // 4. Send
+             context.read<MessagesCubit>().sendContactMessage(
+               widget.chatModel.id ?? '', 
+               name, 
+               phone
+             );
+          } else {
+             ScaffoldMessenger.of(context).showSnackBar(
+               const SnackBar(content: Text("Selected contact has no phone number")),
+             );
+          }
+        }
+      } else {
+         ScaffoldMessenger.of(context).showSnackBar(
+           const SnackBar(content: Text("Permission denied")),
+         );
+      }
+    } catch (e) {
+      print("❌ Error picking contact: $e");
+    }
+  }
+  
+  // 🛠️ Show Attachment Options (Bottom Sheet)
+  void _showAttachmentOptions(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) => Container(
+        decoration: const BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+        ),
+        padding: const EdgeInsets.all(20),
+        // Use Wrap to handle multiple rows gracefully
+        child: Wrap(
+          alignment: WrapAlignment.spaceAround,
+          runSpacing: 20,
+          spacing: 20,
+          children: [
+            _optionItem(Icons.image, Colors.purple, "Gallery", () {
+              Navigator.pop(ctx);
+              _pickImageFromGallery(context);
+            }),
+            _optionItem(Icons.videocam, Colors.pink, "Video", () {
+              Navigator.pop(ctx);
+              _pickVideo(context);
+            }),
+            _optionItem(Icons.insert_drive_file, Colors.blue, "Document", () {
+              Navigator.pop(ctx);
+              _pickDocument(context);
+            }),
+            _optionItem(Icons.location_on, Colors.green, "Location", () {
+              Navigator.pop(ctx);
+              _pickLocation(context);
+            }),
+            //  Added Contact Option
+            _optionItem(Icons.person, Colors.blueAccent, "Contact", () {
+              Navigator.pop(ctx);
+              _pickContact(context);
+            }),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _optionItem(IconData icon, Color color, String label, VoidCallback onTap) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          CircleAvatar(
+            radius: 25,
+            backgroundColor: color.withOpacity(0.1),
+            child: Icon(icon, color: color, size: 28),
+          ),
+          const SizedBox(height: 5),
+          Text(label, style: const TextStyle(fontSize: 12)),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
@@ -96,12 +244,12 @@ Future<void> _pickLocation(BuildContext context) async {
               ),
               child: Column(
                 children: [
-                  // 1. قائمة الرسائل )
+                  // 1. Message List
                   const Expanded(
                     child: ChatMessagesList(),
                   ),
                   
-                  // 2. خانة الإدخال
+                  // 2. Input Field
                   ChatInputField(
                     onSendText: (msg) => context.read<MessagesCubit>()
                         .sendMessage(widget.chatModel.id ?? '', msg),
@@ -160,97 +308,4 @@ Future<void> _pickLocation(BuildContext context) async {
       ),
     );
   }
-
-  //  Pick Document
-  Future<void> _pickDocument(BuildContext context) async {
-    try {
-      FilePickerResult? result = await FilePicker.platform.pickFiles(
-        type: FileType.custom,
-        allowedExtensions: ['pdf', 'doc', 'docx', 'txt'],
-      );
-
-      if (result != null && result.files.single.path != null) {
-        if (context.mounted) {
-          context.read<MessagesCubit>().sendDocumentMessage(
-            widget.chatModel.id ?? '', 
-            result.files.single.path!
-          );
-        }
-      }
-    } catch (e) {
-      print("Error picking doc: $e");
-    }
-  }
-
-  //  Pick Video
-  Future<void> _pickVideo(BuildContext context) async {
-    final XFile? video = await _picker.pickVideo(source: ImageSource.gallery);
-    if (video != null && context.mounted) {
-       // Optional: Add a Video Preview Screen similar to Image Preview if you want
-       // For now, sending directly:
-       context.read<MessagesCubit>().sendVideoMessage(
-         widget.chatModel.id ?? '', 
-         video.path, 
-         '' 
-       );
-    }
-  }
-  
-  // 🛠️ Show Attachment Options (Bottom Sheet)
-  void _showAttachmentOptions(BuildContext context) {
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: Colors.transparent,
-      builder: (ctx) => Container(
-        decoration: const BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-        ),
-        padding: const EdgeInsets.all(20),
-        height: 180, // Increased height for 2 rows if needed
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceAround,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _optionItem(Icons.image, Colors.purple, "Gallery", () {
-              Navigator.pop(ctx);
-              _pickImageFromGallery(context);
-            }),
-            _optionItem(Icons.videocam, Colors.pink, "Video", () {
-              Navigator.pop(ctx);
-              _pickVideo(context);
-            }),
-            _optionItem(Icons.insert_drive_file, Colors.blue, "Document", () {
-              Navigator.pop(ctx);
-              _pickDocument(context);
-            }),
-            // ✅ Added Location Option
-            _optionItem(Icons.location_on, Colors.green, "Location", () {
-              Navigator.pop(ctx);
-              _pickLocation(context);
-            }),
-          ],
-        ),
-      ),
-    );
-  }
-  Widget _optionItem(IconData icon, Color color, String label, VoidCallback onTap) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          CircleAvatar(
-            radius: 25,
-            backgroundColor: color.withOpacity(0.1),
-            child: Icon(icon, color: color, size: 28),
-          ),
-          const SizedBox(height: 5),
-          Text(label, style: const TextStyle(fontSize: 12)),
-        ],
-      ),
-    );
-  }
-
- 
 }

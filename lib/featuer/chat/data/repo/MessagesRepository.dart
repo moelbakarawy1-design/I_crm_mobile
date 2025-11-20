@@ -278,5 +278,48 @@ class MessagesRepository {
       throw Exception("Failed to send location");
     }
   }
+  // 👤 Send Contact
+  Future<Map<String, dynamic>> sendContactMessage(String chatId, String name, String phone) async {
+    try {
+      // Construct the specific JSON structure the backend wants
+      final contactData = [
+        {
+          "name": {
+            "first_name": name.split(" ").first,
+            "last_name": name.split(" ").length > 1 ? name.split(" ").last : "",
+            "formatted_name": name
+          },
+          "phones": [
+            {
+              "phone": phone,
+              "type": "MOBILE"
+            }
+          ]
+        }
+      ];
+
+      final data = {
+        'type': 'contacts', // Type is plural 'contacts' usually
+        'contacts': contactData, // The backend expects this array
+      };
+
+      print('📤 Sending Contact: $name - $phone');
+
+      final ApiResponse response = await _apiHelper.postRequest(
+        endPoint: '${EndPoints.getAllChat}/$chatId/messages',
+        isFormData: false, 
+        data: data,
+      );
+
+      if (response.status) {
+        return response.data;
+      } else {
+        throw Exception(response.message);
+      }
+    } catch (e) {
+      print('❌ Error sending contact: $e');
+      throw Exception("Failed to send contact");
+    }
+  }
 }
 
