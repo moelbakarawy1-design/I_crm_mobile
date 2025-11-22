@@ -10,7 +10,6 @@ import 'package:admin_app/featuer/chat/view/video/widget/VideoMessageWidget.dart
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
-/// Helper: Smart URL Builder
 String _getMediaUrl(String? content) {
   if (content == null || content.isEmpty) return '';
   if (content.startsWith('http') || content.startsWith('https')) {
@@ -20,13 +19,10 @@ String _getMediaUrl(String? content) {
 }
 
 Widget buildMessageContent(MessageData msg) {
-  // Get Full URL
   final String fullUrl = _getMediaUrl(msg.content);
   
-  // Smart Type Detection
   String type = (msg.type ?? '').toLowerCase();
   
-  // Fallback detection
   if (type == 'text' || type.isEmpty) {
      final c = msg.content?.toLowerCase() ?? '';
      if (c.endsWith('.mp4') || c.endsWith('.mov') || c.endsWith('.avi') || c.endsWith('.mkv')) {
@@ -36,33 +32,26 @@ Widget buildMessageContent(MessageData msg) {
      } else if (c.endsWith('.pdf') || c.endsWith('.doc') || c.endsWith('.docx')) {
        type = 'file';
      }
-     // Detect Contact JSON signature
      else if (msg.content != null && msg.content!.contains('"formatted_name"')) {
        type = 'contacts';
      }
   }
 
-  // ------------------------------------------------
-  // 👤 1. CONTACTS (New)
-  // ------------------------------------------------
+  //  CONTACTS (New)
   if (type == 'contacts' || type == 'contact') {
     return ContactMessageWidget(
       content: msg.content ?? '[]', // Pass the JSON string
     );
   }
 
-  // ------------------------------------------------
-  // 📍 2. LOCATION
-  // ------------------------------------------------
+  // LOCATION
   else if (type == 'location') {
     return LocationMessageWidget(
       locationContent: msg.content ?? '', 
     );
   }
 
-  // ------------------------------------------------
-  // 🎥 3. VIDEO
-  // ------------------------------------------------
+  // VIDEO
   else if (type == 'video') {
     return VideoMessageWidget(
       videoUrl: fullUrl, 
@@ -70,60 +59,61 @@ Widget buildMessageContent(MessageData msg) {
     );
   }
 
-  // ------------------------------------------------
-  // 🖼️ 4. IMAGE
-  // ------------------------------------------------
+  //  IMAGE
   else if (type == 'image') {
     return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        ClipRRect(
-          borderRadius: BorderRadius.circular(8),
-          child: Image.network(
-            fullUrl, 
-            width: 200.w,
-            height: 200.h,
-            fit: BoxFit.cover,
-            errorBuilder: (context, error, stackTrace) => 
-                const Icon(Icons.broken_image, color: Colors.grey),
-            loadingBuilder: (context, child, loadingProgress) {
-              if (loadingProgress == null) return child;
-              return Container(
-                width: 200.w,
-                height: 200.h,
-                color: Colors.grey[200],
-                child: const Center(child: CircularProgressIndicator()),
-              );
-            },
+  crossAxisAlignment: CrossAxisAlignment.start,
+  children: [
+    ClipRRect(
+      borderRadius: BorderRadius.circular(8),
+      child: ConstrainedBox(
+        constraints: BoxConstraints(
+          maxWidth: 300.w, 
+          maxHeight: 500.h, 
+        ),
+        child: Image.network(
+          fullUrl,
+      
+          fit: BoxFit.fitWidth, 
+          
+          errorBuilder: (context, error, stackTrace) =>
+              const Icon(Icons.broken_image, color: Colors.grey),
+          
+          loadingBuilder: (context, child, loadingProgress) {
+            if (loadingProgress == null) return child;
+            return Container(
+              width: 200.w, 
+              height: 200.h,
+              color: Colors.grey[200],
+              child: const Center(child: CircularProgressIndicator()),
+            );
+          },
+        ),
+      ),
+    ),
+    if (msg.caption != null && msg.caption!.isNotEmpty)
+      Padding(
+        padding: const EdgeInsets.only(top: 6.0),
+        child: Text(
+          msg.caption!,
+          style: AppTextStyle.setpoppinsTextStyle(
+            fontSize: 12,
+            color: AppColor.mainBlack,
+            fontWeight: FontWeight.w400,
           ),
         ),
-        if (msg.caption != null && msg.caption!.isNotEmpty)
-          Padding(
-            padding: const EdgeInsets.only(top: 6.0),
-            child: Text(
-              msg.caption!,
-              style: AppTextStyle.setpoppinsTextStyle(
-                fontSize: 12, 
-                color: AppColor.mainBlack, 
-                fontWeight: FontWeight.w400
-              ),
-            ),
-          ),
-      ],
-    );
+      ),
+  ],
+);
   } 
 
-  // ------------------------------------------------
-  // 🎤 5. AUDIO
-  // ------------------------------------------------
+  //  AUDIO
   else if (type == 'audio') {
     msg.content = fullUrl; 
     return AudioMessageWidget(message: msg); 
   } 
 
-  // ------------------------------------------------
-  // 📄 6. FILE / DOCUMENT
-  // ------------------------------------------------
+  //  FILE / DOCUMENT
   else if (type == 'file' || type == 'document') {
     return DocumentMessageWidget(
       fileName: "Document", 
@@ -131,9 +121,7 @@ Widget buildMessageContent(MessageData msg) {
     );
   }
 
-  // ------------------------------------------------
-  // 📝 7. TEXT (Default)
-  // ------------------------------------------------
+  //  TEXT 
   else {
     return Text(
       msg.content ?? '',

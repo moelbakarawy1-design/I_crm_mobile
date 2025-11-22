@@ -25,7 +25,6 @@ class _SendOtpViewState extends State<SendOtpView> {
   final _formKey = GlobalKey<FormState>();
   final TextEditingController _otpController = TextEditingController();
 
-  // --- Improved Timer Logic ---
   Timer? _timer;
   int _remainingTime = 60;
   bool _canResend = false;
@@ -80,7 +79,6 @@ class _SendOtpViewState extends State<SendOtpView> {
         resendCodeToken: widget.resendCodeToken!,
       );
     } else {
-      // Show an error if token is missing
       SnackbarUtils.showErrorSnackbar(context, 'Resend token is missing.');
     }
   }

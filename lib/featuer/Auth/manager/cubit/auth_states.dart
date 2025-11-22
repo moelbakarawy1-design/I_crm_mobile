@@ -1,3 +1,4 @@
+import 'package:admin_app/featuer/Auth/data/model/User_profile_model.dart';
 import 'package:admin_app/featuer/Auth/data/model/auth_models.dart';
 
 abstract class AuthState {}
@@ -125,4 +126,18 @@ class NotAdminLogInSuccess extends AuthState {
 class NotAdminLogInError extends AuthState {
   final String message;
   NotAdminLogInError({required this.message});
+}
+
+
+// --- Get Profile States ---
+class GetProfileLoading extends AuthState {}
+
+class GetProfileSuccess extends AuthState {
+  final Data user;
+  GetProfileSuccess({required this.user});
+}
+
+class GetProfileError extends AuthState {
+  final String message;
+  GetProfileError({required this.message});
 }

@@ -1,3 +1,4 @@
+import 'package:admin_app/featuer/Auth/data/model/User_profile_model.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:admin_app/featuer/Auth/data/model/auth_models.dart';
 import 'package:admin_app/featuer/Auth/data/repository/auth_repository.dart';
@@ -86,6 +87,17 @@ Future<void> resetPassword({
     emit(ResetPasswordError(message: e.toString()));
   }
 }
+
+  // Get User Profile
+ Future<void> getUserProfile() async {
+    emit(GetProfileLoading());
+    try {
+      final Data user = await _authRepository.getUserProfile();
+      emit(GetProfileSuccess(user: user));
+    } catch (e) {
+      emit(GetProfileError(message: e.toString()));
+    }
+  }
 
  Future<void> resendOtp({required String resendCodeToken}) async {
     emit(ResendOtpLoading());

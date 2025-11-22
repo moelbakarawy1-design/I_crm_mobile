@@ -96,39 +96,66 @@ class ChatCubit extends Cubit<ChatState> {
     socketService.onMessageStatusUpdated(_handleStatusUpdate);
   }
 
-  //  عند استقبال رسالة جديدة
+//  Handle New Message & Update List Real-Time
   void _handleNewMessage(dynamic data) {
     if (isClosed) return;
-    try {
-      final newMessage = MessageData.fromJson(data['data'] ?? data);
-      final chatId = newMessage.chatId;
-      if (chatId == null) return;
 
-      //  لو المستخدم فاتح نفس المحادثة، ضيفها مباشرة
+    try {
+      // 1. Parse Data
+      dynamic processedData = data;
+      if (data is List && data.isNotEmpty) processedData = data[0];
+      
+      final jsonPayload = (processedData is Map && processedData.containsKey('data')) 
+          ? processedData['data'] 
+          : processedData;
+
+      final newMessage = MessageData.fromJson(jsonPayload);
+      final chatId = newMessage.chatId;
+
+      // Inside the Chat Screen (Update Messages)
       if (chatId == currentChatId) {
-        currentMessages.add(newMessage);
-        if (isClosed) return;
-        emit(MessagesLoaded(List.from(currentMessages)));
+        final exists = currentMessages.any((msg) => msg.id == newMessage.id);
+        if (!exists) {
+          currentMessages.add(newMessage);
+          emit(MessagesLoaded(List.from(currentMessages))); // Update Chat Screen
+        }
       }
 
-      //  حدث آخر رسالة في قائمة المحادثات
+      //  Chat List Screen (Update Preview & Order)
       if (allChats?.data != null) {
         final index = allChats!.data!.indexWhere((c) => c.id == chatId);
+
         if (index != -1) {
-          allChats!.data![index].messages ??= [];
-          allChats!.data![index].messages!.add(Messages(
+          // 1. Extract the chat that received the message
+          var chatToUpdate = allChats!.data![index];
+
+          // 2. Update its last message safely
+          chatToUpdate.messages ??= [];
+          chatToUpdate.messages!.add(Messages(
             id: newMessage.id,
             content: newMessage.content,
             timestamp: newMessage.timestamp,
+            type: newMessage.type, // Ensure type is updated for UI icon
           ));
+
+          // 3. Move this chat to the TOP of the list (Visual Feedback)
+          allChats!.data!.removeAt(index);
+          allChats!.data!.insert(0, chatToUpdate);
+
+          final updatedList = ChatModelNEW(
+            message: allChats!.message,
+            data: List.from(allChats!.data!), // Create copy of list
+          );
+          
+          allChats = updatedList; 
+          emit(ChatListLoaded(updatedList)); 
+        } else {
+          fetchAllChats(); 
         }
-        if (isClosed) return;
-        emit(ChatListLoaded(allChats!));
       }
 
-      print(" New message handled successfully");
     } catch (e) {
-      print(" Error handling new message: $e");
+      print("❌ Error updating real-time UI: $e");
     }
   }
 

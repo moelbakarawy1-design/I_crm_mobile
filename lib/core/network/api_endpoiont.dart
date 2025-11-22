@@ -18,6 +18,8 @@ abstract class EndPoints {
   static const String notAdmin = '/auth/login';
   static const String assignChat = '/api/chats/assign';
   static const String renameUserChat = '/api/chats/name';
+  static const String getProfile = '/users/me';
+  static const String dashboard = '/dashboard';
   static String getMessagesByChatId(String chatId) => '/chats/$chatId/messages';
   static const socketUrl = 'http://192.168.1.88:5000';
 

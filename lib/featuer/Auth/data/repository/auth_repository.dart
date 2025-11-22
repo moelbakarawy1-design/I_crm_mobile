@@ -2,6 +2,7 @@ import 'package:admin_app/core/network/api_helper.dart';
 import 'package:admin_app/core/network/api_endpoiont.dart';
 import 'package:admin_app/core/network/api_response.dart';
 import 'package:admin_app/core/network/local_data.dart';
+import 'package:admin_app/featuer/Auth/data/model/User_profile_model.dart';
 import 'package:admin_app/featuer/Auth/data/model/auth_models.dart';
 import 'package:dio/dio.dart';
 
@@ -66,7 +67,23 @@ class AuthRepository {
       throw Exception(errorMessage);
     }
   }
+// Get User Profile
+  Future<Data> getUserProfile() async {
+       final response = await _apiHelper.getRequest(
+      endPoint: EndPoints.getProfile, 
+      
+    );
 
+    if (response.status && response.data != null) {
+      if (response.data['success'] == true || response.data['status'] == 'success') {
+        return Data.fromJson(response.data['data']);
+      } else {
+        throw Exception(response.data['message'] ?? 'Failed to load profile');
+      }
+    } else {
+      throw Exception(response.message);
+    }
+  }
   // Forget Password
   Future<ForgetPasswordResponse> forgetPassword(
       ForgetPasswordRequest request) async {

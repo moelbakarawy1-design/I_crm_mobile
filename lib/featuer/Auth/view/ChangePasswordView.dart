@@ -60,21 +60,19 @@ class _ChangePasswordViewState extends State<ChangePasswordView> {
 
   @override
   Widget build(BuildContext context) {
-    // --- Use the ResetPasswordView structure ---
     return Scaffold(
-      // 1. Set the blue background color
       backgroundColor: const Color(0xFF1E90FF),
       body: SafeArea(
         child: Column(
           children: [
             Expanded(
-              flex: 4, // Adjust flex as needed
+              flex: 4, 
               child: Center(
                child: SvgPicture.asset('assets/svg/reset_Password.svg')
               ),
             ),
             Expanded(
-              flex: 10, // Adjust flex as needed
+              flex: 10, 
               child: Container(
                 width: double.infinity,
                 decoration: BoxDecoration(
@@ -84,7 +82,7 @@ class _ChangePasswordViewState extends State<ChangePasswordView> {
                     topRight: Radius.circular(50.r),
                   ),
                 ),
-                child: BlocListener<AuthCubit, AuthState>( // Moved Listener here
+                child: BlocListener<AuthCubit, AuthState>( 
                   listener: (context, state) {
                     if (state is ChangePasswordSuccess) {
                       ScaffoldMessenger.of(context).showSnackBar(
@@ -94,9 +92,9 @@ class _ChangePasswordViewState extends State<ChangePasswordView> {
                       );
                     Navigator.pushNamedAndRemoveUntil(
               context,
-              Routes.logInView, // Make sure this route is in your AppRouter
+              Routes.logInView, 
               (route) => false,
-            );// Go back
+            );
                     }
                     if (state is ChangePasswordFailure) {
                       ScaffoldMessenger.of(context).showSnackBar(
@@ -147,7 +145,7 @@ class _ChangePasswordViewState extends State<ChangePasswordView> {
                           ),
                           SizedBox(height: 20.h),
 
-                          // --- New Password Field ---
+                          //New Password Field
                           Text('New Password', style: AppTextStyle.setpoppinsBlack(fontSize: 12, fontWeight: FontWeight.w500)),
                           SizedBox(height: 8.h),
                           CustomTextFormField(
@@ -165,7 +163,7 @@ class _ChangePasswordViewState extends State<ChangePasswordView> {
                           ),
                           SizedBox(height: 20.h),
 
-                          // --- Confirm Password Field ---
+                          //Confirm Password Field
                           Text('Confirm Password', style: AppTextStyle.setpoppinsBlack(fontSize: 12, fontWeight: FontWeight.w500)),
                           SizedBox(height: 8.h),
                           CustomTextFormField(
@@ -183,7 +181,7 @@ class _ChangePasswordViewState extends State<ChangePasswordView> {
                           ),
                           SizedBox(height: 32.h),
 
-                          // --- Submit Button ---
+                          // Submit Button 
                           BlocBuilder<AuthCubit, AuthState>(
                             builder: (context, state) {
                               if (state is ChangePasswordLoading) {
@@ -193,12 +191,11 @@ class _ChangePasswordViewState extends State<ChangePasswordView> {
                                 text: 'Update Password',
                                 onPressed: _handleChangePassword,
                                 width: double.infinity,
-                                backgroundColor: const Color(0xFF1A1A1A), // Same button style
+                                backgroundColor: const Color(0xFF1A1A1A),
                               );
                             },
                           ),
-                           SizedBox(height: 24.h), // Add spacing at the bottom
-                           // Optional: Add a back button or link if needed
+                           SizedBox(height: 24.h), 
                            Center(
                              child: TextButton(
                                onPressed: () => Navigator.pop(context),

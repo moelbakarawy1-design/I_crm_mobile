@@ -1,4 +1,5 @@
 import 'package:admin_app/config/router/routes.dart';
+import 'package:admin_app/core/helper/eror_snackBar_helper.dart';
 import 'package:admin_app/core/theme/app_color.dart';
 import 'package:admin_app/featuer/chat/data/repo/MessagesRepository.dart';
 import 'package:admin_app/featuer/chat/manager/chat_cubit.dart';
@@ -36,6 +37,12 @@ class CahtPage extends StatelessWidget {
       child: Stack(
         children: [
           BlocBuilder<ChatCubit, ChatState>(
+            buildWhen: (previous, current) {
+            
+              return current is ChatLoading ||
+                  current is ChatListLoaded ||
+                  current is ChatError;
+            },
             builder: (context, state) {
               if (state is ChatLoading) {
                 return const Center(child: CircularProgressIndicator());
@@ -43,7 +50,9 @@ class CahtPage extends StatelessWidget {
 
               if (state is ChatListLoaded) {
                 final chats = state.chatModel.data ?? [];
-
+              if (state is ChatError) {
+                showTopError(context, state.chatModel.message??'An error occurred');
+              }
                 if (chats.isEmpty) {
                   return const Center(
                     child: Text('No chats yet', style: TextStyle(color: Colors.grey)),
@@ -76,9 +85,9 @@ class CahtPage extends StatelessWidget {
                     return CusstomCard(
                       name: chat.customer?.name ?? 'Unknown',
                       assignedTo: assignedToName, 
-                      message: messageContent, // Pass raw content, card handles display
+                      message: messageContent, 
                       time: messageTime,
-                      messageType: msgType, // ✅ Pass Type
+                      messageType: msgType,
                       messageStatus: messageStatus,
                       onTap: () {
                         Navigator.pushNamed(
