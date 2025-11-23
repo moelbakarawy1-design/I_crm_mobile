@@ -15,7 +15,8 @@ class ChatCubit extends Cubit<ChatState> {
       : super(ChatInitial());
 
   ChatModelNEW? allChats;
-  List<MessageData> currentMessages = [];
+  // CHANGED: List<MessageData> -> List<OrderedMessages>
+  List<OrderedMessages> currentMessages = [];
   String? currentChatId;
 
   //  تحميل جميع المحادثات
@@ -32,15 +33,19 @@ class ChatCubit extends Cubit<ChatState> {
       emit(ChatError(e.toString()));
     }
   }
- 
+
   //  تحميل رسائل محادثة معينة
   Future<void> loadMessages(String chatId) async {
     if (isClosed) return;
     emit(MessagesLoading());
     currentChatId = chatId;
     try {
+      // Expecting response to be ChatMessagesModel
       final response = await messagesRepository.getMessages(chatId);
-      currentMessages = response.data ?? [];
+      
+      // CHANGED: Access nested orderedMessages
+      currentMessages = response.data?.orderedMessages ?? [];
+      
       if (isClosed) return;
       emit(MessagesLoaded(currentMessages));
     } catch (e) {
@@ -52,9 +57,22 @@ class ChatCubit extends Cubit<ChatState> {
   //  إرسال رسالة جديدة
   Future<void> sendMessage(String chatId, String message) async {
     try {
-      final newMsgData = await messagesRepository.sendMessage(chatId, message);
-      final newMessage =
-          MessageData.fromJson(newMsgData['data'] ?? newMsgData);
+      final newMsgResponse = await messagesRepository.sendMessage(chatId, message);
+      
+      // Handle response based on your API structure (Assuming it returns Map or Model)
+      // We parse it into OrderedMessages
+      final msgData = newMsgResponse['data'];
+
+      // Ensure we treat it as a single object or list
+      final OrderedMessages newMessage;
+       if (msgData is List && msgData.isNotEmpty) {
+        newMessage = OrderedMessages.fromJson(msgData[0]);
+      } else if (msgData is Map<String, dynamic>) {
+        newMessage = OrderedMessages.fromJson(msgData);
+      } else {
+         // Fallback if data structure is exact match
+         newMessage = OrderedMessages.fromJson(newMsgResponse);
+      }
 
       currentMessages.add(newMessage);
       emit(MessagesLoaded(List.from(currentMessages)));
@@ -104,12 +122,13 @@ class ChatCubit extends Cubit<ChatState> {
       // 1. Parse Data
       dynamic processedData = data;
       if (data is List && data.isNotEmpty) processedData = data[0];
-      
-      final jsonPayload = (processedData is Map && processedData.containsKey('data')) 
-          ? processedData['data'] 
+
+      final jsonPayload = (processedData is Map && processedData.containsKey('data'))
+          ? processedData['data']
           : processedData;
 
-      final newMessage = MessageData.fromJson(jsonPayload);
+      // CHANGED: MessageData -> OrderedMessages
+      final newMessage = OrderedMessages.fromJson(jsonPayload);
       final chatId = newMessage.chatId;
 
       // Inside the Chat Screen (Update Messages)
@@ -131,6 +150,9 @@ class ChatCubit extends Cubit<ChatState> {
 
           // 2. Update its last message safely
           chatToUpdate.messages ??= [];
+          
+          // Note: Assuming 'Messages' class in ChatModelNEW is different from OrderedMessages
+          // We map the fields manually here to match the Chat List model
           chatToUpdate.messages!.add(Messages(
             id: newMessage.id,
             content: newMessage.content,
@@ -146,11 +168,11 @@ class ChatCubit extends Cubit<ChatState> {
             message: allChats!.message,
             data: List.from(allChats!.data!), // Create copy of list
           );
-          
-          allChats = updatedList; 
-          emit(ChatListLoaded(updatedList)); 
+
+          allChats = updatedList;
+          emit(ChatListLoaded(updatedList));
         } else {
-          fetchAllChats(); 
+          fetchAllChats();
         }
       }
 
@@ -180,13 +202,14 @@ class ChatCubit extends Cubit<ChatState> {
       print("⚠️ Error updating message status: $e");
     }
   }
+
 // ✅ [NEW] Assign chat function
   Future<void> assignChat(String chatId, String userId) async {
     emit(ChatActionLoading()); // Show modal spinner
     try {
       final response = await chatRepository.assignChat(chatId, userId);
       if (response.status == true) {
-        emit(ChatActionSuccess(response.message ));
+        emit(ChatActionSuccess(response.message));
         await fetchAllChats(); // Refresh the list
       } else {
         emit(ChatActionError(response.message)); // Show error snackbar
@@ -202,7 +225,7 @@ class ChatCubit extends Cubit<ChatState> {
     try {
       final response = await chatRepository.renameChat(chatId, newName);
       if (response.status == true) {
-        emit(ChatActionSuccess(response.message ));
+        emit(ChatActionSuccess(response.message));
         await fetchAllChats(); // Refresh the list to show new name
       } else {
         emit(ChatActionError(response.message)); // Show error snackbar
@@ -211,11 +234,10 @@ class ChatCubit extends Cubit<ChatState> {
       emit(ChatActionError(e.toString()));
     }
   }
+
   @override
   Future<void> close() {
     socketService.disconnect();
     return super.close();
   }
-
-  
 }

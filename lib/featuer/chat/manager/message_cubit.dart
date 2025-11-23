@@ -12,7 +12,8 @@ class MessagesInitial extends MessagesState {}
 class MessagesLoading extends MessagesState {}
 
 class MessagesLoaded extends MessagesState {
-  final List<MessageData> messages;
+  // CHANGED: MessageData -> OrderedMessages
+  final List<OrderedMessages> messages;
   MessagesLoaded(this.messages);
 }
 
@@ -26,13 +27,15 @@ class MessagesCubit extends Cubit<MessagesState> {
   final MessagesRepository messagesRepository;
   final SocketService socketService = SocketService();
 
-  List<MessageData> allMessages = [];
+  // CHANGED: List<MessageData> -> List<OrderedMessages>
+  List<OrderedMessages> allMessages = [];
   String? _currentChatId;
 
   MessagesCubit(this.messagesRepository) : super(MessagesInitial());
 
   /// ✅ HELPER: Convert Media IDs to Full URLs
-  MessageData _fixMessageUrl(MessageData msg) {
+  // CHANGED: MessageData -> OrderedMessages
+  OrderedMessages _fixMessageUrl(OrderedMessages msg) {
     if (msg.content == null) return msg;
     if (['image', 'video', 'audio', 'file', 'document'].contains(msg.type)) {
       final content = msg.content.toString();
@@ -44,7 +47,8 @@ class MessagesCubit extends Cubit<MessagesState> {
   }
 
   /// ✅ HELPER: Centralized Message Adding (Prevents Duplicates)
-  void _addOrUpdateMessage(MessageData newMessage) {
+  // CHANGED: MessageData -> OrderedMessages
+  void _addOrUpdateMessage(OrderedMessages newMessage) {
     if (isClosed) return;
 
     // 1. Check if message already exists by ID
@@ -77,9 +81,11 @@ class MessagesCubit extends Cubit<MessagesState> {
       socketService.socket?.emit('join_chat', {'chatId': _currentChatId});
       listenForSocketEvents();
 
+      // Response is ChatMessagesModel
       final response = await messagesRepository.getMessages(chatId);
       
-      allMessages = (response.data ?? [])
+      // CHANGED: digging into .data?.orderedMessages
+      allMessages = (response.data?.orderedMessages ?? [])
           .map((msg) => _fixMessageUrl(msg))
           .toList();
           
@@ -95,8 +101,13 @@ class MessagesCubit extends Cubit<MessagesState> {
     if (message.trim().isEmpty) return;
     
     try {
-      final newMsgData = await messagesRepository.sendMessage(chatId, message);
-      final newMessage = MessageData.fromJson(newMsgData['data'] ?? newMsgData);
+      final newMsgResponse = await messagesRepository.sendMessage(chatId, message);
+      
+      // Check structure (Handle wrapping if necessary)
+      final msgData = (newMsgResponse['data'] ?? newMsgResponse);
+      
+      // CHANGED: MessageData -> OrderedMessages
+      final newMessage = OrderedMessages.fromJson(msgData);
       
       _addOrUpdateMessage(newMessage); // ✅ Use helper
 
@@ -143,7 +154,8 @@ class MessagesCubit extends Cubit<MessagesState> {
       }
 
       final messageJson = newMsgData['data'] ?? newMsgData;
-      var newMessage = MessageData.fromJson(messageJson);
+      // CHANGED: MessageData -> OrderedMessages
+      var newMessage = OrderedMessages.fromJson(messageJson);
 
       // ✅ Fix URL and Force Type
       newMessage = _fixMessageUrl(newMessage);
@@ -167,7 +179,8 @@ class MessagesCubit extends Cubit<MessagesState> {
 
       final newMsgData = await messagesRepository.sendContactMessage(chatId, name, phone);
       final messageJson = newMsgData['data'] ?? newMsgData;
-      final newMessage = MessageData.fromJson(messageJson);
+      // CHANGED: MessageData -> OrderedMessages
+      final newMessage = OrderedMessages.fromJson(messageJson);
 
       _addOrUpdateMessage(newMessage); // ✅ Use helper
 
@@ -184,7 +197,8 @@ class MessagesCubit extends Cubit<MessagesState> {
 
       final newMsgData = await messagesRepository.sendLocationMessage(chatId, lat, long);
       final messageJson = newMsgData['data'] ?? newMsgData;
-      final newMessage = MessageData.fromJson(messageJson);
+      // CHANGED: MessageData -> OrderedMessages
+      final newMessage = OrderedMessages.fromJson(messageJson);
       
       // Force type location if server misses it
       newMessage.type = 'location'; 
@@ -213,7 +227,8 @@ class MessagesCubit extends Cubit<MessagesState> {
     if (isClosed) return;
     print('📥 [SOCKET] New message received: $data');
     try {
-      var newMessage = MessageData.fromJson(data['data'] ?? data);
+      // CHANGED: MessageData -> OrderedMessages
+      var newMessage = OrderedMessages.fromJson(data['data'] ?? data);
 
       if (newMessage.chatId != _currentChatId) return;
 

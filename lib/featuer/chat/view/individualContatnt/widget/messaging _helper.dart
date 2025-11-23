@@ -18,7 +18,7 @@ String _getMediaUrl(String? content) {
   return '${EndPoints.baseUrl}/chats/media/$content';
 }
 
-Widget buildMessageContent(MessageData msg) {
+Widget buildMessageContent(OrderedMessages msg) {
   final String fullUrl = _getMediaUrl(msg.content);
   
   String type = (msg.type ?? '').toLowerCase();

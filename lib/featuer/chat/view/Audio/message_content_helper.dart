@@ -8,7 +8,7 @@ import 'package:admin_app/core/network/api_endpoiont.dart';
 import 'package:admin_app/featuer/chat/data/model/ChatMessagesModel.dart';
 
 class AudioMessageWidget extends StatefulWidget {
-  final MessageData message;
+  final OrderedMessages message;
 
   const AudioMessageWidget({super.key, required this.message});
 

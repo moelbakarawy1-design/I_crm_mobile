@@ -7,7 +7,7 @@ import 'package:admin_app/featuer/chat/view/individualContatnt/Utils/chat_utils.
 
 
 class MessageBubble extends StatelessWidget {
-  final MessageData msg;
+  final OrderedMessages msg;
   final bool isMe;
 
   const MessageBubble({super.key, required this.msg, required this.isMe});
