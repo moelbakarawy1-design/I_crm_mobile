@@ -37,9 +37,8 @@ class DashboardPage extends StatelessWidget {
                     Padding(
                       padding: EdgeInsets.symmetric(horizontal: 16.w),
                       child: Column(
-                        children: [
-                            
-                    ReportsAnalyticsChart(chartData: chatActivityData),
+                        children: [                          
+                        ReportsAnalyticsChart(chartData: chatActivityData),
                           SizedBox(height: 20.h),
                           StatisticCard(
                             title: 'Total Customers',

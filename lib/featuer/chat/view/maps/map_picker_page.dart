@@ -23,31 +23,28 @@ class _MapPickerPageState extends State<MapPickerPage> {
     _determinePosition();
   }
 
-  // 📍 Get Current User Location
+  //  Get Current User Location
   Future<void> _determinePosition() async {
     bool serviceEnabled;
     LocationPermission permission;
 
     serviceEnabled = await Geolocator.isLocationServiceEnabled();
-    if (!serviceEnabled) {
-      return;
-    }
+    if (!serviceEnabled) return;
 
     permission = await Geolocator.checkPermission();
     if (permission == LocationPermission.denied) {
       permission = await Geolocator.requestPermission();
-      if (permission == LocationPermission.denied) {
-        return;
-      }
+      if (permission == LocationPermission.denied) return;
     }
 
     Position position = await Geolocator.getCurrentPosition();
     
+    if (!mounted) return; 
+
     setState(() {
       _currentPosition = LatLng(position.latitude, position.longitude);
     });
 
-    // Move camera to user
     final GoogleMapController controller = await _controller.future;
     controller.animateCamera(CameraUpdate.newCameraPosition(
       CameraPosition(target: _currentPosition, zoom: 15),
@@ -65,9 +62,10 @@ class _MapPickerPageState extends State<MapPickerPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      resizeToAvoidBottomInset: false ,
       body: Stack(
         children: [
-          // 1. The Map
+          //  The Map
           GoogleMap(
             mapType: MapType.normal,
             initialCameraPosition: CameraPosition(
@@ -85,10 +83,10 @@ class _MapPickerPageState extends State<MapPickerPage> {
             },
           ),
 
-          // 2. Center Pin Icon (WhatsApp Style)
+          //  Center Pin Icon (WhatsApp Style)
           Center(
             child: Padding(
-              padding: const EdgeInsets.only(bottom: 35.0), // Adjust for icon stem
+              padding: const EdgeInsets.only(bottom: 35.0), 
               child: Icon(
                 Icons.location_on,
                 color: Colors.red,
@@ -97,7 +95,7 @@ class _MapPickerPageState extends State<MapPickerPage> {
             ),
           ),
 
-          // 3. Search Bar (Visual Only - requires Places API for logic)
+          //  Search Bar (Visual Only - requires Places API for logic)
           Positioned(
             top: 50.h,
             left: 20.w,
@@ -136,7 +134,7 @@ class _MapPickerPageState extends State<MapPickerPage> {
             ),
           ),
 
-          // 4. Bottom "Send" Button
+          //  Bottom "Send" Button
           Positioned(
             bottom: 30.h,
             left: 20.w,
@@ -148,8 +146,8 @@ class _MapPickerPageState extends State<MapPickerPage> {
                   alignment: Alignment.centerRight,
                   child: FloatingActionButton(
                     backgroundColor: Colors.white,
-                    child: const Icon(Icons.my_location, color: Colors.black),
                     onPressed: _determinePosition,
+                    child: const Icon(Icons.my_location, color: Colors.black),
                   ),
                 ),
                 SizedBox(height: 15.h),

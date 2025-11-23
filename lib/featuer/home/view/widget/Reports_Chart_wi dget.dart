@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:syncfusion_flutter_charts/charts.dart';
-// Import ChartData from the Cubit file (or wherever you moved it)
 import 'package:admin_app/featuer/home/manager/dashboard_cubit.dart';
+import 'package:admin_app/core/theme/app_color.dart';
+import 'package:admin_app/core/theme/app_text_style.dart';
 
 class ReportsAnalyticsChart extends StatelessWidget {
   final List<ChartData> chartData;
@@ -15,15 +16,27 @@ class ReportsAnalyticsChart extends StatelessWidget {
       width: 394.w,
       height: 360.h,
       margin: EdgeInsets.all(16.w),
-      padding: EdgeInsets.all(12.w),
+      padding: EdgeInsets.all(20.w),
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12.r),
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            AppColor.mainWhite,
+            AppColor.primaryWhite,
+          ],
+        ),
+        borderRadius: BorderRadius.circular(20.r),
+        border: Border.all(
+          color: AppColor.secondaryWhite,
+          width: 1.5,
+        ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.1),
-            offset: const Offset(0, 2),
-            blurRadius: 6,
+            color: AppColor.mainBlue.withOpacity(0.08),
+            offset: const Offset(0, 8),
+            blurRadius: 24,
+            spreadRadius: 0,
           ),
         ],
       ),
@@ -33,50 +46,128 @@ class ReportsAnalyticsChart extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Text(
-                "Chat Activity",
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w600,
-                  color: Colors.black87,
-                ),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    "Chat Activity",
+                    style: AppTextStyle.setpoppinsSecondaryBlack(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                  SizedBox(height: 4.h),
+                  Text(
+                    "Real-time overview",
+                    style: AppTextStyle.setipoppinssecondaryGery(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w400,
+                    ),
+                  ),
+                ],
               ),
               Container(
-                padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 5.h),
+                padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
                 decoration: BoxDecoration(
-                  border: Border.all(color: Colors.grey.shade300),
-                  borderRadius: BorderRadius.circular(6),
+                  gradient: LinearGradient(
+                    colors: [
+                      AppColor.mainBlue.withOpacity(0.1),
+                      AppColor.lightPurple.withOpacity(0.1),
+                    ],
+                  ),
+                  borderRadius: BorderRadius.circular(12.r),
+                  border: Border.all(
+                    color: AppColor.mainBlue.withOpacity(0.2),
+                    width: 1,
+                  ),
                 ),
-                child: const Text("Recent", style: TextStyle(fontSize: 12)),
+                child: Row(
+                  children: [
+                    Icon(
+                      Icons.access_time_rounded,
+                      size: 14.sp,
+                      color: AppColor.mainBlue,
+                    ),
+                    SizedBox(width: 6.w),
+                    Text(
+                      "Recent",
+                      style: AppTextStyle.setpoppinsTextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                        color: AppColor.mainBlue,
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ],
           ),
-          const SizedBox(height: 15),
+          SizedBox(height: 24.h),
           Expanded(
             child: SfCartesianChart(
               margin: EdgeInsets.zero,
               plotAreaBorderWidth: 0,
               primaryXAxis: CategoryAxis(
                 majorGridLines: const MajorGridLines(width: 0),
-                labelStyle: TextStyle(fontSize: 10.sp),
+                axisLine: const AxisLine(width: 0),
+                labelStyle: AppTextStyle.setipoppinssecondaryGery(
+                  fontSize: 10,
+                  fontWeight: FontWeight.w500,
+                ),
               ),
               primaryYAxis: NumericAxis(
                 minimum: 0,
-                interval: 1, 
+                interval: 1,
                 axisLine: const AxisLine(width: 0),
                 majorTickLines: const MajorTickLines(size: 0),
+                majorGridLines: MajorGridLines(
+                  width: 1,
+                  color: AppColor.secondaryWhite,
+                  dashArray: [5, 5],
+                ),
+                labelStyle: AppTextStyle.setipoppinssecondaryGery(
+                  fontSize: 10,
+                  fontWeight: FontWeight.w500,
+                ),
               ),
-              tooltipBehavior: TooltipBehavior(enable: true),
+              tooltipBehavior: TooltipBehavior(
+                enable: true,
+                color: AppColor.secondaryBlack,
+                textStyle: AppTextStyle.setpoppinsWhite(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
               series: [
                 SplineAreaSeries<ChartData, String>(
                   dataSource: chartData,
-                  color: Colors.blue.withOpacity(0.15),
-                  borderColor: Colors.blue.shade200,
-                  borderWidth: 2,
+                  gradient: LinearGradient(
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                    colors: [
+                      AppColor.mainBlue.withOpacity(0.4),
+                      AppColor.lightPurple.withOpacity(0.1),
+                      Colors.transparent,
+                    ],
+                  ),
+                  borderGradient: LinearGradient(
+                    colors: [
+                      AppColor.mainBlue,
+                      AppColor.lightPurple,
+                    ],
+                  ),
+                  borderWidth: 3,
                   xValueMapper: (ChartData d, _) => d.x,
                   yValueMapper: (ChartData d, _) => d.y,
                   name: 'Chats',
-                  markerSettings: const MarkerSettings(isVisible: true),
+                  markerSettings: MarkerSettings(
+                    isVisible: true,
+                    height: 8,
+                    width: 8,
+                    borderWidth: 3,
+                    borderColor: AppColor.mainBlue,
+                    color: AppColor.mainWhite,
+                  ),
                 ),
               ],
             ),

@@ -1,12 +1,11 @@
 import 'package:admin_app/core/theme/app_color.dart';
 import 'package:admin_app/core/theme/app_text_style.dart';
 import 'package:admin_app/featuer/home/data/model/DashboardResponse.dart';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 class SalesTable extends StatelessWidget {
-  final List<ChatPerUser> userData; 
+  final List<ChatPerUser> userData;
 
   const SalesTable({super.key, required this.userData});
 
@@ -18,13 +17,25 @@ class SalesTable extends StatelessWidget {
         width: 330.w,
         constraints: BoxConstraints(minHeight: 100.h),
         decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(10),
-          color: Colors.white,
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [
+              AppColor.mainWhite,
+              AppColor.primaryWhite,
+            ],
+          ),
+          borderRadius: BorderRadius.circular(20.r),
+          border: Border.all(
+            color: AppColor.secondaryWhite,
+            width: 1.5,
+          ),
           boxShadow: [
             BoxShadow(
-              color: Colors.grey.withOpacity(0.3),
-              blurRadius: 8,
-              offset: const Offset(0, 2),
+              color: AppColor.mainBlue.withOpacity(0.08),
+              blurRadius: 24,
+              offset: const Offset(0, 8),
+              spreadRadius: 0,
             ),
           ],
         ),
@@ -33,11 +44,31 @@ class SalesTable extends StatelessWidget {
             _buildTableHeader(),
             if (userData.isEmpty)
               Padding(
-                padding: EdgeInsets.all(20.h),
-                child: const Text("No user data available"),
+                padding: EdgeInsets.all(32.h),
+                child: Column(
+                  children: [
+                    Icon(
+                      Icons.inbox_rounded,
+                      size: 48.sp,
+                      color: AppColor.secondaryGrey,
+                    ),
+                    SizedBox(height: 12.h),
+                    Text(
+                      "No user data available",
+                      style: AppTextStyle.setipoppinssecondaryGery(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ],
+                ),
               )
             else
-              ...userData.map((user) => _buildTableRow(user)).toList(),
+              ...userData.asMap().entries.map((entry) {
+                int index = entry.key;
+                ChatPerUser user = entry.value;
+                return _buildTableRow(user, index);
+              }).toList(),
           ],
         ),
       ),
@@ -46,20 +77,19 @@ class SalesTable extends StatelessWidget {
 
   Widget _buildTableHeader() {
     return Container(
-      padding: EdgeInsets.symmetric(vertical: 8.h, horizontal: 20.w),
+      padding: EdgeInsets.symmetric(vertical: 16.h, horizontal: 24.w),
       decoration: BoxDecoration(
-        color: AppColor.mainWhite,
+       color: AppColor.lightPurple.withOpacity(0.05),
         borderRadius: BorderRadius.only(
-          topLeft: Radius.circular(12.r),
-          topRight: Radius.circular(12.r),
+          topLeft: Radius.circular(20.r),
+          topRight: Radius.circular(20.r),
         ),
       ),
       child: Row(
         children: [
           _buildHeaderCell('Agent Name', 3),
           _buildHeaderCell('Total Chats', 2),
-          // JSON only has chatsCount, hiding other columns or you can keep them 0
-          _buildHeaderCell('ID (Partial)', 2), 
+          _buildHeaderCell('User ID', 2),
         ],
       ),
     );
@@ -70,43 +100,88 @@ class SalesTable extends StatelessWidget {
       flex: flex,
       child: Text(
         text,
-        style: AppTextStyle.setpoppinsSecondaryBlack(
-            fontSize: 10.sp, fontWeight: FontWeight.w600),
+        style: AppTextStyle.setpoppinsTextStyle(
+          fontSize: 11.sp,
+          fontWeight: FontWeight.w700,
+          color: AppColor.mainBlue,
+        ),
         textAlign: TextAlign.center,
       ),
     );
   }
 
-  Widget _buildTableRow(ChatPerUser user) {
+  Widget _buildTableRow(ChatPerUser user, int index) {
+    final isEven = index % 2 == 0;
+    
     return Container(
-      padding: EdgeInsets.symmetric(vertical: 12.h, horizontal: 16.w),
+      padding: EdgeInsets.symmetric(vertical: 16.h, horizontal: 24.w),
       decoration: BoxDecoration(
+        color: isEven ? Colors.transparent : AppColor.primaryWhite,
         border: Border(
-          bottom: BorderSide(color: Colors.grey[300]!, width: 1),
+          bottom: BorderSide(
+            color: AppColor.secondaryWhite,
+            width: 1,
+          ),
         ),
       ),
       child: Row(
         children: [
           _buildDataCell(user.name ?? 'Unknown', 3, isName: true),
           _buildDataCell(user.chatsCount?.toString() ?? '0', 2, isBold: true),
-          _buildDataCell(user.userId?.substring(0, 5) ?? '-', 2),
+          _buildDataCell(user.userId?.substring(0, 8) ?? '-', 2),
         ],
       ),
     );
   }
 
-  Widget _buildDataCell(String text, int flex, {bool isName = false, bool isBold = false}) {
+  Widget _buildDataCell(String text, int flex,
+      {bool isName = false, bool isBold = false}) {
     return Expanded(
       flex: flex,
-      child: Text(
-        text,
-        style: TextStyle(
-          color: isName ? Colors.blue[800] : Colors.grey[800],
-          fontWeight: (isName || isBold) ? FontWeight.bold : FontWeight.normal,
-          fontSize: 14.sp,
+      child: Container(
+        padding: EdgeInsets.symmetric(vertical: 4.h),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            if (isName)
+              Container(
+                width: 8.w,
+                height: 8.h,
+                margin: EdgeInsets.only(right: 8.w),
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [
+                      AppColor.mainBlue,
+                      AppColor.lightPurple,
+                    ],
+                  ),
+                  shape: BoxShape.circle,
+                ),
+              ),
+            Flexible(
+              child: Text(
+                text,
+                style: isName
+                    ? AppTextStyle.setpoppinsTextStyle(
+                        fontSize: 13.sp,
+                        fontWeight: FontWeight.w600,
+                        color: AppColor.mainBlue,
+                      )
+                    : isBold
+                        ? AppTextStyle.setpoppinsSecondaryBlack(
+                            fontSize: 13.sp,
+                            fontWeight: FontWeight.w700,
+                          )
+                        : AppTextStyle.setipoppinssecondaryGery(
+                            fontSize: 12.sp,
+                            fontWeight: FontWeight.w500,
+                          ),
+                textAlign: TextAlign.center,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+          ],
         ),
-        textAlign: TextAlign.center,
-        overflow: TextOverflow.ellipsis,
       ),
     );
   }

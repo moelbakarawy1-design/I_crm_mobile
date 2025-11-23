@@ -1,66 +1,232 @@
+import 'package:admin_app/featuer/chat/view/maps/helper/helper_location.dart';
+import 'package:admin_app/featuer/chat/view/maps/widgets/location_widget_constants.dart';
+import 'package:admin_app/featuer/chat/view/maps/widgets/location_widget_styles.dart';
+import 'package:admin_app/featuer/chat/view/maps/widgets/map_grid_painter.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:url_launcher/url_launcher.dart';
-
-// Location Widget
-class LocationMessageWidget extends StatelessWidget {
-  final String locationContent; // Expected format: "lat,long"
+class LocationMessageWidget extends StatefulWidget {
+  final String locationContent; 
 
   const LocationMessageWidget({super.key, required this.locationContent});
 
-  Future<void> _openMap() async {
-    final parts = locationContent.split(',');
-    if (parts.length < 2) return;
+  @override
+  State<LocationMessageWidget> createState() => _LocationMessageWidgetState();
+}
 
-    final lat = parts[0].trim();
-    final long = parts[1].trim();
+class _LocationMessageWidgetState extends State<LocationMessageWidget>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _pulseController;
+  late Animation<double> _pulseAnimation;
+  bool _isHovered = false;
 
-    // Opens Google Maps App or Browser
-    final Uri googleMapsUrl = Uri.parse("https://www.google.com/maps/search/?api=1&query=$lat,$long");
+  @override
+  void initState() {
+    super.initState();
+    _initializeAnimation();
+  }
 
-    try {
-      if (!await launchUrl(googleMapsUrl, mode: LaunchMode.externalApplication)) {
-        debugPrint("Could not launch maps");
-      }
-    } catch (e) {
-      debugPrint("Error launching maps: $e");
-    }
+  void _initializeAnimation() {
+    _pulseController = AnimationController(
+      duration: LocationWidgetConstants.pulseAnimationDuration,
+      vsync: this,
+    )..repeat(reverse: true);
+
+    _pulseAnimation = Tween<double>(
+      begin: LocationWidgetConstants.pulseScaleMin,
+      end: LocationWidgetConstants.pulseScaleMax,
+    ).animate(
+      CurvedAnimation(parent: _pulseController, curve: Curves.easeInOut),
+    );
+  }
+
+  @override
+  void dispose() {
+    _pulseController.dispose();
+    super.dispose();
+  }
+
+  void _handleTap() {
+    LocationWidgetHelpers.openMap(widget.locationContent);
   }
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: _openMap,
-      child: Container(
-        width: 220.w,
-        height: 120.h,
-        decoration: BoxDecoration(
-          color: Colors.grey[100],
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: Colors.grey.shade300),
+    return MouseRegion(
+      onEnter: (_) => setState(() => _isHovered = true),
+      onExit: (_) => setState(() => _isHovered = false),
+      child: GestureDetector(
+        onTap: _handleTap,
+        child: AnimatedContainer(
+          duration: LocationWidgetConstants.hoverAnimationDuration,
+          curve: Curves.easeOutCubic,
+          width: LocationWidgetConstants.containerWidth.w,
+          height: LocationWidgetConstants.containerHeight.h,
+          decoration: LocationWidgetStyles.getContainerDecoration(_isHovered),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(
+              LocationWidgetConstants.borderRadius.r,
+            ),
+            child: Stack(
+              children: [
+                _buildBackground(),
+                _buildContent(),
+              ],
+            ),
+          ),
         ),
+      ),
+    );
+  }
+
+  Widget _buildBackground() {
+    return Positioned.fill(
+      child: CustomPaint(
+        painter: MapGridPainter(
+          color: LocationWidgetStyles.getGridColor(_isHovered),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildContent() {
+    return Padding(
+      padding: EdgeInsets.all(LocationWidgetConstants.contentPadding.w),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _buildHeader(),
+          _buildLocationPin(),
+          _buildFooter(),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildHeader() {
+    return Row(
+      children: [
+        _buildMapIcon(),
+        const Spacer(),
+        _buildLiveBadge(),
+      ],
+    );
+  }
+
+  Widget _buildMapIcon() {
+    return Container(
+      padding: EdgeInsets.all(LocationWidgetConstants.pinContainerPadding.w),
+      decoration: LocationWidgetStyles.getHeaderIconDecoration(_isHovered),
+      child: Icon(
+        Icons.map_rounded,
+        size: LocationWidgetConstants.headerIconSize.sp,
+        color: LocationWidgetStyles.getHeaderIconColor(_isHovered),
+      ),
+    );
+  }
+
+  Widget _buildLiveBadge() {
+    return Container(
+      padding: EdgeInsets.symmetric(
+        horizontal: LocationWidgetConstants.badgeHorizontalPadding.w,
+        vertical: LocationWidgetConstants.badgeVerticalPadding.h,
+      ),
+      decoration: LocationWidgetStyles.getLiveBadgeDecoration(_isHovered),
+      child: Row(
+        children: [
+          Icon(
+            Icons.circle,
+            size: LocationWidgetConstants.liveIndicatorSize.sp,
+            color: LocationWidgetStyles.getLiveIndicatorColor(_isHovered),
+          ),
+          SizedBox(width: 4.w),
+          Text(
+            LocationWidgetConstants.liveText,
+            style: LocationWidgetStyles.getLiveBadgeTextStyle(_isHovered),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildLocationPin() {
+    return SizedBox(
+      height: LocationWidgetConstants.pinPulseSize.h,
+      child: Center(
         child: Stack(
           alignment: Alignment.center,
           children: [
-            Icon(Icons.map_outlined, size: 60, color: Colors.grey.shade300),
-            Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                const Icon(Icons.location_on, color: Colors.red, size: 32),
-                SizedBox(height: 4.h),
-                Text(
-                  "Open Map",
-                  style: TextStyle(
-                    color: Colors.blue[700], 
-                    fontWeight: FontWeight.bold,
-                    fontSize: 12.sp
-                  ),
-                )
-              ],
-            ),
+            _buildPulseEffect(),
+            _buildPinIcon(),
           ],
         ),
       ),
+    );
+  }
+
+  Widget _buildPulseEffect() {
+    return AnimatedBuilder(
+      animation: _pulseAnimation,
+      builder: (context, child) {
+        return Container(
+          width: LocationWidgetConstants.pinPulseSize.w *
+              _pulseAnimation.value,
+          height: LocationWidgetConstants.pinPulseSize.h *
+              _pulseAnimation.value,
+          decoration: LocationWidgetStyles.getPulseDecoration(
+            _isHovered,
+            _pulseAnimation.value,
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildPinIcon() {
+    return Container(
+      padding: EdgeInsets.all(LocationWidgetConstants.pinContainerPadding.w),
+      decoration: LocationWidgetStyles.getLocationPinDecoration(_isHovered),
+      child: Icon(
+        Icons.location_on,
+        color: LocationWidgetStyles.getLocationPinIconColor(_isHovered),
+        size: LocationWidgetConstants.locationPinSize.sp,
+      ),
+    );
+  }
+
+  Widget _buildFooter() {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Expanded(child: _buildCoordinatesInfo()),
+        _buildArrowIcon(),
+      ],
+    );
+  }
+
+  Widget _buildCoordinatesInfo() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          LocationWidgetConstants.locationLabel,
+          style: LocationWidgetStyles.getLocationLabelTextStyle(_isHovered),
+        ),
+        SizedBox(height: 2.h),
+        Text(
+          LocationWidgetHelpers.formatCoordinates(widget.locationContent),
+          style: LocationWidgetStyles.getCoordinatesTextStyle(_isHovered),
+          overflow: TextOverflow.ellipsis,
+        ),
+      ],
+    );
+  }
+
+  Widget _buildArrowIcon() {
+    return Icon(
+      Icons.arrow_forward_rounded,
+      size: LocationWidgetConstants.arrowIconSize.sp,
+      color: LocationWidgetStyles.getArrowIconColor(_isHovered),
     );
   }
 }
