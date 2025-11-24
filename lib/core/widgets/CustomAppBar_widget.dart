@@ -24,7 +24,7 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
         color: AppColor.mainWhite,
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.1), // softer shadow
+            color: Colors.black.withOpacity(0.1),
             offset: const Offset(0, 2),
             blurRadius: 4,
           ),
@@ -36,13 +36,7 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              // Left menu icon
-              IconButton(
-                icon: const Icon(Icons.menu, color: AppColor.grey),
-                onPressed: onMenuPressed,
-              ),
-
-              // Right-aligned title
+              // 1. Title is now first (Left Side)
               Text(
                 title,
                 style: AppTextStyle.setpoppinsTextStyle(
@@ -50,6 +44,12 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
                   fontWeight: FontWeight.w500,
                   color: AppColor.mainBlue,
                 ),
+              ),
+
+              // 2. Menu Icon is now second (Right Side)
+              IconButton(
+                icon: const Icon(Icons.menu, color: AppColor.grey),
+                onPressed: onMenuPressed,
               ),
             ],
           ),

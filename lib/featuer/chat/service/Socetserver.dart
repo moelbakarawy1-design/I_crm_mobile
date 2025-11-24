@@ -1,28 +1,53 @@
+import 'dart:async';
 import 'package:admin_app/core/network/api_endpoiont.dart';
 import 'package:admin_app/core/network/local_data.dart';
+// ignore: library_prefixes
 import 'package:socket_io_client/socket_io_client.dart' as IO;
-import 'dart:async';
 
 class SocketService {
-  IO.Socket? socket;
+  // 1. Singleton Pattern: Ensures only one instance exists in the app
+  static final SocketService _instance = SocketService._internal();
+
+  factory SocketService() {
+    return _instance;
+  }
+
+  SocketService._internal();
+
+  // Variables
+  IO.Socket? _socket;
   bool _isConnecting = false;
-  bool _isDisposed = false;
   Completer<bool>? _connectionCompleter;
 
+  // 2. Broadcast Streams (Solves the multiple listener problem)
+  // Allows both ChatCubit and MessagesCubit to listen simultaneously.
+  final _newMessageController = StreamController<dynamic>.broadcast();
+  final _messageStatusController = StreamController<dynamic>.broadcast();
+  final _connectionStatusController = StreamController<bool>.broadcast();
+
+  // Getters for Streams
+  Stream<dynamic> get newMessageStream => _newMessageController.stream;
+  Stream<dynamic> get messageStatusStream => _messageStatusController.stream;
+  Stream<bool> get connectionStatusStream => _connectionStatusController.stream;
+
+  IO.Socket? get socket => _socket;
+  bool get isConnected => _socket?.connected ?? false;
+
+  /// 🔗 Connect to Socket
   Future<bool> connect() async {
-    if (socket != null && socket!.connected) {
-      print('✅ Socket already connected: ${socket!.id}');
+    if (isConnected) {
+      print('✅ [SocketService] Already connected: ${_socket!.id}');
       return true;
     }
 
-    if (_isConnecting && _connectionCompleter != null) {
-      print('⏳ Connection already in progress, waiting...');
-      return await _connectionCompleter!.future;
+    if (_isConnecting) {
+      print('⏳ [SocketService] Connection in progress...');
+      return _connectionCompleter?.future ?? Future.value(false);
     }
 
     final token = LocalData.accessToken;
     if (token == null || token.isEmpty) {
-      print('❌ Cannot connect socket: No auth token available');
+      print('❌ [SocketService] No auth token available');
       return false;
     }
 
@@ -30,135 +55,142 @@ class SocketService {
     _connectionCompleter = Completer<bool>();
 
     try {
-      print('🔗 Connecting to Socket.IO: ${EndPoints.socketUrl}');
-      if (socket != null) {
-        socket!.dispose();
-        socket = null;
-      }
+      print('🔗 [SocketService] Connecting to: ${EndPoints.socketUrl}');
+      
+      // Cleanup previous instance if exists
+      _socket?.dispose();
 
-     socket = IO.io(
-  EndPoints.socketUrl,
-  IO.OptionBuilder()
-      .setTransports(['websocket'])
-      .disableAutoConnect()
-      .enableReconnection()
-      .setReconnectionAttempts(3)
-      .setAuth({'token': token})  
-      .build(),
-);
+      _socket = IO.io(
+        EndPoints.socketUrl,
+        IO.OptionBuilder()
+            .setTransports(['websocket'])
+            .disableAutoConnect()
+            .enableReconnection()
+            .setReconnectionAttempts(5)
+            .setAuth({'token': token})
+            .build(),
+      );
 
+      _setupInternalListeners();
 
-      // ✅ Listeners
-      socket!.onConnect((_) {
-        if (_isDisposed) return;
-        print('✅ Socket connected: ${socket!.id}');
-        _isConnecting = false;
+      _socket!.connect();
 
-        // ✅ Listen for *all* incoming events for debugging
-        socket!.onAny((event, data) {
-          print('📡 [SOCKET EVENT] $event => $data');
-        });
-
-        if (_connectionCompleter != null && !_connectionCompleter!.isCompleted) {
-          _connectionCompleter!.complete(true);
-        }
-      });
-
-      socket!.onDisconnect((reason) {
-        if (_isDisposed) return;
-        print('⚠️ Socket disconnected: $reason');
-      });
-
-      socket!.onConnectError((error) {
-        if (_isDisposed) return;
-        print('⚠️ Connection error: $error');
-        if (!_connectionCompleter!.isCompleted) _connectionCompleter!.complete(false);
-      });
-
-      print('📡 Initiating connection...');
-      socket!.connect();
-
-      final connected = await _connectionCompleter!.future.timeout(
-        Duration(seconds: 10),
+      // Wait for connection with timeout
+      return await _connectionCompleter!.future.timeout(
+        const Duration(seconds: 15),
         onTimeout: () {
-          print('⚠️ Connection timeout after 10 seconds');
+          print('⚠️ [SocketService] Connection timed out');
           _isConnecting = false;
+          if (_socket != null && !_socket!.connected) {
+             _socket!.disconnect();
+          }
           return false;
         },
       );
-
-      return connected;
     } catch (e) {
-      print('❌ Socket connection exception: $e');
-      if (!_connectionCompleter!.isCompleted) _connectionCompleter!.complete(false);
+      print('❌ [SocketService] Exception: $e');
+      _isConnecting = false;
+      if (_connectionCompleter != null && !_connectionCompleter!.isCompleted) {
+        _connectionCompleter!.complete(false);
+      }
       return false;
     }
   }
 
-  /// 🟢 Join specific chat room
+  /// 🛠 Setup Internal Listeners to feed Streams
+  void _setupInternalListeners() {
+    if (_socket == null) return;
+
+    // --- Connection Events ---
+    _socket!.onConnect((_) {
+      print('✅ [SocketService] Connected: ${_socket!.id}');
+      _isConnecting = false;
+      _connectionStatusController.add(true);
+      
+      if (_connectionCompleter != null && !_connectionCompleter!.isCompleted) {
+        _connectionCompleter!.complete(true);
+      }
+    });
+
+    _socket!.onDisconnect((reason) {
+      print('⚠️ [SocketService] Disconnected: $reason');
+      _connectionStatusController.add(false);
+      _isConnecting = false;
+    });
+
+    _socket!.onConnectError((error) {
+      print('❌ [SocketService] Connect Error: $error');
+      _isConnecting = false;
+      if (_connectionCompleter != null && !_connectionCompleter!.isCompleted) {
+        _connectionCompleter!.complete(false);
+      }
+    });
+
+    // --- Debug: Print all events ---
+    _socket!.onAny((event, data) {
+       // print('📡 [SOCKET RAW] $event'); 
+    });
+
+    // --- Data Events (Feed to Streams) ---
+    
+    // 1. New Message
+    _socket!.on('newMessage', (data) {
+      print('📥 [SocketService] New Message: $data');
+      _newMessageController.add(data);
+    });
+
+    // 2. Receive Message (Alternative name)
+    _socket!.on('receive_message', (data) {
+       print('📥 [SocketService] Receive Message: $data');
+       _newMessageController.add(data);
+    });
+
+    // 3. Status Update
+    _socket!.on('messageStatusUpdated', (data) {
+      print('🔄 [SocketService] Status Update: $data');
+      _messageStatusController.add(data);
+    });
+  }
+
+  /// 🟢 Join Chat Room
   void joinChat(String chatId) {
-    if (socket?.connected ?? false) {
-      socket?.emit('join_chat', {'chatId': chatId});
-      print('📡 Joined chat room: $chatId');
-    } else {
-      print('❌ Cannot join chat: socket not connected');
+    if (isConnected) {
+      _socket!.emit('join_chat', {'chatId': chatId});
+      print('👉 [SocketService] Joined Room: $chatId');
     }
   }
 
-  /// 🟡 Send message event
+  /// 🔴 Leave Chat Room
+  void leaveChat(String chatId) {
+    if (isConnected) {
+      _socket!.emit('leave_chat', {'chatId': chatId});
+      print('👈 [SocketService] Left Room: $chatId');
+    }
+  }
+
+  /// 📤 Send Message
   Future<void> sendMessage(String chatId, String message) async {
-  if (!(socket?.connected ?? false)) {
-    print('⏳ Socket not connected, waiting to connect...');
-    final connected = await connect();
-    if (!connected) {
-      print('❌ Failed to connect socket. Message not sent.');
-      return;
+    if (!isConnected) {
+      print('⏳ [SocketService] Reconnecting before sending...');
+      final success = await connect();
+      if (!success) return;
     }
-  }
 
-  socket?.emit('send_message', {
-    'chatId': chatId,
-    'message': message,
-  });
-
-  print('📤 Message sent via socket → $message');
-}
-
-
-  /// 🟢 Listen for new message
-  void onNewMessage(Function(dynamic) callback) {
-    socket?.off('newMessage');
-    socket?.on('newMessage', (data) {
-      print('📥 [newMessage] => $data');
-      callback(data);
+    _socket!.emit('send_message', {
+      'chatId': chatId,
+      'message': message,
     });
+    print('📤 [SocketService] Sent: $message');
   }
 
-  /// 🟣 Listen for receive_message (some servers use this name)
-  void onReceiveMessage(Function(dynamic) callback) {
-    socket?.off('receive_message');
-    socket?.on('receive_message', (data) {
-      print('📩 [receive_message] => $data');
-      callback(data);
-    });
-  }
-
-  /// 🔄 Listen for message status updates
-  void onMessageStatusUpdated(Function(dynamic) callback) {
-    socket?.off('messageStatusUpdated');
-    socket?.on('messageStatusUpdated', (data) {
-      print('🔄 [messageStatusUpdated] => $data');
-      callback(data);
-    });
-  }
-  
-
+  /// 🔌 Disconnect Completely
   void disconnect() {
-    _isDisposed = true;
-    print('🔌 Disconnecting socket...');
-    socket?.disconnect();
-    socket?.dispose();
-    socket = null;
+    print('🔌 [SocketService] Disconnecting...');
+    _socket?.disconnect();
+    _socket?.dispose();
+    _socket = null;
     _isConnecting = false;
+    // Note: We do NOT close the StreamControllers here because 
+    // the app might reconnect later (e.g., logout -> login).
   }
 }

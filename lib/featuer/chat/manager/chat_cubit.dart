@@ -1,25 +1,25 @@
+import 'dart:async';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:admin_app/featuer/chat/data/model/ChatMessagesModel.dart';
 import 'package:admin_app/featuer/chat/data/model/chat_model12.dart';
 import 'package:admin_app/featuer/chat/data/repo/chat_repo.dart';
 import 'package:admin_app/featuer/chat/data/repo/MessagesRepository.dart';
-import 'package:admin_app/featuer/chat/service/Socetserver.dart';
+import 'package:admin_app/featuer/chat/service/Socetserver.dart'; 
 import 'chat_state.dart';
 
 class ChatCubit extends Cubit<ChatState> {
   final ChatRepository chatRepository;
   final MessagesRepository messagesRepository;
-  final SocketService socketService = SocketService();
+  final SocketService socketService; // ✅ Injected
 
-  ChatCubit(this.chatRepository, this.messagesRepository)
+  StreamSubscription? _messageSubscription; // ✅ Subscription handle
+
+  ChatCubit(this.chatRepository, this.messagesRepository, this.socketService)
       : super(ChatInitial());
 
   ChatModelNEW? allChats;
-  // CHANGED: List<MessageData> -> List<OrderedMessages>
-  List<OrderedMessages> currentMessages = [];
-  String? currentChatId;
-
-  //  تحميل جميع المحادثات
+  
+  // Fetch all chats
   Future<void> fetchAllChats() async {
     emit(ChatLoading());
     try {
@@ -27,63 +27,47 @@ class ChatCubit extends Cubit<ChatState> {
       if (isClosed) return;
       allChats = chatModel;
       emit(ChatListLoaded(chatModel));
-      _setupSocketListeners(); // ✅ نربط السوكت بعد تحميل الشات
+      
+      _setupSocketListeners(); // ✅ Start listening after load
     } catch (e) {
       if (isClosed) return;
       emit(ChatError(e.toString()));
     }
   }
 
-  //  تحميل رسائل محادثة معينة
-  Future<void> loadMessages(String chatId) async {
-    if (isClosed) return;
-    emit(MessagesLoading());
-    currentChatId = chatId;
+  // Assign chat
+  Future<void> assignChat(String chatId, String userId) async {
+    emit(ChatActionLoading());
     try {
-      // Expecting response to be ChatMessagesModel
-      final response = await messagesRepository.getMessages(chatId);
-      
-      // CHANGED: Access nested orderedMessages
-      currentMessages = response.data?.orderedMessages ?? [];
-      
-      if (isClosed) return;
-      emit(MessagesLoaded(currentMessages));
-    } catch (e) {
-      if (isClosed) return;
-      emit(MessagesError(e.toString()));
-    }
-  }
-
-  //  إرسال رسالة جديدة
-  Future<void> sendMessage(String chatId, String message) async {
-    try {
-      final newMsgResponse = await messagesRepository.sendMessage(chatId, message);
-      
-      // Handle response based on your API structure (Assuming it returns Map or Model)
-      // We parse it into OrderedMessages
-      final msgData = newMsgResponse['data'];
-
-      // Ensure we treat it as a single object or list
-      final OrderedMessages newMessage;
-       if (msgData is List && msgData.isNotEmpty) {
-        newMessage = OrderedMessages.fromJson(msgData[0]);
-      } else if (msgData is Map<String, dynamic>) {
-        newMessage = OrderedMessages.fromJson(msgData);
+      final response = await chatRepository.assignChat(chatId, userId);
+      if (response.status == true) {
+        emit(ChatActionSuccess(response.message));
+        await fetchAllChats();
       } else {
-         // Fallback if data structure is exact match
-         newMessage = OrderedMessages.fromJson(newMsgResponse);
+        emit(ChatActionError(response.message));
       }
-
-      currentMessages.add(newMessage);
-      emit(MessagesLoaded(List.from(currentMessages)));
-
-      await socketService.sendMessage(chatId, message);
     } catch (e) {
-      emit(MessagesError(e.toString()));
+      emit(ChatActionError(e.toString()));
     }
   }
 
-  //  حذف محادثة
+  // Rename chat
+  Future<void> renameChat(String chatId, String newName) async {
+    emit(ChatActionLoading());
+    try {
+      final response = await chatRepository.renameChat(chatId, newName);
+      if (response.status == true) {
+        emit(ChatActionSuccess(response.message));
+        await fetchAllChats();
+      } else {
+        emit(ChatActionError(response.message));
+      }
+    } catch (e) {
+      emit(ChatActionError(e.toString()));
+    }
+  }
+
+  // Delete chat
   Future<void> deleteChat(String chatId) async {
     emit(ChatLoading());
     try {
@@ -98,25 +82,25 @@ class ChatCubit extends Cubit<ChatState> {
     }
   }
 
-  //  ربط socket event listeners
+  // ---------------------------------------------------------------------------
+  // 🔌 Socket Logic for Chat List
+  // ---------------------------------------------------------------------------
+
   void _setupSocketListeners() async {
-    final connected = await socketService.connect();
-    if (!connected) {
-      print("❌ Socket connection failed");
-      return;
-    }
+    // Ensure connected
+    await socketService.connect();
 
-    socketService.socket?.onAny((event, data) {
-      print('📡 [SOCKET] $event => $data');
+    // Cancel existing to avoid duplicates
+    _messageSubscription?.cancel();
+
+    // Listen to the Broadcast Stream
+    _messageSubscription = socketService.newMessageStream.listen((data) {
+      _handleNewMessage(data);
     });
-
-    socketService.onNewMessage(_handleNewMessage);
-    socketService.onMessageStatusUpdated(_handleStatusUpdate);
   }
 
-//  Handle New Message & Update List Real-Time
   void _handleNewMessage(dynamic data) {
-    if (isClosed) return;
+    if (isClosed || allChats?.data == null) return;
 
     try {
       // 1. Parse Data
@@ -127,117 +111,46 @@ class ChatCubit extends Cubit<ChatState> {
           ? processedData['data']
           : processedData;
 
-      // CHANGED: MessageData -> OrderedMessages
       final newMessage = OrderedMessages.fromJson(jsonPayload);
       final chatId = newMessage.chatId;
 
-      // Inside the Chat Screen (Update Messages)
-      if (chatId == currentChatId) {
-        final exists = currentMessages.any((msg) => msg.id == newMessage.id);
-        if (!exists) {
-          currentMessages.add(newMessage);
-          emit(MessagesLoaded(List.from(currentMessages))); // Update Chat Screen
-        }
-      }
+      // 2. Find the chat in the list
+      final index = allChats!.data!.indexWhere((c) => c.id == chatId);
 
-      //  Chat List Screen (Update Preview & Order)
-      if (allChats?.data != null) {
-        final index = allChats!.data!.indexWhere((c) => c.id == chatId);
+      if (index != -1) {
+        // Chat exists: Update last message and move to top
+        var chatToUpdate = allChats!.data![index];
 
-        if (index != -1) {
-          // 1. Extract the chat that received the message
-          var chatToUpdate = allChats!.data![index];
+        chatToUpdate.messages ??= [];
+        chatToUpdate.messages!.add(Messages(
+          id: newMessage.id,
+          content: newMessage.content,
+          timestamp: newMessage.timestamp,
+          type: newMessage.type,
+        ));
 
-          // 2. Update its last message safely
-          chatToUpdate.messages ??= [];
-          
-          // Note: Assuming 'Messages' class in ChatModelNEW is different from OrderedMessages
-          // We map the fields manually here to match the Chat List model
-          chatToUpdate.messages!.add(Messages(
-            id: newMessage.id,
-            content: newMessage.content,
-            timestamp: newMessage.timestamp,
-            type: newMessage.type, // Ensure type is updated for UI icon
-          ));
+        // Remove from current position and insert at top (0)
+        allChats!.data!.removeAt(index);
+        allChats!.data!.insert(0, chatToUpdate);
 
-          // 3. Move this chat to the TOP of the list (Visual Feedback)
-          allChats!.data!.removeAt(index);
-          allChats!.data!.insert(0, chatToUpdate);
-
-          final updatedList = ChatModelNEW(
-            message: allChats!.message,
-            data: List.from(allChats!.data!), // Create copy of list
-          );
-
-          allChats = updatedList;
-          emit(ChatListLoaded(updatedList));
-        } else {
-          fetchAllChats();
-        }
-      }
-
-    } catch (e) {
-      print("❌ Error updating real-time UI: $e");
-    }
-  }
-
-  //  تحديث حالة الرسالة
-  void _handleStatusUpdate(dynamic data) {
-    if (isClosed) return;
-    try {
-      final msgId = data['waMessageId'];
-      final newStatus = data['status'];
-      final chatId = data['chatId'];
-
-      if (chatId == currentChatId) {
-        final index =
-            currentMessages.indexWhere((msg) => msg.waMessageId == msgId);
-        if (index != -1) {
-          currentMessages[index].status = newStatus;
-          if (isClosed) return;
-          emit(MessagesLoaded(List.from(currentMessages)));
-        }
-      }
-    } catch (e) {
-      print("⚠️ Error updating message status: $e");
-    }
-  }
-
-// ✅ [NEW] Assign chat function
-  Future<void> assignChat(String chatId, String userId) async {
-    emit(ChatActionLoading()); // Show modal spinner
-    try {
-      final response = await chatRepository.assignChat(chatId, userId);
-      if (response.status == true) {
-        emit(ChatActionSuccess(response.message));
-        await fetchAllChats(); // Refresh the list
+        // Emit new state to refresh UI
+        emit(ChatListLoaded(ChatModelNEW(
+          message: allChats!.message,
+          data: List.from(allChats!.data!),
+        )));
       } else {
-        emit(ChatActionError(response.message)); // Show error snackbar
+        // New chat found (not in list), refresh whole list
+        fetchAllChats();
       }
     } catch (e) {
-      emit(ChatActionError(e.toString()));
-    }
-  }
-
-  // ✅ [NEW] Rename chat function
-  Future<void> renameChat(String chatId, String newName) async {
-    emit(ChatActionLoading()); // Show modal spinner
-    try {
-      final response = await chatRepository.renameChat(chatId, newName);
-      if (response.status == true) {
-        emit(ChatActionSuccess(response.message));
-        await fetchAllChats(); // Refresh the list to show new name
-      } else {
-        emit(ChatActionError(response.message)); // Show error snackbar
-      }
-    } catch (e) {
-      emit(ChatActionError(e.toString()));
+      print("❌ Error updating Chat List UI: $e");
     }
   }
 
   @override
   Future<void> close() {
-    socketService.disconnect();
+    // ✅ Stop listening to updates, but DO NOT disconnect the socket
+    _messageSubscription?.cancel();
     return super.close();
   }
 }

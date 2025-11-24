@@ -4,6 +4,7 @@ import 'package:admin_app/core/theme/app_text_style.dart';
 import 'package:admin_app/featuer/chat/data/model/chat_model12.dart';
 import 'package:admin_app/featuer/chat/data/repo/MessagesRepository.dart';
 import 'package:admin_app/featuer/chat/manager/message_cubit.dart';
+import 'package:admin_app/featuer/chat/service/Socetserver.dart';
 import 'package:admin_app/featuer/chat/view/individualContatnt/widget/chat_messages_list.dart';
 import 'package:admin_app/featuer/chat/view/maps/map_picker_page.dart';
 import 'package:admin_app/featuer/chat/view/pages/camera/view/PreviewScreen_page.dart';
@@ -228,8 +229,10 @@ class _IndividualScreenState extends State<IndividualScreen> {
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
-      create: (context) => MessagesCubit(MessagesRepository())
-        ..getMessages(widget.chatModel.id ?? ''),
+       create:(context) => MessagesCubit(
+        MessagesRepository(), 
+        SocketService() 
+      )..getMessages(widget.chatModel.id ?? ''),
       child: Builder(
         builder: (context) {
           return Scaffold(

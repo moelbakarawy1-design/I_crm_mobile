@@ -6,6 +6,7 @@ import 'package:admin_app/featuer/chat/manager/chat_cubit.dart';
 import 'package:admin_app/featuer/chat/manager/chat_state.dart';
 import 'package:admin_app/featuer/chat/data/model/chat_model12.dart';
 import 'package:admin_app/featuer/chat/data/repo/chat_repo.dart';
+import 'package:admin_app/featuer/chat/service/Socetserver.dart';
 import 'package:admin_app/featuer/chat/view/widgets/cusstomUi/cusstom_card.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -32,8 +33,11 @@ class CahtPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
-      create: (_) =>
-          ChatCubit(ChatRepository(), MessagesRepository())..fetchAllChats(),
+    create: (_) => ChatCubit(
+        ChatRepository(), 
+        MessagesRepository(), 
+        SocketService()
+      )..fetchAllChats(),
       child: Stack(
         children: [
           BlocBuilder<ChatCubit, ChatState>(

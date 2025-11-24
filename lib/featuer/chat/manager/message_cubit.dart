@@ -1,22 +1,18 @@
+import 'dart:async';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:admin_app/core/network/api_endpoiont.dart';
 import 'package:admin_app/featuer/chat/data/model/ChatMessagesModel.dart';
 import 'package:admin_app/featuer/chat/data/repo/MessagesRepository.dart';
-import 'package:admin_app/featuer/chat/service/Socetserver.dart';
+import 'package:admin_app/featuer/chat/service/Socetserver.dart'; 
 
 /// --- STATES ---
 abstract class MessagesState {}
-
 class MessagesInitial extends MessagesState {}
-
 class MessagesLoading extends MessagesState {}
-
 class MessagesLoaded extends MessagesState {
-  // CHANGED: MessageData -> OrderedMessages
   final List<OrderedMessages> messages;
   MessagesLoaded(this.messages);
 }
-
 class MessagesError extends MessagesState {
   final String error;
   MessagesError(this.error);
@@ -25,16 +21,18 @@ class MessagesError extends MessagesState {
 /// --- CUBIT ---
 class MessagesCubit extends Cubit<MessagesState> {
   final MessagesRepository messagesRepository;
-  final SocketService socketService = SocketService();
+  final SocketService socketService; // ✅ Injected
 
-  // CHANGED: List<MessageData> -> List<OrderedMessages>
   List<OrderedMessages> allMessages = [];
   String? _currentChatId;
 
-  MessagesCubit(this.messagesRepository) : super(MessagesInitial());
+  // ✅ Subscriptions
+  StreamSubscription? _msgSubscription;
+  StreamSubscription? _statusSubscription;
 
-  /// ✅ HELPER: Convert Media IDs to Full URLs
-  // CHANGED: MessageData -> OrderedMessages
+  MessagesCubit(this.messagesRepository, this.socketService) : super(MessagesInitial());
+
+  /// Helper: Fix Media URLs
   OrderedMessages _fixMessageUrl(OrderedMessages msg) {
     if (msg.content == null) return msg;
     if (['image', 'video', 'audio', 'file', 'document'].contains(msg.type)) {
@@ -46,45 +44,37 @@ class MessagesCubit extends Cubit<MessagesState> {
     return msg;
   }
 
-  /// ✅ HELPER: Centralized Message Adding (Prevents Duplicates)
-  // CHANGED: MessageData -> OrderedMessages
+  /// Helper: Add/Update Message safely
   void _addOrUpdateMessage(OrderedMessages newMessage) {
     if (isClosed) return;
-
-    // 1. Check if message already exists by ID
+    
     final index = allMessages.indexWhere((msg) => msg.id == newMessage.id);
 
     if (index != -1) {
-      // 🔄 UPDATE existing message (Socket might have arrived before API response)
-      allMessages[index] = newMessage;
-      print('🔄 Message updated: ${newMessage.id}');
+      allMessages[index] = newMessage; // Update
     } else {
-      // ➕ ADD new message
-      allMessages.add(newMessage);
-      print('➕ Message added: ${newMessage.id}');
+      allMessages.add(newMessage); // Add
     }
-
-    // 2. Emit new state
     emit(MessagesLoaded(List.from(allMessages)));
   }
 
-  /// --- Load messages ---
+  /// 📥 Load Messages & Setup Socket
   Future<void> getMessages(String chatId) async {
     if (isClosed) return;
     emit(MessagesLoading());
     _currentChatId = chatId;
 
     try {
-      final connected = await socketService.connect();
-      if (!connected) print('❌ Socket connection failed.');
+      // 1. Ensure Socket Connection & Join Room
+      await socketService.connect();
+      socketService.joinChat(chatId);
+      
+      // 2. Start Listening
+      _listenForSocketEvents();
 
-      socketService.socket?.emit('join_chat', {'chatId': _currentChatId});
-      listenForSocketEvents();
-
-      // Response is ChatMessagesModel
+      // 3. Fetch API History
       final response = await messagesRepository.getMessages(chatId);
       
-      // CHANGED: digging into .data?.orderedMessages
       allMessages = (response.data?.orderedMessages ?? [])
           .map((msg) => _fixMessageUrl(msg))
           .toList();
@@ -96,21 +86,70 @@ class MessagesCubit extends Cubit<MessagesState> {
     }
   }
 
-  /// --- Send Text Message ---
+  /// 🎧 Listen to Socket Streams
+  void _listenForSocketEvents() {
+    // Clear old subs
+    _msgSubscription?.cancel();
+    _statusSubscription?.cancel();
+
+    // New Message Listener
+    _msgSubscription = socketService.newMessageStream.listen((data) {
+        _handleNewMessage(data);
+    });
+
+    // Status Update Listener
+    _statusSubscription = socketService.messageStatusStream.listen((data) {
+        _handleStatusUpdate(data);
+    });
+  }
+
+  void _handleNewMessage(dynamic data) {
+    if (isClosed) return;
+    try {
+      var newMessage = OrderedMessages.fromJson(data['data'] ?? data);
+
+      // Only add if it belongs to THIS chat
+      if (newMessage.chatId != _currentChatId) return;
+
+      newMessage = _fixMessageUrl(newMessage);
+      _addOrUpdateMessage(newMessage);
+      
+    } catch (e) {
+      print('⚠️ Error parsing socket message: $e');
+    }
+  }
+
+  void _handleStatusUpdate(dynamic data) {
+    if (isClosed) return;
+    try {
+      final msgIdToUpdate = data['waMessageId']; 
+      final newStatus = data['status'];
+      final chatOfMessage = data['chatId'];
+
+      if (chatOfMessage != null && chatOfMessage != _currentChatId) return;
+
+      final index = allMessages.indexWhere((msg) => msg.waMessageId == msgIdToUpdate);
+      if (index != -1) {
+        allMessages[index].status = newStatus;
+        emit(MessagesLoaded(List.from(allMessages))); 
+      }
+    } catch (e) {
+      print('⚠️ Error updating status: $e');
+    }
+  }
+
+  /// 📤 Send Text
   Future<void> sendMessage(String chatId, String message) async {
     if (message.trim().isEmpty) return;
-    
     try {
+      // API Call
       final newMsgResponse = await messagesRepository.sendMessage(chatId, message);
-      
-      // Check structure (Handle wrapping if necessary)
       final msgData = (newMsgResponse['data'] ?? newMsgResponse);
-      
-      // CHANGED: MessageData -> OrderedMessages
       final newMessage = OrderedMessages.fromJson(msgData);
       
-      _addOrUpdateMessage(newMessage); // ✅ Use helper
+      _addOrUpdateMessage(newMessage); // Update UI immediately
 
+      // Socket Emit
       await socketService.sendMessage(chatId, message);
 
     } catch (e) {
@@ -118,62 +157,93 @@ class MessagesCubit extends Cubit<MessagesState> {
     }
   }
 
-  // -----------------------------------------------------------------------------
-  // 📤 Unified Media Sending
-  // -----------------------------------------------------------------------------
-
-  Future<void> sendImageMessage(String chatId, String path, String caption) async => 
-      _sendMediaMessage(chatId, path, 'image', caption);
-
-  Future<void> sendVideoMessage(String chatId, String path, String caption) async => 
-      _sendMediaMessage(chatId, path, 'video', caption);
-
-  Future<void> sendDocumentMessage(String chatId, String path) async => 
-      _sendMediaMessage(chatId, path, 'file', '');
-
-  Future<void> sendAudioMessage(String chatId, String path) async => 
-      _sendMediaMessage(chatId, path, 'audio', '');
-
+  /// 📤 Send Media (Generic)
   Future<void> _sendMediaMessage(String chatId, String path, String type, String caption) async {
     if (path.isEmpty) return;
-
     try {
-      print('🚀 Sending $type...');
       Map<String, dynamic> newMsgData;
-
-      if (type == 'image') {
-        newMsgData = await messagesRepository.sendImageMessage(chatId, path, caption);
-      } else if (type == 'video') {
-        newMsgData = await messagesRepository.sendVideoMessage(chatId, path, caption);
-      } else if (type == 'file') {
-        newMsgData = await messagesRepository.sendDocumentMessage(chatId, path);
-      } else if (type == 'audio') {
-        newMsgData = await messagesRepository.sendAudioMessage(chatId, path);
-      } else {
-        return;
-      }
+      
+      if (type == 'image') newMsgData = await messagesRepository.sendImageMessage(chatId, path, caption);
+      else if (type == 'video') newMsgData = await messagesRepository.sendVideoMessage(chatId, path, caption);
+      else if (type == 'file') newMsgData = await messagesRepository.sendDocumentMessage(chatId, path);
+      else if (type == 'audio') newMsgData = await messagesRepository.sendAudioMessage(chatId, path);
+      else return;
 
       final messageJson = newMsgData['data'] ?? newMsgData;
-      // CHANGED: MessageData -> OrderedMessages
       var newMessage = OrderedMessages.fromJson(messageJson);
-
-      // ✅ Fix URL and Force Type
       newMessage = _fixMessageUrl(newMessage);
-      newMessage.type = type == 'file' ? 'file' : type; // Ensure consistency
+      newMessage.type = type == 'file' ? 'file' : type;
 
-      // ✅ Use helper to prevent duplicates
       _addOrUpdateMessage(newMessage);
 
-      print('✅ $type sent locally');
-
     } catch (e) {
-      print('❌ Error sending $type: $e');
       if (!isClosed) emit(MessagesError(e.toString()));
     }
   }
+  Future<void> createChat(String phone ,String name) async {
 
-  // 👤 Send Contact
-  Future<void> sendContactMessage(String chatId, String name, String phone) async {
+    if (isClosed) return;
+
+    emit(MessagesLoading());
+
+    try {
+
+      final response = await messagesRepository.createChat(phone, name);
+
+      if (response != null && response.status) {
+
+        emit(MessagesLoaded([])); 
+
+      } else {
+
+        emit(MessagesError("Failed to create chat"));
+
+      }
+
+    } catch (e) {
+
+      emit(MessagesError(e.toString()));
+
+    }
+
+  } Future<void> sendLocationMessage(String chatId, double lat, double long) async {
+
+    try {
+
+      print('📍 Sending Location...');
+
+
+
+      final newMsgData = await messagesRepository.sendLocationMessage(chatId, lat, long);
+
+      final messageJson = newMsgData['data'] ?? newMsgData;
+
+      // CHANGED: MessageData -> OrderedMessages
+
+      final newMessage = OrderedMessages.fromJson(messageJson);
+
+      
+
+      // Force type location if server misses it
+
+      newMessage.type = 'location'; 
+
+
+
+      _addOrUpdateMessage(newMessage); // ✅ Use helper
+
+
+
+    } catch (e) {
+
+      print('❌ Error sending location: $e');
+
+      if (!isClosed) emit(MessagesError(e.toString()));
+
+    }
+
+  }
+ Future<void> sendContactMessage(String chatId, String name, String phone) async {
     try {
       print('👤 Sending Contact...');
 
@@ -189,97 +259,24 @@ class MessagesCubit extends Cubit<MessagesState> {
       if (!isClosed) emit(MessagesError(e.toString()));
     }
   }
-
-  // 📍 Send Location
-  Future<void> sendLocationMessage(String chatId, double lat, double long) async {
-    try {
-      print('📍 Sending Location...');
-
-      final newMsgData = await messagesRepository.sendLocationMessage(chatId, lat, long);
-      final messageJson = newMsgData['data'] ?? newMsgData;
-      // CHANGED: MessageData -> OrderedMessages
-      final newMessage = OrderedMessages.fromJson(messageJson);
-      
-      // Force type location if server misses it
-      newMessage.type = 'location'; 
-
-      _addOrUpdateMessage(newMessage); // ✅ Use helper
-
-    } catch (e) {
-      print('❌ Error sending location: $e');
-      if (!isClosed) emit(MessagesError(e.toString()));
-    }
-  }
-
-  // -----------------------------------------------------------------------------
-  // 🔌 Socket Listeners
-  // -----------------------------------------------------------------------------
-
-  void listenForSocketEvents() {
-    socketService.socket?.off('newMessage');
-    socketService.socket?.off('messageStatusUpdated');
-    
-    socketService.onNewMessage(_handleNewMessage);
-    socketService.onMessageStatusUpdated(_handleStatusUpdate);
-  }
-
-  void _handleNewMessage(dynamic data) {
-    if (isClosed) return;
-    print('📥 [SOCKET] New message received: $data');
-    try {
-      // CHANGED: MessageData -> OrderedMessages
-      var newMessage = OrderedMessages.fromJson(data['data'] ?? data);
-
-      if (newMessage.chatId != _currentChatId) return;
-
-      newMessage = _fixMessageUrl(newMessage);
-
-      // ✅ Use helper to prevent duplicates from socket
-      _addOrUpdateMessage(newMessage);
-      
-    } catch (e) {
-      print('⚠️ Error parsing new message: $e');
-    }
-  }
-
-  void _handleStatusUpdate(dynamic data) {
-    if (isClosed) return;
-    try {
-      final msgIdToUpdate = data['waMessageId']; 
-      final newStatus = data['status'];
-      final chatOfMessage = data['chatId'];
-
-      if (chatOfMessage != null && chatOfMessage != _currentChatId) return;
-
-      final index = allMessages.indexWhere((msg) => msg.waMessageId == msgIdToUpdate);
-
-      if (index != -1) {
-        allMessages[index].status = newStatus;
-        emit(MessagesLoaded(List.from(allMessages))); 
-      }
-    } catch (e) {
-      print(' Error updating status: $e');
-    }
-  }
-
-  Future<void> createChat(String phone ,String name) async {
-    if (isClosed) return;
-    emit(MessagesLoading());
-    try {
-      final response = await messagesRepository.createChat(phone, name);
-      if (response != null && response.status) {
-        emit(MessagesLoaded([])); 
-      } else {
-        emit(MessagesError("Failed to create chat"));
-      }
-    } catch (e) {
-      emit(MessagesError(e.toString()));
-    }
-  }
+  // Wrappers
+  Future<void> sendImageMessage(String chatId, String path, String caption) => _sendMediaMessage(chatId, path, 'image', caption);
+  Future<void> sendVideoMessage(String chatId, String path, String caption) => _sendMediaMessage(chatId, path, 'video', caption);
+  Future<void> sendDocumentMessage(String chatId, String path) => _sendMediaMessage(chatId, path, 'file', '');
+  Future<void> sendAudioMessage(String chatId, String path) => _sendMediaMessage(chatId, path, 'audio', '');
 
   @override
   Future<void> close() {
-    socketService.disconnect();
+    // 1. Cancel Listeners for this screen
+    _msgSubscription?.cancel();
+    _statusSubscription?.cancel();
+    
+    // 2. Tell Server we left this room
+    if (_currentChatId != null) {
+      socketService.leaveChat(_currentChatId!);
+    }
+    
+    // 3. DO NOT disconnect the socket (ChatCubit needs it)
     return super.close();
   }
 }

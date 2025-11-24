@@ -4,6 +4,7 @@ import 'package:admin_app/core/widgets/cusstom_btn_widget.dart';
 import 'package:admin_app/core/widgets/custom_textField_widget.dart';
 import 'package:admin_app/featuer/chat/data/repo/MessagesRepository.dart';
 import 'package:admin_app/featuer/chat/manager/message_cubit.dart';
+import 'package:admin_app/featuer/chat/service/Socetserver.dart';
 import 'package:country_code_picker/country_code_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -26,7 +27,10 @@ class _CreateChatScreenState extends State<CreateChatScreen> {
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
-      create: (_) => MessagesCubit(MessagesRepository()),
+     create: (_) => MessagesCubit(
+        MessagesRepository(), 
+        SocketService()
+      ),
       child: BlocConsumer<MessagesCubit, MessagesState>(
         listener: (context, state) {
           if (state is MessagesError) {

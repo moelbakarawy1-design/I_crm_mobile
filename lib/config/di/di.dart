@@ -9,6 +9,8 @@ import 'package:admin_app/featuer/chat/data/repo/MessagesRepository.dart';
 import 'package:admin_app/featuer/chat/data/repo/chat_repo.dart'; 
 import 'package:admin_app/featuer/chat/manager/chat_cubit.dart';
 import 'package:admin_app/featuer/chat/manager/message_cubit.dart';
+// ✅ Import SocketService
+import 'package:admin_app/featuer/chat/service/Socetserver.dart'; 
 import 'package:admin_app/featuer/getAllRole/data/repo/invitation_repository.dart';
 import 'package:admin_app/featuer/getAllRole/manager/role_cubit.dart';
 import 'package:get_it/get_it.dart';
@@ -28,25 +30,35 @@ class DependencyInjection {
     getIt.registerLazySingleton<InvitationRepository>(() => InvitationRepository());
     getIt.registerFactory<InvitationCubit>(() => InvitationCubit(getIt<InvitationRepository>()));
 
-    //  Chat Repository
+    // --- 💬 CHAT FEATURE ---
+
+    // 1. Socket Service (Singleton) ✅
+    // This ensures the same socket connection is used everywhere
+    getIt.registerLazySingleton<SocketService>(() => SocketService());
+
+    // 2. Repositories
     getIt.registerLazySingleton<ChatRepository>(() => ChatRepository());
-
-    // Messages
     getIt.registerLazySingleton<MessagesRepository>(() => MessagesRepository());
-    getIt.registerFactory<MessagesCubit>(() => MessagesCubit(getIt<MessagesRepository>()));
 
-    //  Chat Cubit
+    // 3. Messages Cubit (Inject Repo + Socket) ✅
+    getIt.registerFactory<MessagesCubit>(() => MessagesCubit(
+          getIt<MessagesRepository>(),
+          getIt<SocketService>(),
+        ));
+
+    // 4. Chat Cubit (Inject Repos + Socket) ✅
     getIt.registerFactory<ChatCubit>(() => ChatCubit(
           getIt<ChatRepository>(),
           getIt<MessagesRepository>(),
+          getIt<SocketService>(),
         ));
 
-    // Tasks
+    // --- 📝 TASKS ---
     getIt.registerLazySingleton<BaseTasksRepository>(
         () => TasksRepository(getIt<APIHelper>()));
     getIt.registerFactory<TaskCubit>(() => TaskCubit(getIt<BaseTasksRepository>()));
 
-    // Users
+    // --- 👤 USERS ---
     getIt.registerLazySingleton<GetAllUserRepo>(
         () => GetAllUserRepo(getIt<APIHelper>()));
     getIt.registerFactory<GetAllUserCubit>(
