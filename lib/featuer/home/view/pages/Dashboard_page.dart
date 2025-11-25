@@ -2,7 +2,6 @@ import 'package:admin_app/featuer/home/data/repo/DashboardRepo.dart';
 import 'package:admin_app/featuer/home/manager/dashboard_cubit.dart';
 import 'package:admin_app/featuer/home/manager/dashboard_state.dart';
 import 'package:admin_app/featuer/home/view/widget/Reports_Chart_wi%20dget.dart';
-import 'package:admin_app/featuer/home/view/widget/messageStatesChart.dart';
 import 'package:admin_app/featuer/home/view/widget/cusstom_static_card_widget.dart';
 import 'package:admin_app/featuer/home/view/widget/sales_table.dart';
 import 'package:flutter/material.dart';
@@ -55,8 +54,8 @@ class DashboardPage extends StatelessWidget {
                       ),
                     ),
                     
-                    if (data.messageStats != null)
-                      MessageStatsChart(stats: data.messageStats!),
+                      if (data.chatsPerUser != null)
+                      SalesTable(userData: data.chatsPerUser!),
                       
                     if (data.chatsPerUser != null)
                       SalesTable(userData: data.chatsPerUser!),                                      

@@ -1,10 +1,10 @@
 import 'package:admin_app/featuer/chat/manager/message_cubit.dart';
-import 'package:admin_app/featuer/chat/view/maps/map_picker_page.dart';
+import 'package:admin_app/featuer/chat/view/maps/view/map_picker_page.dart';
 import 'package:admin_app/featuer/chat/view/pages/camera/view/PreviewScreen_page.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:flutter_contacts/flutter_contacts.dart';
+import 'package:flutter_contacts/flutter_contacts.dart';  
 import 'package:image_picker/image_picker.dart';
 
 class AttachmentHandler {

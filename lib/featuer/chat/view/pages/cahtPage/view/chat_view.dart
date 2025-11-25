@@ -25,7 +25,6 @@ class _ChatScreenState extends State<ChatScreen>
   void initState() {
     super.initState();
     
-    print("✅ ChatScreen initState called");
     
     // Tab Controller
     _tabController = TabController(
@@ -57,11 +56,9 @@ class _ChatScreenState extends State<ChatScreen>
 
   @override
   Widget build(BuildContext context) {
-    print("✅ ChatScreen build called");
     
     return BlocProvider(
       create: (context) {
-        print("✅ Creating ChatCubit");
         return ChatCubit(
           ChatRepository(),
           MessagesRepository(),
@@ -70,24 +67,20 @@ class _ChatScreenState extends State<ChatScreen>
       },
       child: Builder(
         builder: (context) {
-          print("✅ Builder inside BlocProvider");
           return FadeTransition(
             opacity: _fadeAnimation,
             child: Scaffold(
               appBar: AnimatedChatAppBar(
                 tabController: _tabController,
                 onBackPressed: () {
-                  print("🔙 Back pressed");
                   Navigator.pop(context);
                 },
                 onSearchChanged: (query) {
-                  print("🔍🔍🔍 ChatScreen: onSearchChanged called with: '$query'");
                   try {
                     final cubit = context.read<ChatCubit>();
-                    print("✅ Got cubit: $cubit");
                     cubit.searchChats(query);
                   } catch (e) {
-                    print("❌❌❌ Error accessing cubit: $e");
+                    print("❌  accessing ChatCubit: $e");
                   }
                 },
               ),

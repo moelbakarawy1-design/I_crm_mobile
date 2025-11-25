@@ -62,11 +62,12 @@ dependencies:
   video_player: ^2.8.1 
   url_launcher: ^6.2.1 
   chewie: ^1.7.1
-  google_maps_flutter: ^2.14.0
-  geolocator: ^14.0.1
   geocoding: ^4.0.0
   permission_handler: ^12.0.1
   flutter_contacts: ^1.1.9+2
+  flutter_map: ^8.2.2
+  latlong2: ^0.9.1
+  flutter_typeahead: ^5.2.0
 
 flutter_native_splash:
   # This package generates native code to customize Flutter's default white native splash screen

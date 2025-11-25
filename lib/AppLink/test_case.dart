@@ -1,3 +1,5 @@
+// ignore_for_file: empty_catches
+
 import 'dart:async';
 import 'package:admin_app/core/network/local_data.dart';
 import 'package:admin_app/core/theme/app_text_style.dart';
@@ -84,7 +86,7 @@ class DeepLinkHandler {
 
 );
 
-    // ignore: empty_catches
+
     } catch (e) {
     }
   }

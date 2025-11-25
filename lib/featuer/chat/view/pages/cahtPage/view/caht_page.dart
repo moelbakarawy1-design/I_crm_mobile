@@ -20,14 +20,12 @@ class CahtPage extends StatelessWidget {
           // Main Content
           BlocBuilder<ChatCubit, ChatState>(
             buildWhen: (previous, current) {
-              print("🔄 CahtPage buildWhen: ${current.runtimeType}");
               return current is ChatLoading ||
                   current is ChatListLoaded ||
                   current is ChatError ||
                   current is ChatSearchResult;
             },
             builder: (context, state) {
-              print("🎨 CahtPage building with state: ${state.runtimeType}");
               return AnimatedSwitcher(
                 duration: const Duration(milliseconds: 300),
                 child: _buildContent(context, state),
@@ -55,10 +53,8 @@ class CahtPage extends StatelessWidget {
     // 🔍 Support both ChatListLoaded and ChatSearchResult
     if (state is ChatListLoaded) {
       chats = state.chatModel.data ?? [];
-      print("📋 Displaying ${chats.length} chats (ChatListLoaded)");
     } else if (state is ChatSearchResult) {
       chats = state.results;
-      print("🔍 Displaying ${chats.length} search results (ChatSearchResult)");
     } else if (state is ChatError) {
       return Center(
         key: const ValueKey('error'),
