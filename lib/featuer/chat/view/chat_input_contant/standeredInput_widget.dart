@@ -1,7 +1,10 @@
-import 'package:admin_app/featuer/chat/view/chat_input_contant/chat_inputField_widget.dart';
+import 'package:admin_app/featuer/chat/view/chat_input_contant/widgets/animated_action_buttons.dart';
+import 'package:admin_app/featuer/chat/view/chat_input_contant/widgets/animated_emoji_button.dart';
+import 'package:admin_app/featuer/chat/view/chat_input_contant/widgets/animated_send_button.dart';
+import 'package:admin_app/featuer/chat/view/chat_input_contant/widgets/animated_text_field.dart';
 import 'package:flutter/material.dart';
 
-class StandardInputInterface extends StatelessWidget {
+class StandardInputInterface extends StatefulWidget {
   final TextEditingController controller;
   final Function(String) onSendText;
   final VoidCallback onRecordStart;
@@ -20,68 +23,89 @@ class StandardInputInterface extends StatelessWidget {
   });
 
   @override
+  State<StandardInputInterface> createState() => _StandardInputInterfaceState();
+}
+
+class _StandardInputInterfaceState extends State<StandardInputInterface>
+    with TickerProviderStateMixin {
+  late AnimationController _sendButtonController;
+  late AnimationController _actionsController;
+
+  @override
+  void initState() {
+    super.initState();
+
+    _sendButtonController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 300),
+    );
+
+    _actionsController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 300),
+    );
+
+    _actionsController.forward();
+  }
+
+  @override
+  void dispose() {
+    _sendButtonController.dispose();
+    _actionsController.dispose();
+    super.dispose();
+  }
+
+  void _onTextChanged(bool isTyping) {
+    if (isTyping) {
+      _actionsController.reverse();
+      _sendButtonController.forward();
+    } else {
+      _sendButtonController.reverse();
+      _actionsController.forward();
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Row(
       children: [
-        IconButton(
-          icon: const Icon(Icons.emoji_emotions_outlined, color: Colors.grey),
-          onPressed: () {}, 
-        ),
-        Expanded(
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 15),
-            decoration: BoxDecoration(
-              color: Colors.grey[200],
-              borderRadius: BorderRadius.circular(25),
-            ),
-            child: TextField(
-              controller: controller,
-              decoration: const InputDecoration(
-                hintText: "Type a message",
-                border: InputBorder.none,
-              ),
-            ),
-          ),
-        ),
+        const AnimatedEmojiButton(),
+        AnimatedTextField(controller: widget.controller),
         const SizedBox(width: 6),
-        
-        // Actions (Send or Record/Attach)
         ValueListenableBuilder<TextEditingValue>(
-          valueListenable: controller,
+          valueListenable: widget.controller,
           builder: (context, value, child) {
             final isTyping = value.text.trim().isNotEmpty;
 
-            if (isTyping) {
-              return IconButton(
-                icon: const Icon(Icons.send, color: kPrimaryColor),
-                onPressed: () {
-                  onSendText(controller.text.trim());
-                  controller.clear();
-                },
-              );
-            }
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              if (mounted) _onTextChanged(isTyping);
+            });
 
-            return Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                GestureDetector(
-                  onLongPress: onRecordStart,
-                  onLongPressUp: onRecordEnd,
-                  onTap: onRecordStart, 
-                  child: const Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 8),
-                    child: Icon(Icons.mic, color: kPrimaryColor),
-                  ),
-                ),
-                IconButton(
-                  icon: const Icon(Icons.attach_file, color: kPrimaryColor),
-                  onPressed: onUploadFile,
-                ),
-                IconButton(
-                  icon: const Icon(Icons.camera_alt, color: kPrimaryColor),
-                  onPressed: onOpenCamera,
-                ),
-              ],
+            return AnimatedSwitcher(
+              duration: const Duration(milliseconds: 300),
+              transitionBuilder: (child, animation) {
+                return ScaleTransition(
+                  scale: animation,
+                  child: child,
+                );
+              },
+              child: isTyping
+                  ? AnimatedSendButton(
+                      key: const ValueKey('send'),
+                      controller: _sendButtonController,
+                      onSend: () {
+                        widget.onSendText(widget.controller.text.trim());
+                        widget.controller.clear();
+                      },
+                    )
+                  : AnimatedActionButtons(
+                      key: const ValueKey('actions'),
+                      controller: _actionsController,
+                      onRecordStart: widget.onRecordStart,
+                      onRecordEnd: widget.onRecordEnd,
+                      onUploadFile: widget.onUploadFile,
+                      onOpenCamera: widget.onOpenCamera,
+                    ),
             );
           },
         ),

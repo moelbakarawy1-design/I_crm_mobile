@@ -31,7 +31,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 // ✅ --- IMPORT CHAT MODEL WITH A PREFIX ---
 import 'package:admin_app/featuer/chat/data/model/chat_model12.dart' as ChatModel;
-import 'package:admin_app/featuer/chat/view/chat_view.dart';
+import 'package:admin_app/featuer/chat/view/pages/cahtPage/view/chat_view.dart';
 import 'package:admin_app/featuer/chat/view/individualContatnt/individual_screen.dart';
 import 'package:admin_app/featuer/chat/view/pages/create_chatpage.dart';
 

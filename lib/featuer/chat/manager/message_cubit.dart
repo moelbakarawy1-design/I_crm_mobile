@@ -1,3 +1,5 @@
+// ignore_for_file: curly_braces_in_flow_control_structures
+
 import 'dart:async';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:admin_app/core/network/api_endpoiont.dart';
@@ -163,8 +165,9 @@ class MessagesCubit extends Cubit<MessagesState> {
     try {
       Map<String, dynamic> newMsgData;
       
-      if (type == 'image') newMsgData = await messagesRepository.sendImageMessage(chatId, path, caption);
-      else if (type == 'video') newMsgData = await messagesRepository.sendVideoMessage(chatId, path, caption);
+      if (type == 'image') {
+        newMsgData = await messagesRepository.sendImageMessage(chatId, path, caption);
+      } else if (type == 'video') newMsgData = await messagesRepository.sendVideoMessage(chatId, path, caption);
       else if (type == 'file') newMsgData = await messagesRepository.sendDocumentMessage(chatId, path);
       else if (type == 'audio') newMsgData = await messagesRepository.sendAudioMessage(chatId, path);
       else return;
@@ -211,9 +214,6 @@ class MessagesCubit extends Cubit<MessagesState> {
     try {
 
       print('📍 Sending Location...');
-
-
-
       final newMsgData = await messagesRepository.sendLocationMessage(chatId, lat, long);
 
       final messageJson = newMsgData['data'] ?? newMsgData;
@@ -221,19 +221,8 @@ class MessagesCubit extends Cubit<MessagesState> {
       // CHANGED: MessageData -> OrderedMessages
 
       final newMessage = OrderedMessages.fromJson(messageJson);
-
-      
-
-      // Force type location if server misses it
-
       newMessage.type = 'location'; 
-
-
-
       _addOrUpdateMessage(newMessage); // ✅ Use helper
-
-
-
     } catch (e) {
 
       print('❌ Error sending location: $e');

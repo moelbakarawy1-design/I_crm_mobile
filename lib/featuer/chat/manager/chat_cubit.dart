@@ -1,41 +1,47 @@
 import 'dart:async';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:admin_app/featuer/chat/data/model/ChatMessagesModel.dart';
+import 'package:admin_app/featuer/chat/data/model/ChatMessagesModel.dart' hide Data;
 import 'package:admin_app/featuer/chat/data/model/chat_model12.dart';
 import 'package:admin_app/featuer/chat/data/repo/chat_repo.dart';
 import 'package:admin_app/featuer/chat/data/repo/MessagesRepository.dart';
-import 'package:admin_app/featuer/chat/service/Socetserver.dart'; 
+import 'package:admin_app/featuer/chat/service/Socetserver.dart';
 import 'chat_state.dart';
 
 class ChatCubit extends Cubit<ChatState> {
   final ChatRepository chatRepository;
   final MessagesRepository messagesRepository;
-  final SocketService socketService; // ✅ Injected
+  final SocketService socketService;
 
-  StreamSubscription? _messageSubscription; // ✅ Subscription handle
+  StreamSubscription? _messageSubscription;
 
   ChatCubit(this.chatRepository, this.messagesRepository, this.socketService)
       : super(ChatInitial());
 
   ChatModelNEW? allChats;
-  
-  // Fetch all chats
+  List<Data> filteredChats = [];
+  String currentSearchQuery = ''; // 🔍 Track current search
+
   Future<void> fetchAllChats() async {
     emit(ChatLoading());
     try {
       final chatModel = await chatRepository.getAllChats();
       if (isClosed) return;
       allChats = chatModel;
-      emit(ChatListLoaded(chatModel));
+      filteredChats = chatModel.data ?? [];      
+      // 🔍 If there's an active search, reapply it
+      if (currentSearchQuery.isNotEmpty) {
+        searchChats(currentSearchQuery);
+      } else {
+        emit(ChatListLoaded(chatModel));
+      }
       
-      _setupSocketListeners(); // ✅ Start listening after load
+      _setupSocketListeners();
     } catch (e) {
       if (isClosed) return;
       emit(ChatError(e.toString()));
     }
   }
 
-  // Assign chat
   Future<void> assignChat(String chatId, String userId) async {
     emit(ChatActionLoading());
     try {
@@ -51,7 +57,6 @@ class ChatCubit extends Cubit<ChatState> {
     }
   }
 
-  // Rename chat
   Future<void> renameChat(String chatId, String newName) async {
     emit(ChatActionLoading());
     try {
@@ -67,7 +72,6 @@ class ChatCubit extends Cubit<ChatState> {
     }
   }
 
-  // Delete chat
   Future<void> deleteChat(String chatId) async {
     emit(ChatLoading());
     try {
@@ -82,18 +86,9 @@ class ChatCubit extends Cubit<ChatState> {
     }
   }
 
-  // ---------------------------------------------------------------------------
-  // 🔌 Socket Logic for Chat List
-  // ---------------------------------------------------------------------------
-
   void _setupSocketListeners() async {
-    // Ensure connected
     await socketService.connect();
-
-    // Cancel existing to avoid duplicates
     _messageSubscription?.cancel();
-
-    // Listen to the Broadcast Stream
     _messageSubscription = socketService.newMessageStream.listen((data) {
       _handleNewMessage(data);
     });
@@ -103,7 +98,6 @@ class ChatCubit extends Cubit<ChatState> {
     if (isClosed || allChats?.data == null) return;
 
     try {
-      // 1. Parse Data
       dynamic processedData = data;
       if (data is List && data.isNotEmpty) processedData = data[0];
 
@@ -114,11 +108,9 @@ class ChatCubit extends Cubit<ChatState> {
       final newMessage = OrderedMessages.fromJson(jsonPayload);
       final chatId = newMessage.chatId;
 
-      // 2. Find the chat in the list
       final index = allChats!.data!.indexWhere((c) => c.id == chatId);
 
       if (index != -1) {
-        // Chat exists: Update last message and move to top
         var chatToUpdate = allChats!.data![index];
 
         chatToUpdate.messages ??= [];
@@ -129,17 +121,21 @@ class ChatCubit extends Cubit<ChatState> {
           type: newMessage.type,
         ));
 
-        // Remove from current position and insert at top (0)
         allChats!.data!.removeAt(index);
         allChats!.data!.insert(0, chatToUpdate);
 
-        // Emit new state to refresh UI
-        emit(ChatListLoaded(ChatModelNEW(
-          message: allChats!.message,
-          data: List.from(allChats!.data!),
-        )));
+        // 🔍 Reapply search if active
+        if (currentSearchQuery.isNotEmpty) {
+          searchChats(currentSearchQuery);
+        } else {
+          filteredChats = List.from(allChats!.data!);
+          emit(ChatListLoaded(ChatModelNEW(
+            message: allChats!.message,
+            data: List.from(allChats!.data!),
+            success: allChats!.success,
+          )));
+        }
       } else {
-        // New chat found (not in list), refresh whole list
         fetchAllChats();
       }
     } catch (e) {
@@ -147,9 +143,53 @@ class ChatCubit extends Cubit<ChatState> {
     }
   }
 
+  //  Improved Search logic
+  void searchChats(String query) {
+    currentSearchQuery = query; // Save current search query
+    
+    if (allChats == null || allChats!.data == null) {
+      return;
+    }
+
+    if (query.trim().isEmpty) {
+      filteredChats = List.from(allChats!.data!);
+      emit(ChatListLoaded(ChatModelNEW(
+        message: allChats!.message,
+        data: filteredChats,
+        success: allChats!.success,
+      )));
+    } else {
+      final lowerQuery = query.toLowerCase().trim();
+      
+      filteredChats = allChats!.data!.where((chat) {
+        final customerName = chat.customer?.name?.toLowerCase() ?? '';
+        final customerPhone = chat.customer?.phone?.toLowerCase() ?? '';
+        final matches = customerName.contains(lowerQuery) || customerPhone.contains(lowerQuery);
+        
+        if (matches) {
+        }
+        return matches;
+      }).toList();
+      
+      emit(ChatSearchResult(filteredChats));
+    }
+  }
+
+  // 🔍 Clear search and show all chats
+  void clearSearch() {
+    currentSearchQuery = '';
+    if (allChats != null) {
+      filteredChats = List.from(allChats!.data ?? []);
+      emit(ChatListLoaded(ChatModelNEW(
+        message: allChats!.message,
+        data: filteredChats,
+        success: allChats!.success,
+      )));
+    }
+  }
+
   @override
   Future<void> close() {
-    // ✅ Stop listening to updates, but DO NOT disconnect the socket
     _messageSubscription?.cancel();
     return super.close();
   }
