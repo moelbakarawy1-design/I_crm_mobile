@@ -56,9 +56,13 @@ class _CreateChatScreenState extends State<CreateChatScreen> {
 
           return Scaffold(
             appBar: AppBar(
-              title: const Text("Create Chat"),
+              title:  Text("Create Chat",style: AppTextStyle.setpoppinsWhite(fontSize: 20, fontWeight: FontWeight.w500),),
               backgroundColor: AppColor.lightBlue,
               elevation: 0,
+              leading: IconButton(
+                icon: const Icon(Icons.arrow_back_ios, color: Colors.white),
+                onPressed: () => Navigator.of(context).pop(),
+              ),
             ),
             body: Padding(
               padding: const EdgeInsets.all(20),

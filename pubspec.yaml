@@ -60,7 +60,7 @@ dependencies:
   image_picker: ^1.2.1
   file_picker: ^8.0.0  
   video_player: ^2.8.1 
-  url_launcher: ^6.2.1 
+  url_launcher: ^6.3.2 
   chewie: ^1.7.1
   geocoding: ^4.0.0
   permission_handler: ^12.0.1
@@ -69,6 +69,7 @@ dependencies:
   latlong2: ^0.9.1
   flutter_typeahead: ^5.2.0
   geolocator: ^14.0.1
+  flutter_linkify: ^6.0.0
 
 flutter_native_splash:
   # This package generates native code to customize Flutter's default white native splash screen

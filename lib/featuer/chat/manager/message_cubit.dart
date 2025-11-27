@@ -26,7 +26,13 @@ class MessagesCubit extends Cubit<MessagesState> {
   final SocketService socketService; // ✅ Injected
 
   List<OrderedMessages> allMessages = [];
+ final Set<String> _messageIds = {}; 
+
   String? _currentChatId;
+  String? _savedNextCursor; // الكيرسر الحالي
+  bool _hasNextPage = true;
+  bool _isLoadingMore = false;
+  bool get isLoadingMore => _isLoadingMore;
 
   // ✅ Subscriptions
   StreamSubscription? _msgSubscription;
@@ -45,49 +51,126 @@ class MessagesCubit extends Cubit<MessagesState> {
     }
     return msg;
   }
+  void _sortMessages() {
+    allMessages.sort((a, b) {
+      DateTime dateA = DateTime.tryParse(a.createdAt ?? '') ?? DateTime.now();
+      DateTime dateB = DateTime.tryParse(b.createdAt ?? '') ?? DateTime.now();
+      return dateB.compareTo(dateA); 
+    });
+  }
 
-  /// Helper: Add/Update Message safely
-  void _addOrUpdateMessage(OrderedMessages newMessage) {
+ void _addOrUpdateMessage(OrderedMessages newMessage) {
     if (isClosed) return;
     
     final index = allMessages.indexWhere((msg) => msg.id == newMessage.id);
 
     if (index != -1) {
-      allMessages[index] = newMessage; // Update
+      // تحديث رسالة موجودة
+      allMessages[index] = newMessage; 
     } else {
-      allMessages.add(newMessage); // Add
+      // إضافة رسالة جديدة
+      // 👇 التعديل: نتأكد إنها مش في الـ Set ونضيفها
+      if (!_messageIds.contains(newMessage.id)) {
+         allMessages.add(newMessage);
+         _messageIds.add(newMessage.id!); // ✅ ضيف الـ ID هنا
+      }
     }
+    
+    _sortMessages(); // ✅ نعيد الترتيب احتياطي
     emit(MessagesLoaded(List.from(allMessages)));
   }
 
-  /// 📥 Load Messages & Setup Socket
+void _addUniqueMessages(List<OrderedMessages> newMessages) {
+    for (var msg in newMessages) {
+      if (!_messageIds.contains(msg.id)) {
+        _messageIds.add(msg.id!);
+        allMessages.add(_fixMessageUrl(msg));
+      }
+    }
+    _sortMessages();
+  }
+
   Future<void> getMessages(String chatId) async {
     if (isClosed) return;
     emit(MessagesLoading());
     _currentChatId = chatId;
+    
+    _savedNextCursor = null;
+    _hasNextPage = true;
+    allMessages.clear();
+    _messageIds.clear();
 
     try {
-      // 1. Ensure Socket Connection & Join Room
       await socketService.connect();
       socketService.joinChat(chatId);
-      
-      // 2. Start Listening
       _listenForSocketEvents();
 
-      // 3. Fetch API History
       final response = await messagesRepository.getMessages(chatId);
       
-      allMessages = (response.data?.orderedMessages ?? [])
-          .map((msg) => _fixMessageUrl(msg))
-          .toList();
+      _savedNextCursor = response.data?.nextCursor;
+      _hasNextPage = response.data?.hasNextPage ?? false;
+
+      if (response.data?.orderedMessages != null) {
+        _addUniqueMessages(response.data!.orderedMessages!);
+      }
           
-      if (!isClosed) emit(MessagesLoaded(List.from(allMessages)));
+      emit(MessagesLoaded(List.from(allMessages)));
 
     } catch (e) {
-      if (!isClosed) emit(MessagesError(e.toString()));
+      emit(MessagesError(e.toString()));
     }
   }
 
+// داخل MessagesCubit.dart
+
+  Future<void> loadMoreMessages() async {
+    // نفس شروط الحماية القديمة
+    if (!_hasNextPage || _isLoadingMore || _savedNextCursor == null) return;
+
+    _isLoadingMore = true;
+    print("⏳ Requesting Batch of 20 with Cursor: $_savedNextCursor");
+
+    try {
+      final response = await messagesRepository.getMessages(
+        _currentChatId!,
+        cursor: _savedNextCursor, 
+        // الـ limit بقى مبعوت جوه الـ Repo تلقائي
+      );
+
+      _savedNextCursor = response.data?.nextCursor;
+      _hasNextPage = response.data?.hasNextPage ?? false;
+      
+      final incomingMessages = response.data?.orderedMessages ?? [];
+      
+      print("📦 Received Batch Size: ${incomingMessages.length}"); // لوج عشان نتأكد
+
+      if (incomingMessages.isNotEmpty) {
+        int oldLength = allMessages.length;
+        _addUniqueMessages(incomingMessages);
+
+        if (allMessages.length > oldLength) {
+             emit(MessagesLoaded(List.from(allMessages)));
+        }
+
+        // 👇👇 التعديل الجديد (شرط التوقف الإضافي)
+        // لو طلبنا 20 وجالنا أقل من 20، يبقى أكيد دي آخر صفحة حتى لو الباك إند قال غير كده
+        if (incomingMessages.length < 20) {
+          _hasNextPage = false;
+          print("🛑 Reached end of messages (Batch < 20)");
+        }
+      } else {
+        // لو القائمة فاضية يبقى خلصنا
+        _hasNextPage = false;
+      }
+
+    } catch (e) {
+      print("❌ Error loading more: $e");
+    } finally {
+      // الـ Delay مهم عشان الـ List تلحق تطول قبل ما السكرول يحس تاني
+      await Future.delayed(const Duration(milliseconds: 200));
+      _isLoadingMore = false;
+    }
+  }
   /// 🎧 Listen to Socket Streams
   void _listenForSocketEvents() {
     // Clear old subs
@@ -256,16 +339,13 @@ class MessagesCubit extends Cubit<MessagesState> {
 
   @override
   Future<void> close() {
-    // 1. Cancel Listeners for this screen
     _msgSubscription?.cancel();
     _statusSubscription?.cancel();
     
-    // 2. Tell Server we left this room
     if (_currentChatId != null) {
       socketService.leaveChat(_currentChatId!);
     }
     
-    // 3. DO NOT disconnect the socket (ChatCubit needs it)
     return super.close();
   }
 }

@@ -6,18 +6,29 @@ import 'dart:io';
 import 'package:dio/dio.dart';
 class MessagesRepository {
   final APIHelper _apiHelper = APIHelper();
-  Future<ChatMessagesModel> getMessages(String chatId) async {
-    final ApiResponse response = await _apiHelper.getRequest(
-      endPoint: '${EndPoints.getAllChat}/$chatId/messages',
-    );
 
-    if (response.status) {
-      // ⭐️ FIXED: Parse the full response model, not just one message
-      return ChatMessagesModel.fromJson(response.data);
-    } else {
-      throw Exception(response.message);
-    }
+
+Future<ChatMessagesModel> getMessages(String chatId, {String? cursor}) async {
+  
+  Map<String, dynamic> queryParams = {
+    'limit': 20,
+  };
+  
+  if (cursor != null) {
+    queryParams['cursor'] = cursor;
   }
+
+  final ApiResponse response = await _apiHelper.getRequest(
+    endPoint: '${EndPoints.getAllChat}/$chatId/messages',
+    queryParameters: queryParams,
+  );
+
+  if (response.status) {
+    return ChatMessagesModel.fromJson(response.data);
+  } else {
+    throw Exception(response.message);
+  }
+}
 
   Future<Map<String, dynamic>> sendMessage(String chatId, String message) async {
     final ApiResponse response = await _apiHelper.postRequest(

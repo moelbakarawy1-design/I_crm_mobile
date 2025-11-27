@@ -8,7 +8,9 @@ import 'package:admin_app/featuer/chat/view/maps/special_message_widgets.dart';
 import 'package:admin_app/featuer/chat/view/video/widget/DocumentMessageWidget.dart';
 import 'package:admin_app/featuer/chat/view/video/widget/VideoMessageWidget.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_linkify/flutter_linkify.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 String _getMediaUrl(String? content) {
   if (content == null || content.isEmpty) return '';
@@ -122,14 +124,25 @@ Widget buildMessageContent(OrderedMessages msg) {
   }
 
   //  TEXT 
-  else {
-    return Text(
-      msg.content ?? '',
-      style: AppTextStyle.setpoppinsTextStyle(
-        fontSize: 12, 
-        fontWeight: FontWeight.w400, 
-        color: AppColor.mainBlack
-      ),
-    );
-  }
+ else {
+  return Linkify(
+    text: msg.content ?? '',
+    style: AppTextStyle.setpoppinsTextStyle(
+      fontSize: 12,
+      fontWeight: FontWeight.w400,
+      color: AppColor.mainBlack,
+    ),
+    linkStyle: AppTextStyle.setpoppinsTextStyle(
+      fontSize: 12,
+      fontWeight: FontWeight.w400,
+      color: Colors.blue,
+    ),
+    onOpen: (link) async {
+      final url = Uri.parse(link.url);
+      if (await canLaunchUrl(url)) {
+        await launchUrl(url, mode: LaunchMode.externalApplication);
+      }
+    },
+  );
+}
 }
