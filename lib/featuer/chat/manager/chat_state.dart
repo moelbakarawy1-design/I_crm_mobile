@@ -1,4 +1,4 @@
-import 'package:admin_app/featuer/chat/data/model/ChatMessagesModel.dart';
+import 'package:admin_app/featuer/chat/data/model/ChatMessagesModel.dart' hide Data;
 import 'package:admin_app/featuer/chat/data/model/chat_model12.dart';
 
 abstract class ChatState {}
@@ -11,6 +11,11 @@ class ChatError extends ChatState {
   final String message;
   ChatError(this.message);
 }
+class ChatSearchResult extends ChatState {
+  final List<Data> results;
+  ChatSearchResult(this.results);
+}
+
 
 // قائمة المحادثات
 class ChatListLoaded extends ChatState {
@@ -22,7 +27,6 @@ class ChatListLoaded extends ChatState {
 class MessagesLoading extends ChatState {}
 
 class MessagesLoaded extends ChatState {
-  // CHANGED: MessageData -> OrderedMessages
   final List<OrderedMessages> messages;
   MessagesLoaded(this.messages);
 }

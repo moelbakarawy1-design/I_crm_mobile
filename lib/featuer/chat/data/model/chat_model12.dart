@@ -113,8 +113,8 @@ class Messages {
   String? id;
   String? content;
   String? timestamp;
-  String? type; // ✅ Added type
-  String? caption; // ✅ Added caption (optional but useful)
+  String? type; 
+  String? caption; 
 
   Messages({
     this.id, 
@@ -128,8 +128,8 @@ class Messages {
     id = json['id'];
     content = json['content'];
     timestamp = json['timestamp'];
-    type = json['type']; // ✅ Parse type
-    caption = json['caption']; // ✅ Parse caption
+    type = json['type']; 
+    caption = json['caption']; 
   }
 
   Map<String, dynamic> toJson() {
@@ -137,8 +137,8 @@ class Messages {
     data['id'] = id;
     data['content'] = content;
     data['timestamp'] = timestamp;
-    data['type'] = type; // ✅ Save type
-    data['caption'] = caption; // ✅ Save caption
+    data['type'] = type;
+    data['caption'] = caption;
     return data;
   }
 }
