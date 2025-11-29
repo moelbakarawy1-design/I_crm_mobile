@@ -107,7 +107,7 @@ Widget build(BuildContext context) {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          'Sign Up',
+                          'Sign in',
                           style: AppTextStyle.setpoppinsBlack(
                             fontSize: 32,
                             fontWeight: FontWeight.w700,

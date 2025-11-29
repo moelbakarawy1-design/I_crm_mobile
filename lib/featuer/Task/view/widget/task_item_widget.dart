@@ -42,8 +42,8 @@ class TaskItemWidget extends StatelessWidget {
                 formattedDate,
                 textAlign: TextAlign.start,
                 style: AppTextStyle.setpoppinsTextStyle(
-                  fontSize: 8,
-                  fontWeight: FontWeight.w400,
+                  fontSize: 8.sp,
+                  fontWeight: FontWeight.w600,
                   color: statusInfo['color'],
                 ),
               ),
@@ -56,7 +56,7 @@ class TaskItemWidget extends StatelessWidget {
                 task.title ?? 'No Title',
                 textAlign: TextAlign.center,
                 style: AppTextStyle.setpoppinsTextStyle(
-                  fontSize: 8,
+                  fontSize: 10.sp,
                   fontWeight: FontWeight.w500,
                   color: AppColor.mainBlack,
                 ),
@@ -77,8 +77,8 @@ class TaskItemWidget extends StatelessWidget {
                     child: Text(
                       status.label,
                       style: AppTextStyle.setpoppinsTextStyle(
-                        fontSize: 8,
-                        fontWeight: FontWeight.w400,
+                        fontSize: 8.sp,
+                        fontWeight: FontWeight.w600,
                         color: TaskHelper.getStatusInfo(status.value)['color'],
                       ),
                     ),

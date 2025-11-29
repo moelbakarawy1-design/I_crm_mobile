@@ -1,3 +1,4 @@
+import 'package:admin_app/core/theme/app_color.dart';
 import 'package:admin_app/core/theme/app_text_style.dart';
 import 'package:admin_app/featuer/User/data/model/getAllUser_model.dart';
 import 'package:admin_app/featuer/User/manager/user_cubit.dart';
@@ -20,71 +21,96 @@ class TableRowWidget extends StatelessWidget {
           bottom: BorderSide(color: Colors.grey.shade200, width: 1),
         ),
       ),
-      child: Table(
-        columnWidths: const {
-          0: FlexColumnWidth(4),
-          1: FlexColumnWidth(4),
-          2: FlexColumnWidth(4),
-          3: FlexColumnWidth(4),
-          4: FlexColumnWidth(5),
-        },
-        children: [
-          TableRow(
-            children: [
-              _tableCell(user.name ?? ''),
-              _tableCell(user.email ?? ''),
-              _tableCell(user.role?.name ?? '—'),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8),
+      child: IntrinsicHeight(
+        child: Row(
+          children: [
+            // Name Column
+            Expanded(
+              flex: 4,
+              child: _tableCell(user.name ?? ''),
+            ),
+            // Email Column
+            Expanded(
+              flex: 4,
+              child: _tableCell(user.email ?? ''),
+            ),
+            // Role Column
+            Expanded(
+              flex: 3,
+              child: _tableCell(user.role?.name ?? '—'),
+            ),
+            // Actions Column
+            Expanded(
+              flex: 3,
+              child: Padding(
+                padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 12.h),
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    InkWell(
-                      child: SvgPicture.asset('assets/svg/Component _edit.svg',
-                          width: 30, height: 30),
-                      onTap: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                              builder: (_) => EditUserScreen(user: user)),
-                        );
-                      },
+                    // Edit Button
+                    Flexible(
+                      child: InkWell(
+                        borderRadius: BorderRadius.circular(4.r),
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                                builder: (_) => EditUserScreen(user: user)),
+                          );
+                        },
+                        child: SvgPicture.asset(
+                          'assets/svg/Component _edit.svg',
+                          width: 22.w,
+                          height: 22.h,
+                        ),
+                      ),
                     ),
                     SizedBox(width: 4.w),
-                    InkWell(
-                      child: SvgPicture.asset('assets/svg/Component _delete.svg',
-                          width: 30, height: 30),
-                      onTap: () {
-                        showDialog(
-                          context: context,
-                          builder: (context) {
-                            return AlertDialog(
-                              title: const Text("Delete User"),
-                              content: Text("Are you sure you want to delete ${user.name}?"),
-                              actions: [
-                                TextButton(
-                                  onPressed: () => Navigator.pop(context),
-                                  child: const Text("Cancel"),
-                                ),
-                                TextButton(
-                                  onPressed: () {
-                                    Navigator.pop(context);
-                                    context.read<GetAllUserCubit>().deleteUser(user.id!);
-                                  },
-                                  child: const Text("Delete", style: TextStyle(color: Colors.red)),
-                                ),
-                              ],
-                            );
-                          },
-                        );
-                      },
+                    // Delete Button
+                    Flexible(
+                      child: InkWell(
+                        borderRadius: BorderRadius.circular(4.r),
+                        onTap: () {
+                          showDialog(
+                            context: context,
+                            builder: (context) {
+                              return AlertDialog(
+                                title: const Text("Delete User"),
+                                content: Text(
+                                    "Are you sure you want to delete ${user.name}?"),
+                                actions: [
+                                  TextButton(
+                                    onPressed: () => Navigator.pop(context),
+                                    child: const Text("Cancel"),
+                                  ),
+                                  TextButton(
+                                    onPressed: () {
+                                      Navigator.pop(context);
+                                      context
+                                          .read<GetAllUserCubit>()
+                                          .deleteUser(user.id!);
+                                    },
+                                    child: const Text("Delete",
+                                        style: TextStyle(color: Colors.red)),
+                                  ),
+                                ],
+                              );
+                            },
+                          );
+                        },
+                        child: SvgPicture.asset(
+                          'assets/svg/Component _delete.svg',
+                          width: 22.w,
+                          height: 22.h,
+                        ),
+                      ),
                     ),
                   ],
                 ),
               ),
-            ],
-          ),
-        ],
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -95,8 +121,12 @@ class TableRowWidget extends StatelessWidget {
       child: Text(
         text,
         style: AppTextStyle.setpoppinsTextStyle(
-            fontSize: 10, fontWeight: FontWeight.w500, color: const Color(0xFF7E92A2)),
+          fontSize: 10.sp,
+          fontWeight: FontWeight.w400,
+          color:  AppColor.secondaryGrey,
+        ),
         overflow: TextOverflow.ellipsis,
+        maxLines: 1,
       ),
     );
   }

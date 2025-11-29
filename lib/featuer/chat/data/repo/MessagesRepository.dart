@@ -6,23 +6,17 @@ import 'dart:io';
 import 'package:dio/dio.dart';
 class MessagesRepository {
   final APIHelper _apiHelper = APIHelper();
-
-
-Future<ChatMessagesModel> getMessages(String chatId, {String? cursor}) async {
-  
+  Future<ChatMessagesModel> getMessages(String chatId, {String? cursor}) async { 
   Map<String, dynamic> queryParams = {
     'limit': 20,
   };
-  
   if (cursor != null) {
     queryParams['cursor'] = cursor;
   }
-
   final ApiResponse response = await _apiHelper.getRequest(
     endPoint: '${EndPoints.getAllChat}/$chatId/messages',
     queryParameters: queryParams,
   );
-
   if (response.status) {
     return ChatMessagesModel.fromJson(response.data);
   } else {
@@ -289,7 +283,7 @@ Future<ChatMessagesModel> getMessages(String chatId, {String? cursor}) async {
       throw Exception("Failed to send location");
     }
   }
-  // 👤 Send Contact
+  //  Send Contact
   Future<Map<String, dynamic>> sendContactMessage(String chatId, String name, String phone) async {
     try {
       // Construct the specific JSON structure the backend wants
@@ -313,9 +307,6 @@ Future<ChatMessagesModel> getMessages(String chatId, {String? cursor}) async {
         'type': 'contacts', // Type is plural 'contacts' usually
         'contacts': contactData, // The backend expects this array
       };
-
-      print('📤 Sending Contact: $name - $phone');
-
       final ApiResponse response = await _apiHelper.postRequest(
         endPoint: '${EndPoints.getAllChat}/$chatId/messages',
         isFormData: false, 
@@ -328,7 +319,6 @@ Future<ChatMessagesModel> getMessages(String chatId, {String? cursor}) async {
         throw Exception(response.message);
       }
     } catch (e) {
-      print('❌ Error sending contact: $e');
       throw Exception("Failed to send contact");
     }
   }

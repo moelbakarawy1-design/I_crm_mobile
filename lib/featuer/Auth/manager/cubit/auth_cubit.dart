@@ -157,4 +157,31 @@ Future<void> resetPassword({
       emit(NotAdminLogInError(message: e.toString()));
     }
   }
+  // Add this method to your AuthCubit class
+
+Future<void> createAdmin({
+  required String name,
+  required String email,
+  required String password,
+  required String passwordConfirm,
+}) async {
+  emit(CreateAdminLoading());
+  try {
+    final request = CreateAdminRequest(
+      name: name,
+      email: email,
+      password: password,
+      passwordConfirm: passwordConfirm,
+    );
+
+    final response = await _authRepository.createAdmin(request);
+
+    emit(CreateAdminSuccess(
+      message: response.message,
+      adminData: response.data,
+    ));
+  } catch (e) {
+    emit(CreateAdminError(message: e.toString()));
+  }
+}
 }

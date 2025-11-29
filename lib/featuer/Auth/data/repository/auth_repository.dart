@@ -135,8 +135,6 @@ class AuthRepository {
   }
 }
 
-
-
   // Change Password
   Future<ApiResponse> changePassword(ChangePasswordRequest request) async {
     return await _apiHelper.postRequest(
@@ -315,5 +313,37 @@ Future<LoginResponse> notAdminLogIn(String email) async {
       throw Exception(response.message );
     }
   }
+  // Add this method to your AuthRepository class
+
+Future<CreateAdminResponse> createAdmin(CreateAdminRequest request) async {
+  final response = await _apiHelper.postRequest(
+    endPoint: EndPoints.createAdmin, // You'll need to add this endpoint
+    data: request.toJson(),
+    isFormData: false,
+    isAuthorized: true, // Assuming admin needs to be logged in to create another admin
+  );
+
+  if (response.status && response.data != null) {
+    final createAdminData = CreateAdminResponse.fromJson(response.data);
+    
+    if (createAdminData.success) {
+      print('✅ Admin created successfully: ${createAdminData.message}');
+      return createAdminData;
+    } else {
+      throw Exception(createAdminData.message);
+    }
+  } else {
+    String errorMessage = "Failed to create admin. Please try again.";
+    
+    if (response.message is Map) {
+      final mapMsg = response.message as Map<String, dynamic>;
+      errorMessage = mapMsg.values.expand((v) => v is List ? v : [v]).join('\n');
+    } else {
+      errorMessage = response.message;
+    }
+    
+    throw Exception(errorMessage);
+  }
+}
 
 }

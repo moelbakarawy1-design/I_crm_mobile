@@ -29,7 +29,6 @@ class ChatRepository {
       );
       return response;
     } catch (e) {
-      print('❌ Error deleting chat: $e');
       return ApiResponse(
         status: false,
         statusCode: 500,
@@ -46,13 +45,8 @@ class ChatRepository {
         data: {"userId": userId}, 
         
       );
-      print('✅ assignChat status: ${response.status}');
-    print('✅ assignChat statusCode: ${response.statusCode}');
-    print('✅ assignChat message: ${response.message}');
-    print('✅ assignChat raw data: ${response.data}');
       return response;
     } catch (e) {
-      print('❌ Error assigning chat: $e');
       return ApiResponse(
         status: false,
         statusCode: 500,
@@ -67,13 +61,8 @@ class ChatRepository {
         isFormData: false,
         data: {"name": newName}, 
       );
-     print('✅ assignChat status: ${response.status}');
-    print('✅ assignChat statusCode: ${response.statusCode}');
-    print('✅ assignChat message: ${response.message}');
-    print('✅ assignChat raw data: ${response.data}');
       return response;
     } catch (e) {
-      print('❌ Error renaming chat: $e');
       return ApiResponse(
         status: false,
         statusCode: 500,

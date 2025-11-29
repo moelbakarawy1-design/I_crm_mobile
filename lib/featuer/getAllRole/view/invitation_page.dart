@@ -47,6 +47,7 @@ class _InvitationPageState extends State<InvitationPage> {
           children: [
             // Search and Add Controller Button
             Row(
+              mainAxisSize: MainAxisSize.min,
               children: [
                 Expanded(
                   child: Container(
@@ -164,76 +165,69 @@ class _InvitationPageState extends State<InvitationPage> {
       ),
     );
   }
-
-  Widget _buildUsersTable(List<Data> users) {
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12.r),
-        boxShadow: [
-          BoxShadow(
-            color: AppColor.mainBlack.withOpacity(0.05),
-            blurRadius: 7,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Column(
-        children: [
-          // Table Header
-          Container(
-            width: double.infinity,
-            decoration: BoxDecoration(
-              color: const Color(0xFFF8FAFC),
-              borderRadius: BorderRadius.only(
-                topLeft: Radius.circular(12.r),
-                topRight: Radius.circular(12.r),
-              ),
+Widget _buildUsersTable(List<Data> users) {
+  return Container(
+    decoration: BoxDecoration(
+      color: Colors.white,
+      borderRadius: BorderRadius.circular(12.r),
+      boxShadow: [
+        BoxShadow(
+          color: AppColor.mainBlack.withOpacity(0.05),
+          blurRadius: 7,
+          offset: const Offset(0, 2),
+        ),
+      ],
+    ),
+    child: Column(
+      children: [
+        // Table Header
+        Container(
+          width: double.infinity,
+          decoration: BoxDecoration(
+            color: const Color(0xFFF8FAFC),
+            borderRadius: BorderRadius.only(
+              topLeft: Radius.circular(12.r),
+              topRight: Radius.circular(12.r),
             ),
-            child: Table(
-              columnWidths: const {
-                0: FlexColumnWidth(5),
-                1: FlexColumnWidth(4),
-                2: FlexColumnWidth(4),
-                3: FlexColumnWidth(5),
-                4: FlexColumnWidth(5),
-              },
+          ),
+          child: IntrinsicHeight(
+            child: Row(
               children: [
-                TableRow(
-                  children: [
-                    _tableHeader('Name'),
-                    _tableHeader('Email'),
-                    _tableHeader('Role'),
-                    _tableHeader('Actions'),
-                  ],
-                ),
+                Expanded(flex: 4, child: _tableHeader('Name')),
+                Expanded(flex: 4, child: _tableHeader('Email')),
+                Expanded(flex: 3, child: _tableHeader('Role')),
+                Expanded(flex: 3, child: _tableHeader('Actions')),
               ],
             ),
           ),
+        ),
 
-          // Table Content
-          Expanded(
-            child: ListView.builder(
-              itemCount: users.length,
-              itemBuilder: (context, index) {
-                final user = users[index];
-                return TableRowWidget(user: user);
-              },
-            ),
+        // Table Content
+        Expanded(
+          child: ListView.builder(
+            itemCount: users.length,
+            itemBuilder: (context, index) {
+              final user = users[index];
+              return TableRowWidget(user: user);
+            },
           ),
-        ],
-      ),
-    );
-  }
+        ),
+      ],
+    ),
+  );
+}
 
-  Widget _tableHeader(String title) {
-    return Padding(
-      padding: EdgeInsets.symmetric(vertical: 8.h, horizontal: 10.w),
-      child: Text(
-        title,
-        style: AppTextStyle.setpoppinsTextStyle(
-            fontSize: 8, fontWeight: FontWeight.w500, color: const Color(0xFF7E92A2)),
+Widget _tableHeader(String title) {
+  return Padding(
+    padding: EdgeInsets.symmetric(vertical: 12.h, horizontal: 10.w),
+    child: Text(
+      title,
+      style: AppTextStyle.setpoppinsTextStyle(
+        fontSize: 11.sp,
+        fontWeight: FontWeight.w600,
+        color: AppColor.gray70,
       ),
-    );
-  }
+    ),
+  );
+}
 }

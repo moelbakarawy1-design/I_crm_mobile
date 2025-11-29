@@ -141,3 +141,19 @@ class GetProfileError extends AuthState {
   final String message;
   GetProfileError({required this.message});
 }
+
+// Create Admin States
+class CreateAdminLoading extends AuthState {}
+
+class CreateAdminSuccess extends AuthState {
+  final String message;
+  final AdminData? adminData;
+
+  CreateAdminSuccess({required this.message, this.adminData});
+}
+
+class CreateAdminError extends AuthState {
+  final String message;
+
+  CreateAdminError({required this.message});
+}

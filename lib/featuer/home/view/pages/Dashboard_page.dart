@@ -52,13 +52,9 @@ class DashboardPage extends StatelessWidget {
                           ),
                         ],
                       ),
-                    ),
-                    
+                    ),                   
                       if (data.chatsPerUser != null)
-                      SalesTable(userData: data.chatsPerUser!),
-                      
-                    if (data.chatsPerUser != null)
-                      SalesTable(userData: data.chatsPerUser!),                                      
+                      SalesTable(userData: data.chatsPerUser!),                                                                          
                     SizedBox(height: 50.h),
                   ],
                 ),

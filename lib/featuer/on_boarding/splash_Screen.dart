@@ -3,7 +3,7 @@ import 'package:admin_app/config/router/routes.dart';
 import 'package:admin_app/core/theme/app_color.dart';
 import 'package:admin_app/core/utils/App_assets_utils.dart';
 import 'package:admin_app/core/network/local_data.dart';
-import 'package:admin_app/AppLink/test_case.dart'; // Make sure this path is correct
+import 'package:admin_app/AppLink/deepLinkModel.dart'; // Make sure this path is correct
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 

@@ -132,7 +132,6 @@ class ForgetPasswordRequest {
   }
 }
 
-// --- FIXED ---
 // Updated to match your Postman response
 class ForgetPasswordResponse {
   final String status;
@@ -153,7 +152,6 @@ class ForgetPasswordResponse {
     );
   }
 }
-// --- END FIX ---
 
 class VerifyOtpRequest {
   final String code;
@@ -246,5 +244,75 @@ class ChangePasswordRequest {
       'newPassword': newPassword,
       'newPasswordConfirm': newPasswordConfirm,
     };
+  }
+}
+// Add these classes to your auth_models.dart file
+
+class CreateAdminRequest {
+  final String name;
+  final String email;
+  final String password;
+  final String passwordConfirm;
+
+  CreateAdminRequest({
+    required this.name,
+    required this.email,
+    required this.password,
+    required this.passwordConfirm,
+  });
+
+  Map<String, dynamic> toJson() {
+    return {
+      'name': name,
+      'email': email,
+      'password': password,
+      'passwordConfirm': passwordConfirm,
+    };
+  }
+}
+
+class CreateAdminResponse {
+  final bool success;
+  final String message;
+  final AdminData? data;
+
+  CreateAdminResponse({
+    required this.success,
+    required this.message,
+    this.data,
+  });
+
+  factory CreateAdminResponse.fromJson(Map<String, dynamic> json) {
+    return CreateAdminResponse(
+      success: json['success'] ?? false,
+      message: json['message'] ?? '',
+      data: json['data'] != null ? AdminData.fromJson(json['data']) : null,
+    );
+  }
+}
+
+class AdminData {
+  final String id;
+  final String email;
+  final String name;
+  final String? roleId;
+  final String createdAt;
+
+  AdminData({
+    required this.id,
+    required this.email,
+    required this.name,
+    this.roleId,
+    required this.createdAt,
+  });
+
+  factory AdminData.fromJson(Map<String, dynamic> json) {
+    return AdminData(
+      id: json['id'] ?? '',
+      email: json['email'] ?? '',
+      name: json['name'] ?? '',
+      roleId: json['roleId'],
+      createdAt: json['createdAt'] ?? '',
+    );
   }
 }

@@ -1,10 +1,11 @@
+import 'package:admin_app/AppLink/TokenHandlerPage.dart';
 import 'package:admin_app/config/router/router_transation.dart';
 import 'package:admin_app/config/router/routes.dart';
 import 'package:admin_app/featuer/Auth/view/ChangePasswordView.dart';
 import 'package:admin_app/featuer/Auth/view/Log_In_view.dart';
 import 'package:admin_app/featuer/Auth/view/NotAdmin_view.dart';
+import 'package:admin_app/featuer/Auth/view/createAdmin_view.dart';
 import 'package:admin_app/featuer/Auth/view/forget_password_view.dart';
-import 'package:admin_app/AppLink/test_case.dart';
 import 'package:admin_app/featuer/Auth/view/send_otp_view.dart';
 import 'package:admin_app/featuer/Auth/view/reset_password_view.dart';
 import 'package:admin_app/featuer/Task/view/screen/add_task_screen.dart';
@@ -20,7 +21,7 @@ import 'package:admin_app/featuer/getAllRole/view/screens/AddController_screen.d
 import 'package:admin_app/featuer/home/view/home_Email_view.dart';
 import 'package:admin_app/featuer/getAllRole/view/invitation_page.dart';
 import 'package:admin_app/featuer/home/view/pages/Dashboard_page.dart';
-import 'package:admin_app/featuer/home/view/pages/setting_page.dart';
+import 'package:admin_app/featuer/home/view/pages/settingPage/view/setting_page.dart';
 import 'package:admin_app/featuer/role/roles_page.dart';
 import 'package:admin_app/featuer/on_boarding/on_board_view.dart';
 import 'package:admin_app/featuer/on_boarding/splash_Screen.dart';
@@ -28,14 +29,10 @@ import 'package:admin_app/featuer/role/widget/create_role_page.dart';
 import 'package:admin_app/featuer/role/widget/edit_role_page.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-
-// ✅ --- IMPORT CHAT MODEL WITH A PREFIX ---
 import 'package:admin_app/featuer/chat/data/model/chat_model12.dart' as ChatModel;
 import 'package:admin_app/featuer/chat/view/pages/cahtPage/view/chat_view.dart';
 import 'package:admin_app/featuer/chat/view/individualContatnt/individual_screen.dart';
 import 'package:admin_app/featuer/chat/view/pages/create_chatpage.dart';
-
-// ✅ --- IMPORT TASK MODEL WITH A PREFIX ---
 import 'package:admin_app/featuer/Task/data/model/getAllTask_model.dart' as TaskModel;
 
 
@@ -55,8 +52,10 @@ class AppRouter {
   return RouterTransitions.buildFromBottom(
     SendOtpView(resendCodeToken: resendCodeToken),
   );
- case Routes.cameraPage:
- return RouterTransitions.buildFromBottom(CameraPage());
+    case Routes.cameraPage:
+    return RouterTransitions.buildFromBottom(CameraPage());
+    case Routes.createAdminPage:
+        return RouterTransitions.buildFromBottom(CreateAdminView());
       case Routes.home:
         return RouterTransitions.buildFromBottom(HomeView());
       case Routes.resetPassword:
@@ -96,7 +95,6 @@ return RouterTransitions.buildFromBottom(AddControllerPage());
       case Routes.chatScreen:
         return RouterTransitions.buildFromBottom(ChatScreen());
 
-      // ✅ --- FIX: Use the 'ChatModel' prefix ---
       case Routes.individualScreen:
         final chatModel = settings.arguments as ChatModel.Data;
         return RouterTransitions.buildFromBottom(
@@ -109,7 +107,6 @@ return RouterTransitions.buildFromBottom(AddControllerPage());
       case Routes.tasksScreen:
         return RouterTransitions.buildFromBottom(TasksScreen());
 
-      // ✅ --- FIX: Use the 'TaskModel' prefix ---
       case Routes.viewTaskDialog:
         final task = settings.arguments as TaskModel.TaskSummary;
         return RouterTransitions.buildFromBottom(ViewTaskDialog(
@@ -117,7 +114,6 @@ return RouterTransitions.buildFromBottom(AddControllerPage());
         ));
         case Routes.notAdminView:
         return RouterTransitions.buildFromBottom(NotAdminView());
-      // ✅ --- FIX: Use the 'TaskModel' prefix ---
       case Routes.editTaskDialog:
         final task = settings.arguments as TaskModel.TaskSummary;
         return RouterTransitions.buildFromBottom(EditTaskDialog(

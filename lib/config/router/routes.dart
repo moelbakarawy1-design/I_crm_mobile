@@ -27,4 +27,5 @@ class Routes {
     static const String  notAdminView ='/NotAdminView';
     static const String allUsersScreen = '/AllUsersScreen';
     static const String addControllerPage = '/AddControllerPage';
+    static const String createAdminPage = '/CreateadminView';
 }

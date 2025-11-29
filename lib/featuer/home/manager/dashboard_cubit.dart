@@ -10,11 +10,14 @@ class DashboardCubit extends Cubit<DashboardState> {
   DashboardCubit(this._repo) : super(DashboardInitial());
 
   Future<void> fetchDashboardData() async {
+    if (isClosed) return;
     emit(DashboardLoading());
     try {
       final data = await _repo.getDashboardStats();
+      if (isClosed) return;
       emit(DashboardSuccess(data));
     } catch (e) {
+      if (isClosed) return;
       emit(DashboardError(e.toString()));
     }
   }
