@@ -26,7 +26,7 @@
     </queries>
 
     <application
-        android:label="I_CRM"
+        android:label="ICRM"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher"
         android:usesCleartextTraffic="true">           
