@@ -53,7 +53,7 @@ class MessageBubble extends StatelessWidget {
             const SizedBox(height: 3),
             
       
-            buildMessageContent(msg),
+            buildMessageContent(msg, context),
             
             const SizedBox(height: 4),
             

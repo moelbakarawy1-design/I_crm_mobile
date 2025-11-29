@@ -35,7 +35,7 @@ class _RolesPageState extends State<RolesPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFFF5F6FA),
-      appBar:CustomAppBar(title: 'Role',onMenuPressed: () => Navigator.pop(context),),
+      appBar:CustomAppBar(title: 'Role', onMenuPressed: () => Navigator.pop(context),),
 
       body: BlocListener<InvitationCubit, InvitationState>(
         listener: (context, state) {

@@ -67,8 +67,8 @@ class UserModel {
 
   bool hasPermission(Permission permission) {
     if (role == null) return false;
-    return role!.permissions.contains(permission) ||
-           role!.permissions.contains(Permission.ADMIN);
+    return role!.permissions.contains(permission) ;
+           
   }
 }
 

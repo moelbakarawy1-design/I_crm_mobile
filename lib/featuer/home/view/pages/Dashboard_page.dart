@@ -1,3 +1,5 @@
+import 'package:admin_app/core/network/local_data.dart';
+import 'package:admin_app/core/theme/app_text_style.dart';
 import 'package:admin_app/featuer/home/data/repo/DashboardRepo.dart';
 import 'package:admin_app/featuer/home/manager/dashboard_cubit.dart';
 import 'package:admin_app/featuer/home/manager/dashboard_state.dart';
@@ -13,57 +15,100 @@ class DashboardPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return BlocProvider(
-      create: (context) => DashboardCubit(DashboardRepository())..fetchDashboardData(),
-      child: Scaffold(
-        backgroundColor: const Color(0xFFF5F7FA),
-        body: BlocBuilder<DashboardCubit, DashboardState>(
-          builder: (context, state) {
-            if (state is DashboardLoading) {
-              return const Center(child: CircularProgressIndicator());
-            } else if (state is DashboardError) {
-              return Center(child: Text("Error: ${state.message}"));
-            } else if (state is DashboardSuccess) {
-              final data = state.data;
-              final cubit = context.read<DashboardCubit>();
-              
-              final chatActivityData = cubit.getChatsPerDay(data.latestChats);
+    return FutureBuilder<String?>(
+      future: LocalData.getUserRole(),
+      builder: (context, snapshot) {       
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Scaffold(
+            body: Center(child: CircularProgressIndicator()),
+          );
+        }
 
-              return SingleChildScrollView(
-                child: Column(
-                  children: [
-                    SizedBox(height: 20.h),
-                    Padding(
-                      padding: EdgeInsets.symmetric(horizontal: 16.w),
-                      child: Column(
-                        children: [                          
-                        ReportsAnalyticsChart(chartData: chatActivityData),
-                          SizedBox(height: 20.h),
-                          StatisticCard(
-                            title: 'Total Customers',
-                            value: '${data.counts?.customers ?? 0}',
-                            iconPath: 'assets/svg/Icon_cusstomer.svg',
-                          ),
-                          SizedBox(height: 15.h),
-                          StatisticCard(
-                            title: 'Active Users',
-                            value: '${data.counts?.users ?? 0}',
-                            iconPath: 'assets/svg/IconActiveCusstomer.svg',
-                          ),
+        final String? userRole = snapshot.data;
+        final bool isAllowed = userRole != null && 
+            (userRole.toLowerCase() == 'admin' || userRole.toLowerCase() == 'manager');
+
+        if (!isAllowed) {
+          return Scaffold(
+            backgroundColor: const Color(0xFFF5F7FA),
+            body: Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Icons.security, size: 70.sp, color: Colors.grey),
+                  SizedBox(height: 16.h),
+                  Text(
+                    "Access Restricted",
+                    style: AppTextStyle.setpoppinsBlack(
+                      fontSize: 24.sp,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  SizedBox(height: 8.h),
+                  Text(
+                    "Current Role: ${userRole ?? 'None'}\nOnly Admins & Managers allowed.",
+                    textAlign: TextAlign.center,
+                    style: AppTextStyle.setpoppinsSecondaryBlack(fontSize: 14.sp, fontWeight: FontWeight.normal),
+                  ),
+                ],
+              ),
+            ),
+          );
+        }
+
+        //  SUCCESS: Show Dashboard
+        return BlocProvider(
+          create: (context) => DashboardCubit(DashboardRepository())..fetchDashboardData(),
+          child: Scaffold(
+            backgroundColor: const Color(0xFFF5F7FA),
+            body: BlocBuilder<DashboardCubit, DashboardState>(
+              builder: (context, state) {
+                if (state is DashboardLoading) {
+                  return const Center(child: CircularProgressIndicator());
+                } else if (state is DashboardError) {
+                  return Center(child: Text("Error: ${state.message}"));
+                } else if (state is DashboardSuccess) {
+                  final data = state.data;
+                  final cubit = context.read<DashboardCubit>();
+                  final chatActivityData = cubit.getChatsPerDay(data.latestChats);
+
+                  return SingleChildScrollView(
+                    child: Column(
+                      children: [
+                        SizedBox(height: 20.h),
+                        Padding(
+                          padding: EdgeInsets.symmetric(horizontal: 16.w),
+                          child: Column(
+                            children: [                           
+                              ReportsAnalyticsChart(chartData: chatActivityData),
+                                SizedBox(height: 20.h),
+                                StatisticCard(
+                                  title: 'Total Customers',
+                                  value: '${data.counts?.customers ?? 0}',
+                                  iconPath: 'assets/svg/Icon_cusstomer.svg',
+                                ),
+                                SizedBox(height: 15.h),
+                                StatisticCard(
+                                  title: 'Active Users',
+                                  value: '${data.counts?.users ?? 0}',
+                                  iconPath: 'assets/svg/IconActiveCusstomer.svg',
+                                ),
+                              ],
+                            ),
+                          ),                   
+                            if (data.chatsPerUser != null)
+                            SalesTable(userData: data.chatsPerUser!),                                                                              
+                          SizedBox(height: 50.h),
                         ],
                       ),
-                    ),                   
-                      if (data.chatsPerUser != null)
-                      SalesTable(userData: data.chatsPerUser!),                                                                          
-                    SizedBox(height: 50.h),
-                  ],
-                ),
-              );
-            }
-            return const SizedBox.shrink();
-          },
-        ),
-      ),
+                    );
+                  }
+                  return const SizedBox.shrink();
+                },
+              ),
+            ),
+          );
+      },
     );
   }
 }

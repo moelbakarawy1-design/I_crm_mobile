@@ -4,6 +4,7 @@ import 'package:admin_app/core/theme/app_text_style.dart';
 import 'package:admin_app/featuer/chat/data/model/ChatMessagesModel.dart';
 import 'package:admin_app/featuer/chat/view/Audio/message_content_helper.dart';
 import 'package:admin_app/featuer/chat/view/contacts/contact_message_widget.dart';
+import 'package:admin_app/featuer/chat/view/individualContatnt/Utils/FullScreenImage.dart';
 import 'package:admin_app/featuer/chat/view/maps/special_message_widgets.dart'; 
 import 'package:admin_app/featuer/chat/view/video/widget/DocumentMessageWidget.dart';
 import 'package:admin_app/featuer/chat/view/video/widget/VideoMessageWidget.dart';
@@ -20,7 +21,7 @@ String _getMediaUrl(String? content) {
   return '${EndPoints.baseUrl}/chats/media/$content';
 }
 
-Widget buildMessageContent(OrderedMessages msg) {
+Widget buildMessageContent(OrderedMessages msg , BuildContext context) {
   final String fullUrl = _getMediaUrl(msg.content);
   
   String type = (msg.type ?? '').toLowerCase();
@@ -61,53 +62,64 @@ Widget buildMessageContent(OrderedMessages msg) {
     );
   }
 
-  //  IMAGE
-  else if (type == 'image') {
-    return Column(
-  crossAxisAlignment: CrossAxisAlignment.start,
-  children: [
-    ClipRRect(
-      borderRadius: BorderRadius.circular(8),
-      child: ConstrainedBox(
-        constraints: BoxConstraints(
-          maxWidth: 300.w, 
-          maxHeight: 500.h, 
-        ),
-        child: Image.network(
-          fullUrl,
-      
-          fit: BoxFit.fitWidth, 
-          
-          errorBuilder: (context, error, stackTrace) =>
-              const Icon(Icons.broken_image, color: Colors.grey),
-          
-          loadingBuilder: (context, child, loadingProgress) {
-            if (loadingProgress == null) return child;
-            return Container(
-              width: 200.w, 
-              height: 200.h,
-              color: Colors.grey[200],
-              child: const Center(child: CircularProgressIndicator()),
-            );
-          },
-        ),
-      ),
-    ),
-    if (msg.caption != null && msg.caption!.isNotEmpty)
-      Padding(
-        padding: const EdgeInsets.only(top: 6.0),
-        child: Text(
-          msg.caption!,
-          style: AppTextStyle.setpoppinsTextStyle(
-            fontSize: 12,
-            color: AppColor.mainBlack,
-            fontWeight: FontWeight.w400,
+ else if (type == 'image') {
+  return Column(
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+      GestureDetector(
+        onTap: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (_) => FullScreenImage(imageUrl: fullUrl),
+            ),
+          );
+        },
+        child: Hero(
+          tag: fullUrl,
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(8),
+            child: ConstrainedBox(
+              constraints: BoxConstraints(
+                maxWidth: 300.w,
+                maxHeight: 500.h,
+              ),
+              child: Image.network(
+                fullUrl,
+                fit: BoxFit.fitWidth,
+                errorBuilder: (context, error, stackTrace) =>
+                    const Icon(Icons.broken_image, color: Colors.grey),
+                loadingBuilder: (context, child, loadingProgress) {
+                  if (loadingProgress == null) return child;
+                  return Container(
+                    width: 200.w,
+                    height: 200.h,
+                    color: Colors.grey[200],
+                    child: const Center(child: CircularProgressIndicator()),
+                  );
+                },
+              ),
+            ),
           ),
         ),
       ),
-  ],
-);
-  } 
+      if (msg.caption != null && msg.caption!.isNotEmpty)
+        Padding(
+          padding: const EdgeInsets.only(top: 6.0),
+          child: Text(
+            msg.caption!,
+            style: AppTextStyle.setpoppinsTextStyle(
+              fontSize: 12,
+              color: AppColor.mainBlack,
+              fontWeight: FontWeight.w400,
+            ),
+          ),
+        ),
+    ],
+  );
+}
+
+
 
   //  AUDIO
   else if (type == 'audio') {

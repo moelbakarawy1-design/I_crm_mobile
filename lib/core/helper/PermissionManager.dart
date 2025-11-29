@@ -6,7 +6,7 @@ class PermissionManager {
     if (user == null) return false;
     return user.role?.permissions.contains(permission) ??
         false ||
-        user.role!.permissions.contains(Permission.ADMIN) ;
+        user.role!.permissions.contains(Permission.ASSIGN_CHAT) ;
         
   }
 }

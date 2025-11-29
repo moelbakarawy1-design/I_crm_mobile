@@ -1,29 +1,27 @@
 // ignore_for_file: constant_identifier_names
 
 enum Permission {
-  ADMIN,
   READ_WHATSAPP,
   READ_WRITE_WHATSAPP,
   READ_ALL_CHATS,
   DELETE_CHAT,
-  CREATE_ROLE,
-  READ_ROLES,
-  UPDATE_ROLE,
-  DELETE_ROLE,
-  CREATE_USER,
   READ_USERS,
+  CREATE_USER,
   UPDATE_USER,
   DELETE_USER,
+  READ_ROLES,
+  CREATE_ROLE,
+  UPDATE_ROLE,
+  DELETE_ROLE,
   READ_ALL_TASKS,
   CREATE_TASK,
   UPDATE_TASK,
   DELETE_TASK,
+  ASSIGN_CHAT,
 }
 extension PermissionExtension on Permission {
   String get value {
     switch (this) {
-      case Permission.ADMIN:
-        return "ADMIN";
       case Permission.READ_WHATSAPP:
         return "READ_WHATSAPP";
       case Permission.READ_WRITE_WHATSAPP:
@@ -56,6 +54,8 @@ extension PermissionExtension on Permission {
         return "UPDATE_TASK";
       case Permission.DELETE_TASK:
         return "DELETE_TASK";
+      case Permission.ASSIGN_CHAT:
+        return "ASSIGN_CHAT";
     }
   }
 
