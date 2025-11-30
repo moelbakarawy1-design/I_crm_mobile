@@ -5,7 +5,7 @@ import 'package:admin_app/core/widgets/custom_textField_widget.dart';
 import 'package:admin_app/featuer/getAllRole/data/model/role_model.dart';
 import 'package:admin_app/featuer/getAllRole/manager/role_cubit.dart';
 import 'package:admin_app/featuer/getAllRole/manager/role_state.dart';
-import 'package:admin_app/featuer/role/helper/enum_permission.dart';
+import 'package:admin_app/core/helper/enum_permission.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';

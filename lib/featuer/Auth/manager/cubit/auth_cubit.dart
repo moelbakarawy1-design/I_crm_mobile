@@ -1,3 +1,4 @@
+import 'package:admin_app/core/network/local_data.dart';
 import 'package:admin_app/featuer/Auth/data/model/User_profile_model.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:admin_app/featuer/Auth/data/model/auth_models.dart';
@@ -19,14 +20,37 @@ class AuthCubit extends Cubit<AuthState> {
     emit(LoginLoading());
     try {
       final request = LoginRequest(email: email, password: password);
+      final loginData = await _authRepository.login(request);    
+      List<String> apiPermissions = [];
+      if (loginData.user?.role?.permissions != null) {
+        apiPermissions = loginData.user!.role!.permissions
+            .map((permission) => permission.name) 
+            .toList();
+      }
 
-      final loginData = await _authRepository.login(request);
+      print("📥 Login Success. Saving ${apiPermissions.length} permissions...");
+
+      // 2. Save User Data & Permissions
+      await LocalData.saveUserData(
+        userId: loginData.user?.id ?? '',
+        userName: loginData.user?.name ?? '',
+        userEmail: email, 
+        userRole: loginData.user?.role?.name ?? '',
+        permissions: apiPermissions, 
+      );
+
+      // 3. Save Tokens
+      await LocalData.saveTokens(
+        accessToken: loginData.token ?? '',
+        refreshToken: loginData.refreshToken,
+      );
 
       emit(LoginSuccess(
         message: loginData.message,
-        user: loginData.user, 
+        user: loginData.user,
       ));
     } catch (e) {
+      print("Login Error: $e");
       emit(LoginError(message: e.toString()));
     }
   }
@@ -40,7 +64,7 @@ class AuthCubit extends Cubit<AuthState> {
       final response = await _authRepository.forgetPassword(request);
       emit(ForgetPasswordSuccess(
         message: response.message,
-        resendCodeToken: response.resendCodeToken, 
+        resendCodeToken: response.resendCodeToken,
       ));
     } catch (e) {
       emit(ForgetPasswordError(message: e.toString()));
@@ -48,48 +72,48 @@ class AuthCubit extends Cubit<AuthState> {
   }
 
   // Verify OTP
- Future<void> verifyOtp({required String code}) async {
-  emit(VerifyOtpLoading());
-  try {
-    final otpData = await _authRepository.verifyOtp(code: code);
+  Future<void> verifyOtp({required String code}) async {
+    emit(VerifyOtpLoading());
+    try {
+      final otpData = await _authRepository.verifyOtp(code: code);
 
-    final token = otpData['token'] as String?;
-    final message = otpData['message'] as String? ?? '';
+      final token = otpData['token'] as String?;
+      final message = otpData['message'] as String? ?? '';
 
-    if (token == null) {
-      throw Exception("Verification token is missing!");
+      if (token == null) {
+        throw Exception("Verification token is missing!");
+      }
+
+      emit(VerifyOtpSuccess(
+        message: message,
+        token: token,
+      ));
+    } catch (e) {
+      emit(VerifyOtpError(message: e.toString()));
     }
-
-    emit(VerifyOtpSuccess(
-      message: message,
-      token: token,
-    ));
-  } catch (e) {
-    emit(VerifyOtpError(message: e.toString()));
   }
-}
 
-Future<void> resetPassword({
-  required String token,
-  required String password,
-  required String confirmPassword,
-}) async {
-  emit(ResetPasswordLoading());
-  try {
-    final message = await _authRepository.resetPassword(
-      token: token,
-      password: password,
-      confirmPassword: confirmPassword,
-    );
+  Future<void> resetPassword({
+    required String token,
+    required String password,
+    required String confirmPassword,
+  }) async {
+    emit(ResetPasswordLoading());
+    try {
+      final message = await _authRepository.resetPassword(
+        token: token,
+        password: password,
+        confirmPassword: confirmPassword,
+      );
 
-    emit(ResetPasswordSuccess(message: message));
-  } catch (e) {
-    emit(ResetPasswordError(message: e.toString()));
+      emit(ResetPasswordSuccess(message: message));
+    } catch (e) {
+      emit(ResetPasswordError(message: e.toString()));
+    }
   }
-}
 
   // Get User Profile
- Future<void> getUserProfile() async {
+  Future<void> getUserProfile() async {
     emit(GetProfileLoading());
     try {
       final Data user = await _authRepository.getUserProfile();
@@ -99,10 +123,11 @@ Future<void> resetPassword({
     }
   }
 
- Future<void> resendOtp({required String resendCodeToken}) async {
+  Future<void> resendOtp({required String resendCodeToken}) async {
     emit(ResendOtpLoading());
     try {
-      final message = await _authRepository.resendOtp(resendCodeToken: resendCodeToken);
+      final message =
+          await _authRepository.resendOtp(resendCodeToken: resendCodeToken);
       emit(ResendOtpSuccess(message: message));
     } catch (e) {
       print('$e');
@@ -120,6 +145,7 @@ Future<void> resetPassword({
 
       // ✅ FIX: Log user out on SUCCESS
       await _authRepository.logout();
+      await LocalData.clear(); // Clear local storage
     } catch (e) {
       emit(ChangePasswordFailure(e.toString()));
     }
@@ -130,9 +156,11 @@ Future<void> resetPassword({
     emit(LogoutLoading());
     try {
       await _authRepository.logout();
+      await LocalData.clear(); // Clear local storage
       emit(LogoutSuccess());
     } catch (e) {
-      emit(LogoutSuccess()); // still ensure UI navigation
+      await LocalData.clear(); // Ensure clear happens even if API fails
+      emit(LogoutSuccess()); 
     }
   }
 
@@ -143,12 +171,14 @@ Future<void> resetPassword({
       await _authRepository.logoutAllDevices();
       // ✅ FIX: Call the main logout function to clear all local data/cookies
       await _authRepository.logout();
+      await LocalData.clear();
       emit(LogoutAllSuccess());
     } catch (e) {
       emit(LogoutAllFailure(e.toString()));
     }
   }
-   Future<void> notAdminLogIn(String email) async {
+
+  Future<void> notAdminLogIn(String email) async {
     emit(NotAdminLogInLoading());
     try {
       final response = await _authRepository.notAdminLogIn(email);
@@ -157,31 +187,30 @@ Future<void> resetPassword({
       emit(NotAdminLogInError(message: e.toString()));
     }
   }
-  // Add this method to your AuthCubit class
 
-Future<void> createAdmin({
-  required String name,
-  required String email,
-  required String password,
-  required String passwordConfirm,
-}) async {
-  emit(CreateAdminLoading());
-  try {
-    final request = CreateAdminRequest(
-      name: name,
-      email: email,
-      password: password,
-      passwordConfirm: passwordConfirm,
-    );
+  Future<void> createAdmin({
+    required String name,
+    required String email,
+    required String password,
+    required String passwordConfirm,
+  }) async {
+    emit(CreateAdminLoading());
+    try {
+      final request = CreateAdminRequest(
+        name: name,
+        email: email,
+        password: password,
+        passwordConfirm: passwordConfirm,
+      );
 
-    final response = await _authRepository.createAdmin(request);
+      final response = await _authRepository.createAdmin(request);
 
-    emit(CreateAdminSuccess(
-      message: response.message,
-      adminData: response.data,
-    ));
-  } catch (e) {
-    emit(CreateAdminError(message: e.toString()));
+      emit(CreateAdminSuccess(
+        message: response.message,
+        adminData: response.data,
+      ));
+    } catch (e) {
+      emit(CreateAdminError(message: e.toString()));
+    }
   }
-}
 }

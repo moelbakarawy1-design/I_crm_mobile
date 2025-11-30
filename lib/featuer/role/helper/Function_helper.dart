@@ -1,4 +1,5 @@
- import 'package:admin_app/core/theme/app_text_style.dart';
+ import 'package:admin_app/core/theme/app_color.dart';
+import 'package:admin_app/core/theme/app_text_style.dart';
 import 'package:admin_app/core/widgets/cusstom_btn_widget.dart';
 import 'package:admin_app/featuer/getAllRole/data/model/role_model.dart';
 import 'package:admin_app/featuer/getAllRole/manager/role_cubit.dart';
@@ -13,7 +14,7 @@ Widget buildError(String message, BuildContext context) => Center(
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(Icons.error_outline, size: 80.w, color: Colors.red),
+              Icon(Icons.error_outline, size: 80.w, color: AppColor.lightBlue),
               SizedBox(height: 24.h),
               Text('Error Loading Roles',
                   style: AppTextStyle.setpoppinsTextStyle(
@@ -27,6 +28,7 @@ Widget buildError(String message, BuildContext context) => Center(
                       fontSize: 14.sp, color: const Color(0xFF9E9E9E), fontWeight: FontWeight.w500)),
               SizedBox(height: 32.h),
               CustomButton(
+                backgroundColor: AppColor.lightBlue,
                 onPressed: () {
                   context.read<InvitationCubit>().fetchRoles();
                 },

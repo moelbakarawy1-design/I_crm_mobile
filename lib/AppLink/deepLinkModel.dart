@@ -3,76 +3,94 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:app_links/app_links.dart';
 import 'package:admin_app/config/router/routes.dart';
+import 'package:admin_app/core/network/local_data.dart'; // Import LocalData
+import 'package:shared_preferences/shared_preferences.dart';
 
-// DeepLinkHandler
 class DeepLinkHandler {
   static final AppLinks _appLinks = AppLinks();
   static StreamSubscription<Uri>? _sub;
   static bool _initialized = false;
 
-  /// Get initial link without handling it
-  static Future<Uri?> getInitialLink() async {
-    try {
-      return await _appLinks.getInitialLink();
-    } catch (e) {
-      return null;
-    }
-  }
-  // Initialize deep links
   static Future<void> init(BuildContext context) async {
-    if (_initialized) {
-      return;
-    }   
+    if (_initialized) return;
+    _initialized = true;
+
     try {
-      // Check if app opened initially by link
       final initialLink = await _appLinks.getInitialLink();
-      
+
       if (initialLink != null) {
-       
-        // ignore: use_build_context_synchronously
-        await _handleUri(context, initialLink);
-      } else {
+        // 1. Extract Token
+        String? currentToken = _extractToken(initialLink);
+
+        if (currentToken != null) {
+          
+          // 🛑 FIX 1: If user is ALREADY logged in, ignore invite links completely.
+          // This prevents the app from re-processing the link after a restart.
+          if (LocalData.accessToken != null && LocalData.accessToken!.isNotEmpty) {
+            print("🛑 User already logged in. Ignoring Invite Link: $currentToken");
+            return; 
+          }
+
+          final prefs = await SharedPreferences.getInstance();
+          // Removed prefs.reload() as it can cause sync issues on some devices
+          
+          final lastToken = prefs.getString('last_handled_token');
+
+          print("🔍 DeepLink Check:");
+          print("   💾 Last Token:    '$lastToken'");
+          print("   🔗 Current Token: '$currentToken'");
+
+          // 2. Compare Tokens (Duplicate Check)
+          if (lastToken == currentToken) {
+            print("🚫 Stale Link Detected - Ignoring.");
+            return;
+          } 
+
+          // 3. New Link: Save and Navigate
+          print("✅ New Link Detected - Saving...");
+          await prefs.setString('last_handled_token', currentToken);
+          
+          if (context.mounted) {
+             _navigateToTokenPage(context, currentToken);
+          }
+        }
       }
+
+      // Listen for NEW links (Stream)
+      _sub = _appLinks.uriLinkStream.listen((Uri? uri) {
+        if (uri != null) {
+           String? token = _extractToken(uri);
+           if (token != null && context.mounted) {
+             // For stream events, we usually allow them even if logged in
+             // (e.g. user clicks a NEW invite link while using the app)
+             _navigateToTokenPage(context, token);
+           }
+        }
+      });
+
     } catch (e) {
+      print("❌ DeepLink Init Error: $e");
     }
   }
 
-  // Handle the incoming URI and extract token
-  static Future<void> _handleUri(BuildContext context, Uri uri) async {
-    if (uri.pathSegments.isNotEmpty) {
-    }
-
-    String? tokenUrl;
-
-
+  static String? _extractToken(Uri uri) {
     if (uri.scheme == 'mycrm' && uri.host == 'invite') {
-      
       if (uri.pathSegments.isNotEmpty) {
-        tokenUrl = uri.pathSegments.first;
-      
+        return uri.pathSegments.first;
       } else if (uri.path.isNotEmpty && uri.path != '/') {
-        tokenUrl = uri.path.replaceFirst('/', '');
-  
-      } else {
+        return uri.path.replaceFirst('/', '');
       }
-    } else {
     }
+    return null;
+  }
 
-    if (tokenUrl == null || tokenUrl.isEmpty) {
-   
-      return;
-    }
-    if (!context.mounted) {
-      return;
-    }
-    try {
-     await Navigator.pushReplacementNamed(
+  static void _navigateToTokenPage(BuildContext context, String token) {
+    print("🚀 Navigating to TokenHandler...");
+    Navigator.pushReplacementNamed(
       context,
-     Routes.tokenHandlerPage,
-     arguments: tokenUrl
-);
-    } catch (e) {
-    }
+      Routes.tokenHandlerPage,
+      arguments: token,
+    );
   }
 
   static void dispose() {
@@ -80,4 +98,3 @@ class DeepLinkHandler {
     _initialized = false;
   }
 }
-

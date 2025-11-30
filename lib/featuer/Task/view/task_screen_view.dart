@@ -1,4 +1,6 @@
+import 'package:admin_app/core/network/local_data.dart';
 import 'package:admin_app/featuer/Task/data/model/states_enum.dart';
+import 'package:admin_app/core/helper/enum_permission.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:admin_app/config/router/routes.dart';
@@ -7,7 +9,6 @@ import 'package:admin_app/featuer/Task/manager/task_cubit.dart';
 import 'package:admin_app/featuer/Task/manager/task_state.dart';
 import 'package:admin_app/featuer/Task/data/model/getAllTask_model.dart' as TaskModel;
 import 'package:admin_app/featuer/Task/view/widget/search_add_task_bar.dart';
-// Import new widgets
 import 'package:admin_app/featuer/Task/view/widget/task_list_container.dart';
 
 class TasksScreen extends StatefulWidget {
@@ -44,24 +45,31 @@ class _TasksScreenState extends State<TasksScreen> {
       ),
       body: Column(
         children: [
-          // الجزء العلوي: البحث والفلترة
           Expanded(
             flex: 1,
-            child: SearchAddTaskBar(
-              controller: TextEditingController(),
-              onAddPressed: () =>
-                  Navigator.pushNamed(context, Routes.addTaskDialog),
-              onFilterPressed: (status) {
-                context.read<TaskCubit>().filterTasksByStatus(status?.value);
-              },
-              onSearchChanged: (query) {
-                context.read<TaskCubit>().searchTasksByName(query);
+            child: FutureBuilder<bool>(
+              future: LocalData.hasEnumPermission(Permission.CREATE_TASK),
+              builder: (context, snapshot) {
+                final bool canCreateTask = snapshot.data ?? false;
+                return SearchAddTaskBar(
+                  controller: TextEditingController(),           
+                  onAddPressed: canCreateTask 
+                      ? () => Navigator.pushNamed(context, Routes.addTaskDialog)
+                      : null, 
+                  
+                  onFilterPressed: (status) {
+                    context.read<TaskCubit>().filterTasksByStatus(status?.value);
+                  },
+                  onSearchChanged: (query) {
+                    context.read<TaskCubit>().searchTasksByName(query);
+                  },
+                );
               },
             ),
           ),
           const SizedBox(height: 10),
-          
-          // الجزء السفلي: قائمة المهام
+
+          // Lower Part: Task List
           Expanded(
             flex: 7,
             child: Padding(
@@ -71,25 +79,27 @@ class _TasksScreenState extends State<TasksScreen> {
                   if (state is CreateTaskSuccess ||
                       state is UpdateTaskSuccess ||
                       state is DeleteTaskSuccess) {
-                    
                     String message = "Success!";
                     if (state is CreateTaskSuccess) message = state.message;
                     if (state is UpdateTaskSuccess) message = state.message;
                     if (state is DeleteTaskSuccess) message = state.message;
-                    
+
                     ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text(message), backgroundColor: Colors.green),
+                      SnackBar(
+                          content: Text(message), backgroundColor: Colors.green),
                     );
-                    
+
                     // Refresh data
                     context.read<TaskCubit>().fetchTasks();
-                  } else if (state is DeleteTaskFailure || state is UpdateTaskFailure) {
+                  } else if (state is DeleteTaskFailure ||
+                      state is UpdateTaskFailure) {
                     String message = "An error occurred.";
                     if (state is DeleteTaskFailure) message = state.message;
                     if (state is UpdateTaskFailure) message = state.message;
-                    
+
                     ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text(message), backgroundColor: Colors.red),
+                      SnackBar(
+                          content: Text(message), backgroundColor: Colors.red),
                     );
                   }
                 },
@@ -105,8 +115,8 @@ class _TasksScreenState extends State<TasksScreen> {
                       if (state.tasks.isEmpty) {
                         return const Center(child: Text('No tasks found.'));
                       }
-                      // استدعاء الكونتينر المنفصل
-                      return TaskListContainer(tasks: state.tasks.cast<TaskModel.TaskSummary>());
+                      return TaskListContainer(
+                          tasks: state.tasks.cast<TaskModel.TaskSummary>());
                     }
                     return const Center(child: Text('Loading Tasks...'));
                   },

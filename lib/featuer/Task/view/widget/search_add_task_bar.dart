@@ -7,14 +7,15 @@ import 'package:flutter_svg/flutter_svg.dart';
 
 class SearchAddTaskBar extends StatefulWidget {
   final TextEditingController controller;
-  final VoidCallback onAddPressed;
+  // 1. Change type to VoidCallback? (nullable)
+  final VoidCallback? onAddPressed; 
   final ValueChanged<TaskStatus?>? onFilterPressed;
   final ValueChanged<String>? onSearchChanged;
 
   const SearchAddTaskBar({
     super.key,
     required this.controller,
-    required this.onAddPressed,
+    required this.onAddPressed, // It can now accept null
     this.onFilterPressed,
     this.onSearchChanged,
   });
@@ -87,28 +88,29 @@ class _SearchAddTaskBarState extends State<SearchAddTaskBar> {
             ),
           ),
 
-          const SizedBox(width: 12),
-
-          // ➕ Add button
-          ElevatedButton.icon(
-            onPressed: widget.onAddPressed,
-            icon: const Icon(Icons.add, color: Colors.white),
-            label: const Text(
-              "Add Tasks",
-              style: TextStyle(
-                color: Colors.white,
-                fontWeight: FontWeight.w600,
+          // 2. Hide Button & Spacing if onAddPressed is null
+          if (widget.onAddPressed != null) ...[
+            const SizedBox(width: 12),
+            ElevatedButton.icon(
+              onPressed: widget.onAddPressed,
+              icon: const Icon(Icons.add, color: Colors.white),
+              label: const Text(
+                "Add Tasks",
+                style: TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFF1A73E8),
+                padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                elevation: 1,
               ),
             ),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFF1A73E8),
-              padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(10),
-              ),
-              elevation: 1,
-            ),
-          ),
+          ],
         ],
       ),
     );

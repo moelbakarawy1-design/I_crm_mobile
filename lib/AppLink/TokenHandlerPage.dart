@@ -31,7 +31,9 @@ class _TokenHandlerPageState extends State<TokenHandlerPage> {
 
   Future<void> _verifyToken(String token) async {
     try {
+      // NOTE: Ensure this IP is accessible from your device/emulator
       final url = 'http://192.168.1.88:5000/api/auth/login/$token';
+      
       final response = await Dio().post(
         url,
         options: Options(validateStatus: (status) => status! < 500),
@@ -39,20 +41,39 @@ class _TokenHandlerPageState extends State<TokenHandlerPage> {
 
       if (response.statusCode == 200) {
         final data = response.data;
+        
+        // Extract Access Token
         final jwt = data['token'] ?? '';
+        final refreshToken = data['refreshToken'] ?? data['refresh_token'] ?? ''; 
         final user = data['user'] ?? {};
         final role = user['role']?['name'] ?? '';
         final userName = user['name'] ?? 'User';
         final userId = user['id']?.toString() ?? '';
         final userEmail = user['email'] ?? '';
 
-        // Save securely
-        await LocalData.saveTokens(accessToken: jwt);
+        // -----------------------------------------------------------
+        // ✅ EXTRACT PERMISSIONS (if available in this response)
+        // -----------------------------------------------------------
+        List<String> apiPermissions = [];
+        if (user['role'] != null && user['role']['permissions'] != null) {
+          apiPermissions = List<String>.from(user['role']['permissions']);
+        }
+
+        print("📥 Invite Login Success. Saving ${apiPermissions.length} permissions...");
+
+        // Save both tokens securely
+        await LocalData.saveTokens(
+          accessToken: jwt,
+          refreshToken: refreshToken.isNotEmpty ? refreshToken : null,
+        );
+        
+        // Save User Data WITH Permissions
         await LocalData.saveUserData(
           userId: userId,
           userName: userName,
           userEmail: userEmail,
           userRole: role,
+          permissions: apiPermissions, 
         );
 
         if (!mounted) return;
@@ -61,7 +82,6 @@ class _TokenHandlerPageState extends State<TokenHandlerPage> {
         await Future.delayed(const Duration(seconds: 1));
         if (!mounted) return;
 
-        // Navigate based on role
         Navigator.pushReplacementNamed(context, Routes.home);
       } else {
         if (!mounted) return;

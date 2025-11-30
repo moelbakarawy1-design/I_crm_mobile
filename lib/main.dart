@@ -18,12 +18,16 @@ Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized(); 
   WidgetsBinding widgetsBinding = WidgetsFlutterBinding.ensureInitialized();
   FlutterNativeSplash.preserve(widgetsBinding: widgetsBinding); 
+  
   await LocalData.init();
+  
+  // 👇 ADD THIS LINE HERE to see permissions in the console on startup
+  await LocalData.debugPrintAllPermissions(); 
+
   await DependencyInjection.init(); 
   await APIHelper.init();
   runApp(const MyApp());
 }
-
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 

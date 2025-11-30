@@ -1,4 +1,5 @@
 import 'package:admin_app/core/network/local_data.dart';
+import 'package:admin_app/core/theme/app_color.dart';
 import 'package:admin_app/core/theme/app_text_style.dart';
 import 'package:admin_app/featuer/home/data/repo/DashboardRepo.dart';
 import 'package:admin_app/featuer/home/manager/dashboard_cubit.dart';
@@ -35,7 +36,7 @@ class DashboardPage extends StatelessWidget {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(Icons.security, size: 70.sp, color: Colors.grey),
+                  Icon(Icons.security, size: 70.sp, color: AppColor.lightBlue),
                   SizedBox(height: 16.h),
                   Text(
                     "Access Restricted",

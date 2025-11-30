@@ -1,3 +1,4 @@
+import 'package:admin_app/core/network/local_data.dart';
 import 'package:admin_app/core/theme/app_color.dart';
 import 'package:admin_app/core/theme/app_text_style.dart';
 import 'package:admin_app/core/widgets/cusstom_btn_widget.dart';
@@ -58,191 +59,248 @@ class _CreateAdminViewState extends State<CreateAdminView> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: const Color(0xFF1E90FF),
-      body: SafeArea(
-        child: Column(
-          children: [
-            Expanded(
-              flex: 4,
-              child: Center(
-                child: SvgPicture.asset('assets/svg/reset_Password.svg'),
+    //  Wrap with FutureBuilder to check Role
+    return FutureBuilder<String?>(
+      future: LocalData.getUserRole(),
+      builder: (context, snapshot) {
+        
+        //  Loading State
+        if (snapshot.connectionState == ConnectionState.waiting) {
+           return const Scaffold(
+            backgroundColor: Color(0xFF1E90FF),
+            body: Center(child: CircularProgressIndicator(color: Colors.white)),
+          );
+        }
+
+        //  Permission Logic: STRICTLY MANAGER ONLY
+        final String? userRole = snapshot.data;
+        // Checks if role exists and equals 'manager' (case-insensitive)
+        final bool isAllowed = userRole != null && userRole.toLowerCase() == 'manager';
+
+        //  Access Denied State
+        if (!isAllowed) {
+          return Scaffold(
+            backgroundColor: AppColor.mainWhite,
+            appBar: AppBar(
+              backgroundColor: Colors.transparent,
+              elevation: 0,
+              leading: IconButton(
+                icon: const Icon(Icons.arrow_back, color: Colors.black),
+                onPressed: () => Navigator.pop(context),
               ),
             ),
-            Expanded(
-              flex: 10,
-              child: Container(
-                width: double.infinity,
-                decoration: BoxDecoration(
-                  color: AppColor.mainWhite,
-                  borderRadius: BorderRadius.only(
-                    topLeft: Radius.circular(50.r),
-                    topRight: Radius.circular(50.r),
+            body: Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Icons.admin_panel_settings_outlined, size: 64.sp, color: AppColor.lightBlue),
+                  SizedBox(height: 16.h),
+                  Text(
+                    "Restricted Access",
+                    style: TextStyle(
+                      fontSize: 20.sp, 
+                      fontWeight: FontWeight.bold
+                    ),
+                  ),
+                  SizedBox(height: 8.h),
+                  Text(
+                    "Only Managers can create new Admins.",
+                    style: TextStyle(fontSize: 14.sp, color: Colors.grey[600]),
+                  ),
+                ],
+              ),
+            ),
+          );
+        }
+
+        // 5. Success State: Show the Form
+        return Scaffold(
+          backgroundColor: const Color(0xFF1E90FF),
+          body: SafeArea(
+            child: Column(
+              children: [
+                Expanded(
+                  flex: 4,
+                  child: Center(
+                    child: SvgPicture.asset('assets/svg/reset_Password.svg'),
                   ),
                 ),
-                
-                child: BlocListener<AuthCubit, AuthState>(
-                  listener: (context, state) {
-                    if (state is CreateAdminSuccess) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: Text(state.message),
-                          backgroundColor: Colors.green,
-                        ),
-                      );
-                      Navigator.pop(context);
-                    }
-                    if (state is CreateAdminError) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: Text(state.message),
-                          backgroundColor: Colors.red,
-                        ),
-                      );
-                    }
-                  },
-                  
-                  child: SingleChildScrollView(
-                    padding: EdgeInsets.symmetric(
-                      horizontal: 30.w,
-                      vertical: 40.h,
+                Expanded(
+                  flex: 10,
+                  child: Container(
+                    width: double.infinity,
+                    decoration: BoxDecoration(
+                      color: AppColor.mainWhite,
+                      borderRadius: BorderRadius.only(
+                        topLeft: Radius.circular(50.r),
+                        topRight: Radius.circular(50.r),
+                      ),
                     ),
-                    child: Form(
-                      key: _formKey,
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Create Admin',
-                            style: AppTextStyle.setpoppinsBlack(
-                                fontSize: 32, fontWeight: FontWeight.w700),
-                          ),
-                          SizedBox(height: 8.h),
-                          Text(
-                            'Enter admin details below',
-                            style: AppTextStyle.setpoppinsBlack(
-                                fontSize: 12, fontWeight: FontWeight.w400),
-                          ),
-                          SizedBox(height: 32.h),
-
-                          // Name Field
-                          Text('Name',
-                              style: AppTextStyle.setpoppinsBlack(
-                                  fontSize: 12, fontWeight: FontWeight.w500)),
-                          SizedBox(height: 8.h),
-                          CustomTextFormField(
-                            controller: _nameController,
-                            hintText: 'Enter admin name',
-                            validator: (value) {
-                              if (value == null || value.isEmpty) {
-                                return 'Name is required';
-                              }
-                              return null;
-                            },
-                            textInputAction: TextInputAction.next,
-                          ),
-                          SizedBox(height: 20.h),
-
-                          // Email Field
-                          Text('Email',
-                              style: AppTextStyle.setpoppinsBlack(
-                                  fontSize: 12, fontWeight: FontWeight.w500)),
-                          SizedBox(height: 8.h),
-                          CustomTextFormField(
-                            controller: _emailController,
-                            hintText: 'Enter email address',
-                            keyboardType: TextInputType.emailAddress,
-                            validator: FieldValidator.email,
-                            textInputAction: TextInputAction.next,
-                          ),
-                          SizedBox(height: 20.h),
-
-                          // Password Field
-                          Text('Password',
-                              style: AppTextStyle.setpoppinsBlack(
-                                  fontSize: 12, fontWeight: FontWeight.w500)),
-                          SizedBox(height: 8.h),
-                          CustomTextFormField(
-                            controller: _passwordController,
-                            hintText: 'Enter password',
-                            obscureText: _obscurePassword,
-                            suffixIcon: IconButton(
-                              onPressed: () => setState(
-                                  () => _obscurePassword = !_obscurePassword),
-                              icon: _obscurePassword
-                                  ? SvgPicture.asset('assets/svg/eye-slash.svg',
-                                      width: 24.w, height: 24.h)
-                                  : SvgPicture.asset('assets/svg/eye_open.svg',
-                                      width: 24.w, height: 24.h),
+                    
+                    child: BlocListener<AuthCubit, AuthState>(
+                      listener: (context, state) {
+                        if (state is CreateAdminSuccess) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text(state.message),
+                              backgroundColor: Colors.green,
                             ),
-                            validator: FieldValidator.password,
-                            textInputAction: TextInputAction.next,
-                          ),
-                          SizedBox(height: 20.h),
-
-                          // Confirm Password Field
-                          Text('Confirm Password',
-                              style: AppTextStyle.setpoppinsBlack(
-                                  fontSize: 12, fontWeight: FontWeight.w500)),
-                          SizedBox(height: 8.h),
-                          CustomTextFormField(
-                            controller: _confirmPasswordController,
-                            hintText: 'Confirm password',
-                            obscureText: _obscureConfirmPassword,
-                            suffixIcon: IconButton(
-                              onPressed: () => setState(() =>
-                                  _obscureConfirmPassword =
-                                      !_obscureConfirmPassword),
-                              icon: _obscureConfirmPassword
-                                  ? SvgPicture.asset('assets/svg/eye-slash.svg',
-                                      width: 24.w, height: 24.h)
-                                  : SvgPicture.asset('assets/svg/eye_open.svg',
-                                      width: 24.w, height: 24.h),
+                          );
+                          Navigator.pop(context);
+                        }
+                        if (state is CreateAdminError) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text(state.message),
+                              backgroundColor: Colors.red,
                             ),
-                            validator: _validateConfirmPassword,
-                            textInputAction: TextInputAction.done,
-                          ),
-                          SizedBox(height: 32.h),
+                          );
+                        }
+                      },
+                      
+                      child: SingleChildScrollView(
+                        padding: EdgeInsets.symmetric(
+                          horizontal: 30.w,
+                          vertical: 40.h,
+                        ),
+                        child: Form(
+                          key: _formKey,
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Create Admin',
+                                style: AppTextStyle.setpoppinsBlack(
+                                    fontSize: 32, fontWeight: FontWeight.w700),
+                              ),
+                              SizedBox(height: 8.h),
+                              Text(
+                                'Enter admin details below',
+                                style: AppTextStyle.setpoppinsBlack(
+                                    fontSize: 12, fontWeight: FontWeight.w400),
+                              ),
+                              SizedBox(height: 32.h),
 
-                          // Submit Button
-                          BlocBuilder<AuthCubit, AuthState>(
-                            builder: (context, state) {
-                              if (state is CreateAdminLoading) {
-                                return const Center(
-                                    child: CircularProgressIndicator());
-                              }
-                              return CustomButton(
-                                text: 'Create Admin',
-                                onPressed: _handleCreateAdmin,
-                                width: double.infinity,
-                                backgroundColor: const Color(0xFF1A1A1A),
-                              );
-                            },
-                          ),
-                          SizedBox(height: 24.h),
-                          Center(
-                            child: TextButton(
-                              onPressed: () => Navigator.pop(context),
-                              child: Text(
-                                'Cancel',
-                                style: TextStyle(
-                                  fontSize: 13.sp,
-                                  fontWeight: FontWeight.w600,
-                                  color: Colors.grey,
+                              // Name Field
+                              Text('Name',
+                                  style: AppTextStyle.setpoppinsBlack(
+                                      fontSize: 12, fontWeight: FontWeight.w500)),
+                              SizedBox(height: 8.h),
+                              CustomTextFormField(
+                                controller: _nameController,
+                                hintText: 'Enter admin name',
+                                validator: (value) {
+                                  if (value == null || value.isEmpty) {
+                                    return 'Name is required';
+                                  }
+                                  return null;
+                                },
+                                textInputAction: TextInputAction.next,
+                              ),
+                              SizedBox(height: 20.h),
+
+                              // Email Field
+                              Text('Email',
+                                  style: AppTextStyle.setpoppinsBlack(
+                                      fontSize: 12, fontWeight: FontWeight.w500)),
+                              SizedBox(height: 8.h),
+                              CustomTextFormField(
+                                controller: _emailController,
+                                hintText: 'Enter email address',
+                                keyboardType: TextInputType.emailAddress,
+                                validator: FieldValidator.email,
+                                textInputAction: TextInputAction.next,
+                              ),
+                              SizedBox(height: 20.h),
+
+                              // Password Field
+                              Text('Password',
+                                  style: AppTextStyle.setpoppinsBlack(
+                                      fontSize: 12, fontWeight: FontWeight.w500)),
+                              SizedBox(height: 8.h),
+                              CustomTextFormField(
+                                controller: _passwordController,
+                                hintText: 'Enter password',
+                                obscureText: _obscurePassword,
+                                suffixIcon: IconButton(
+                                  onPressed: () => setState(
+                                      () => _obscurePassword = !_obscurePassword),
+                                  icon: _obscurePassword
+                                      ? SvgPicture.asset('assets/svg/eye-slash.svg',
+                                          width: 24.w, height: 24.h)
+                                      : SvgPicture.asset('assets/svg/eye_open.svg',
+                                          width: 24.w, height: 24.h),
+                                ),
+                                validator: FieldValidator.password,
+                                textInputAction: TextInputAction.next,
+                              ),
+                              SizedBox(height: 20.h),
+
+                              // Confirm Password Field
+                              Text('Confirm Password',
+                                  style: AppTextStyle.setpoppinsBlack(
+                                      fontSize: 12, fontWeight: FontWeight.w500)),
+                              SizedBox(height: 8.h),
+                              CustomTextFormField(
+                                controller: _confirmPasswordController,
+                                hintText: 'Confirm password',
+                                obscureText: _obscureConfirmPassword,
+                                suffixIcon: IconButton(
+                                  onPressed: () => setState(() =>
+                                      _obscureConfirmPassword =
+                                          !_obscureConfirmPassword),
+                                  icon: _obscureConfirmPassword
+                                      ? SvgPicture.asset('assets/svg/eye-slash.svg',
+                                          width: 24.w, height: 24.h)
+                                      : SvgPicture.asset('assets/svg/eye_open.svg',
+                                          width: 24.w, height: 24.h),
+                                ),
+                                validator: _validateConfirmPassword,
+                                textInputAction: TextInputAction.done,
+                              ),
+                              SizedBox(height: 32.h),
+
+                              // Submit Button
+                              BlocBuilder<AuthCubit, AuthState>(
+                                builder: (context, state) {
+                                  if (state is CreateAdminLoading) {
+                                    return const Center(
+                                        child: CircularProgressIndicator());
+                                  }
+                                  return CustomButton(
+                                    text: 'Create Admin',
+                                    onPressed: _handleCreateAdmin,
+                                    width: double.infinity,
+                                    backgroundColor: const Color(0xFF1A1A1A),
+                                  );
+                                },
+                              ),
+                              SizedBox(height: 24.h),
+                              Center(
+                                child: TextButton(
+                                  onPressed: () => Navigator.pop(context),
+                                  child: Text(
+                                    'Cancel',
+                                    style: TextStyle(
+                                      fontSize: 13.sp,
+                                      fontWeight: FontWeight.w600,
+                                      color: Colors.grey,
+                                    ),
+                                  ),
                                 ),
                               ),
-                            ),
+                            ],
                           ),
-                        ],
+                        ),
                       ),
                     ),
                   ),
                 ),
-              ),
+              ],
             ),
-          ],
-        ),
-      ),
+          ),
+        );
+      },
     );
   }
 }

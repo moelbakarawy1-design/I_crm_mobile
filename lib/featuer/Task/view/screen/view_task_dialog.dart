@@ -1,10 +1,12 @@
 import 'package:admin_app/config/router/routes.dart';
+import 'package:admin_app/core/network/local_data.dart';
 import 'package:admin_app/core/theme/app_text_style.dart';
 import 'package:admin_app/core/widgets/CustomAppBar_widget.dart';
 import 'package:admin_app/core/widgets/cusstom_btn_widget.dart';
 import 'package:admin_app/featuer/Task/data/model/getAllTask_model.dart';
 import 'package:admin_app/featuer/Task/manager/task_cubit.dart';
 import 'package:admin_app/featuer/Task/view/screen/utils/helper_Utils.dart';
+import 'package:admin_app/core/helper/enum_permission.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -17,15 +19,11 @@ class ViewTaskDialog extends StatelessWidget {
 
   const ViewTaskDialog({super.key, required this.task});
 
-
   void _showEditTaskDialog(BuildContext context, TaskSummary task) {
     Navigator.pushNamed(
       context,
       Routes.editTaskDialog,
-      arguments: 
-        task,
-        
-      
+      arguments: task,
     );
   }
 
@@ -111,11 +109,12 @@ class ViewTaskDialog extends StatelessWidget {
                     border: Border.all(color: const Color(0xFFE0E0E0)),
                   ),
                   child: Text(task.title ?? 'No Title',
-                      style: AppTextStyle.setpoppinsSecondaryBlack(fontSize: 9, fontWeight: FontWeight.w400)),
+                      style: AppTextStyle.setpoppinsSecondaryBlack(
+                          fontSize: 9, fontWeight: FontWeight.w400)),
                 ),
                 SizedBox(height: 15.h),
                 //description
-               Container(
+                Container(
                   width: double.infinity,
                   padding: EdgeInsets.all(12.w),
                   decoration: BoxDecoration(
@@ -162,40 +161,66 @@ class ViewTaskDialog extends StatelessWidget {
                     children: [
                       SvgPicture.asset('assets/svg/calendar 1.svg'),
                       SizedBox(width: 8.w),
-                      Text(formattedDate,
-                          style: const TextStyle(fontSize: 14)),
+                      Text(formattedDate, style: const TextStyle(fontSize: 14)),
                     ],
                   ),
                 ),
                 SizedBox(height: 25.h),
-               // Buttons
-                CustomButton(
-                  width: 332.w ,
-                  text: 'Edit Task',
-                  backgroundColor: Colors.blue,
-                  textColor: Colors.white,
-                  borderRadius: 8,
-                  height: 40.h,
-                  onPressed: () {
-                    Navigator.pop(context); // Close this view dialog
-                    _showEditTaskDialog(context, task); // Open edit dialog
-                    },
-                  ),
-                     SizedBox(height: 10.h),
-                  SizedBox(
-                    width: double.infinity,
-                    child: CustomButton(
-                      text: 'Delete Task',
-                      backgroundColor: Colors.red,
-                      textColor: Colors.white,
-                      borderRadius: 30,
-                      height: 45.h,
-                      onPressed: () {
-                        _showDeleteConfirmationDialog(context, task.id!);
-                      },
-                    ),
-                  ),
+                FutureBuilder<List<bool>>(
+                  // Check both permissions at once: [UPDATE_TASK, DELETE_TASK]
+                  future: Future.wait([
+                    LocalData.hasEnumPermission(Permission.UPDATE_TASK),
+                    LocalData.hasEnumPermission(Permission.DELETE_TASK),
+                  ]),
+                  builder: (context, snapshot) {
+                    // While loading, hide buttons or show loader
+                    if (!snapshot.hasData) {
+                      return const SizedBox.shrink();
+                    }
 
+                    final canUpdate = snapshot.data![0];
+                    final canDelete = snapshot.data![1];
+
+                    return Column(
+                      children: [
+                        // Edit Button (Only if UPDATE_TASK permission)
+                        if (canUpdate)
+                          CustomButton(
+                            width: 332.w,
+                            text: 'Edit Task',
+                            backgroundColor: Colors.blue,
+                            textColor: Colors.white,
+                            borderRadius: 8,
+                            height: 40.h,
+                            onPressed: () {
+                              Navigator.pop(context); // Close this view dialog
+                              _showEditTaskDialog(
+                                  context, task); // Open edit dialog
+                            },
+                          ),
+
+                        if (canUpdate) SizedBox(height: 10.h),
+
+                        // Delete Button (Only if DELETE_TASK permission)
+                        if (canDelete)
+                          SizedBox(
+                            width: double.infinity,
+                            child: CustomButton(
+                              text: 'Delete Task',
+                              backgroundColor: Colors.red,
+                              textColor: Colors.white,
+                              borderRadius: 30,
+                              height: 45.h,
+                              onPressed: () {
+                                _showDeleteConfirmationDialog(
+                                    context, task.id!);
+                              },
+                            ),
+                          ),
+                      ],
+                    );
+                  },
+                ),
               ],
             ),
           ),
@@ -203,6 +228,4 @@ class ViewTaskDialog extends StatelessWidget {
       ),
     );
   }
-
- 
 }

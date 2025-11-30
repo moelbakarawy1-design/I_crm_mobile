@@ -1,4 +1,4 @@
-import 'package:admin_app/featuer/role/helper/enum_permission.dart';
+import 'package:admin_app/core/helper/enum_permission.dart';
 
 class LoginRequest {
   final String email;

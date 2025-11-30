@@ -1,4 +1,6 @@
 import 'package:admin_app/config/router/routes.dart';
+import 'package:admin_app/core/helper/enum_permission.dart';
+import 'package:admin_app/core/network/local_data.dart';
 import 'package:admin_app/featuer/chat/manager/chat_cubit.dart';
 import 'package:admin_app/featuer/chat/manager/chat_state.dart';
 import 'package:admin_app/featuer/chat/data/model/chat_model12.dart';
@@ -32,9 +34,15 @@ class CahtPage extends StatelessWidget {
               );
             },
           ),
-
-          // Floating Action Button
-          const AnimatedFAB(),
+          FutureBuilder<bool>(
+            future: LocalData.hasEnumPermission(Permission.READ_WRITE_WHATSAPP),
+            builder: (context, snapshot) {
+              if (snapshot.hasData && snapshot.data == true) {
+                return const AnimatedFAB();
+              }
+              return const SizedBox.shrink();
+            },
+          ),
         ],
       ),
     );

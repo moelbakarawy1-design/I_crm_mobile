@@ -1,3 +1,5 @@
+import 'package:admin_app/core/theme/app_color.dart';
+import 'package:admin_app/core/theme/app_text_style.dart';
 import 'package:admin_app/core/widgets/CustomAppBar_widget.dart';
 import 'package:admin_app/featuer/getAllRole/view/screens/EditUserScreen.dart';
 import 'package:flutter/material.dart';
@@ -10,6 +12,7 @@ class AllUsersScreen extends StatefulWidget {
   const AllUsersScreen({super.key});
 
   @override
+  // ignore: library_private_types_in_public_api
   _AllUsersScreenState createState() => _AllUsersScreenState();
 }
 
@@ -58,11 +61,11 @@ class _AllUsersScreenState extends State<AllUsersScreen> {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(Icons.error_outline, size: 64, color: Colors.red[300]),
+                  Icon(Icons.error_outline, size: 64, color: AppColor.lightBlue),
                   const SizedBox(height: 16),
                   Text(
                     'Error Loading Users',
-                    style: Theme.of(context).textTheme.titleLarge,
+                    style: AppTextStyle.setpoppinsTextStyle(fontSize: 20, fontWeight: FontWeight.w600, color: AppColor.secondaryBlack),
                   ),
                   const SizedBox(height: 8),
                   Text(
@@ -71,10 +74,14 @@ class _AllUsersScreenState extends State<AllUsersScreen> {
                     textAlign: TextAlign.center,
                   ),
                   const SizedBox(height: 24),
-                  ElevatedButton.icon(
+                  ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      minimumSize: const Size(150, 48),
+                      backgroundColor: AppColor.lightBlue,
+                      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                    ),
                     onPressed: () => context.read<GetAllUserCubit>().fetchAllUsers(),
-                    icon: const Icon(Icons.refresh),
-                    label: const Text('Retry'),
+                    child:  Text('Retry',style: AppTextStyle.setpoppinsTextStyle(fontSize: 16,color: AppColor.mainWhite, fontWeight: FontWeight.w500),)
                   ),
                 ],
               ),
