@@ -1,4 +1,5 @@
 import 'package:admin_app/core/theme/app_color.dart';
+import 'package:admin_app/core/utils/responsive_layout.dart';
 import 'package:admin_app/core/widgets/CustomAppBar_widget.dart';
 import 'package:admin_app/featuer/home/view/pages/Dashboard_page.dart';
 import 'package:admin_app/featuer/home/view/pages/profile_page.dart';
@@ -17,75 +18,111 @@ class _HomeViewState extends State<HomeView> {
   int _currentIndex = 0;
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
 
+  final List<Widget> pages = [
+    const DashboardPage(),
+    const ProfilePage(),
+  ];
+
+  void _onItemTapped(int index) {
+    setState(() {
+      _currentIndex = index;
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
-    final List<Widget> pages = [
-      const DashboardPage(),
-      const ProfilePage(),
-    ];
-
-    return Scaffold(
-      key: _scaffoldKey,
-      backgroundColor: AppColor.secondaryWhite,
-      
-      // ✅ 1. AppBar handles the click to open the END drawer
-      appBar: CustomAppBar(
-        title: _getTitle(_currentIndex),
-        onMenuPressed: () => _scaffoldKey.currentState?.openEndDrawer(),
-      ),
-
-      // ✅ 2. Use endDrawer to place it on the RIGHT side
-      endDrawer: const DrawerMenu(), 
-
-      body: pages[_currentIndex],
-      
-      bottomNavigationBar: Container(
-        decoration: BoxDecoration(
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.1),
-              blurRadius: 10,
-              offset: const Offset(0, -2),
-            ),
-          ],
-        ),
-        child: BottomNavigationBar(
-          currentIndex: _currentIndex,
-          onTap: (index) {
-            setState(() {
-              _currentIndex = index;
-            });
-          },
-          type: BottomNavigationBarType.fixed,
-          backgroundColor: Colors.white,
-          selectedItemColor: const Color(0xFF0E87F8),
-          unselectedItemColor: const Color(0xFF9E9E9E),
-          selectedLabelStyle: TextStyle(
-            fontSize: 12.sp,
-            fontWeight: FontWeight.w600,
-          ),
-          unselectedLabelStyle: TextStyle(
-            fontSize: 12.sp,
-            fontWeight: FontWeight.w400,
-          ),
-          items: const [
-            BottomNavigationBarItem(
-              icon: Icon(Icons.bar_chart_outlined),
-              activeIcon: Icon(Icons.bar_chart),
-              label: 'Dashboard',
-            ),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.person_outline),
-              activeIcon: Icon(Icons.person),
-              label: 'Profile',
-            ),
-          ],
-        ),
-      ),
+    return ResponsiveLayout(
+      mobile: _buildMobileLayout(),
+      tablet: _buildTabletLayout(),
+      desktop: _buildDesktopLayout(),
     );
   }
 
-  // 📋 Title based on active tab
+  Widget _buildMobileLayout() {
+    return Scaffold(
+      key: _scaffoldKey,
+      backgroundColor: AppColor.secondaryWhite,
+      appBar: CustomAppBar(
+        title: _getTitle(_currentIndex),
+        // Open the right drawer (navigation)
+        onMenuPressed: () => _scaffoldKey.currentState?.openEndDrawer(),
+      ),
+      // Use 'endDrawer' for right-side navigation
+      endDrawer: DrawerMenu(
+        currentIndex: _currentIndex,
+        onNavigate: _onItemTapped,
+      ),
+      body: pages[_currentIndex],
+    );
+  }
+
+  Widget _buildTabletLayout() {
+    return ScreenUtilInit(
+      designSize: const Size(768, 1024), // Tablet Design Size
+      builder: (context, child) {
+        return Scaffold(
+          key: _scaffoldKey,
+          backgroundColor: AppColor.secondaryWhite,
+          appBar: CustomAppBar(
+            title: _getTitle(_currentIndex),
+            // Open the right drawer (navigation)
+            onMenuPressed: () => _scaffoldKey.currentState?.openEndDrawer(),
+          ),
+          // Use 'endDrawer' for right-side navigation
+          endDrawer: DrawerMenu(
+            currentIndex: _currentIndex,
+            onNavigate: _onItemTapped,
+          ),
+          body: pages[_currentIndex],
+        );
+      },
+    );
+  }
+
+  Widget _buildDesktopLayout() {
+    return ScreenUtilInit(
+      designSize: const Size(1440, 900), // Desktop Design Size
+      builder: (context, child) {
+        return Scaffold(
+          backgroundColor: AppColor.secondaryWhite,
+          body: Row(
+            children: [
+              Expanded(
+                child: Column(
+                  children: [
+                    // Custom Header for Desktop if needed, or just the content
+                    Container(
+                      height: 60,
+                      color: Colors.white,
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      alignment: Alignment.centerLeft,
+                      child: Text(
+                        _getTitle(_currentIndex),
+                        style: TextStyle(
+                          fontSize: 20.sp,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                    Expanded(child: pages[_currentIndex]),
+                  ],
+                ),
+              ),
+              // Permanent Drawer for Desktop (Right Side)
+              SizedBox(
+                width: 250,
+                child: DrawerMenu(
+                  currentIndex: _currentIndex,
+                  onNavigate: _onItemTapped,
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
   String _getTitle(int index) {
     switch (index) {
       case 0:

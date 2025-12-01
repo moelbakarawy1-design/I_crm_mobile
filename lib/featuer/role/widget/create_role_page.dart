@@ -136,6 +136,7 @@ class _CreateRolePageState extends State<CreateRolePage> {
               BlocBuilder<InvitationCubit, InvitationState>(
                 builder: (context, state) {
                   return CustomButton(
+                    backgroundColor: AppColor.lightBlue,
                     text: 'Create Role',
                     onPressed: _submit,
                     isLoading: state is CreateRoleLoading,

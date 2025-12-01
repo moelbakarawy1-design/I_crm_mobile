@@ -1,3 +1,4 @@
+import 'package:admin_app/core/widgets/CustomAppBar_widget.dart';
 import 'package:admin_app/featuer/Auth/data/model/User_profile_model.dart';
 import 'package:admin_app/core/theme/app_color.dart';
 import 'package:admin_app/featuer/home/view/pages/widget/profile_account_info.dart';
@@ -56,6 +57,10 @@ class _ProfilePageState extends State<ProfilePage> with SingleTickerProviderStat
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      appBar: CustomAppBar(
+        title: 'Profile',
+        onMenuPressed: () => Navigator.pop(context),
+      ),
       backgroundColor: AppColor.primaryWhite,
       body: BlocConsumer<AuthCubit, AuthState>(
         listener: (context, state) {

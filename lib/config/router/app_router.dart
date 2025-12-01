@@ -21,6 +21,7 @@ import 'package:admin_app/featuer/getAllRole/view/screens/AddController_screen.d
 import 'package:admin_app/featuer/home/view/home_Email_view.dart';
 import 'package:admin_app/featuer/getAllRole/view/invitation_page.dart';
 import 'package:admin_app/featuer/home/view/pages/Dashboard_page.dart';
+import 'package:admin_app/featuer/home/view/pages/profile_page.dart';
 import 'package:admin_app/featuer/home/view/pages/settingPage/view/setting_page.dart';
 import 'package:admin_app/featuer/role/roles_page.dart';
 import 'package:admin_app/featuer/on_boarding/on_board_view.dart';
@@ -94,6 +95,8 @@ return RouterTransitions.buildFromBottom(AddControllerPage());
         ));
       case Routes.chatScreen:
         return RouterTransitions.buildFromBottom(ChatScreen());
+        case Routes.profilePage:
+        return RouterTransitions.buildFromBottom(ProfilePage());
 
       case Routes.individualScreen:
         final chatModel = settings.arguments as ChatModel.Data;

@@ -1,3 +1,5 @@
+// ignore_for_file: use_build_context_synchronously
+
 import 'dart:async';
 import 'package:admin_app/AppLink/deepLinkModel.dart';
 import 'package:admin_app/config/router/routes.dart';
@@ -17,13 +19,11 @@ class SplashScreen extends StatefulWidget {
 class _SplashScreenState extends State<SplashScreen> {
   double _opacity = 0.0;
   Offset _offset = const Offset(0, 0.5);
-  
-  // ❌ REMOVED: _deepLinkHandled flag (This was causing the bug)
 
   @override
   void initState() {
     super.initState();
-    
+
     Timer(const Duration(milliseconds: 300), () {
       if (mounted) {
         setState(() {
@@ -39,13 +39,7 @@ class _SplashScreenState extends State<SplashScreen> {
   Future<void> _startNavigation() async {
     final deepLinkFuture = _initializeDeepLinks();
     final timerFuture = Future.delayed(const Duration(seconds: 2));
-
     await Future.wait([deepLinkFuture, timerFuture]);
-
-    // ✅ CHECK MOUNTED
-    // If DeepLinkHandler processed a valid NEW link, it would have navigated away 
-    // (unmounting this screen). So 'mounted' would be false.
-    // If it was a STALE link (ignored), we are still mounted, so we proceed to login check.
     if (mounted) {
       _checkLoginStatus();
     }
@@ -54,12 +48,7 @@ class _SplashScreenState extends State<SplashScreen> {
   Future<void> _initializeDeepLinks() async {
     try {
       print('🎯 SplashScreen: Initializing DeepLinkHandler...');
-      
-      // ✅ Let DeepLinkHandler do the work (Stale check + Navigation)
-      await DeepLinkHandler.init(context); 
-      
-      // ❌ REMOVED: The manual getInitialLink() check.
-      // Do not manually check the link here; the Handler will do it intelligently.
+      await DeepLinkHandler.init(context);
     } catch (e) {
       print('❌ Error initializing deep links: $e');
     }
@@ -68,21 +57,14 @@ class _SplashScreenState extends State<SplashScreen> {
   Future<void> _checkLoginStatus() async {
     if (!mounted) return;
 
-    final token = LocalData.accessToken; 
+    final token = LocalData.accessToken;
     final userRole = await LocalData.getUserRole(); 
 
     if (token != null && token.isNotEmpty) {
-      print("User is logged in. Role: $userRole");
-
-      if (userRole == 'admin' || userRole == 'MANAGER') {
-        Navigator.pushReplacementNamed(context, Routes.home); 
-      } else if (userRole == 'sales') {
-        // Ensure this route exists in your Router
-        Navigator.pushReplacementNamed(context, Routes.salsedashboard); 
-      } else {
-        print("Unknown role, navigating to home.");
-        Navigator.pushReplacementNamed(context, Routes.home);
-      }
+      print("✅ User is logged in. Role: $userRole");
+      print("🚀 Navigating everyone to Home...");
+      Navigator.pushReplacementNamed(context, Routes.home);
+      
     } else {
       print("User is not logged in, navigating to onBoardView.");
       Navigator.pushReplacementNamed(context, Routes.onBoardView);
@@ -91,7 +73,7 @@ class _SplashScreenState extends State<SplashScreen> {
 
   @override
   void dispose() {
-     DeepLinkHandler.dispose(); // Best to keep it alive for app lifetime
+    // DeepLinkHandler.dispose(); // Kept commented as per your previous logic
     super.dispose();
   }
 
@@ -122,6 +104,6 @@ class _SplashScreenState extends State<SplashScreen> {
           ),
         ),
       ),
-    ); 
+    );
   }
 }

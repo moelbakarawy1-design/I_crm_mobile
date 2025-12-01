@@ -13,8 +13,7 @@ class ReportsAnalyticsChart extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      width: 394.w,
-      height: 360.h,
+      // Removed fixed width and height to allow flexibility
       margin: EdgeInsets.all(16.w),
       padding: EdgeInsets.all(20.w),
       decoration: BoxDecoration(
@@ -42,30 +41,36 @@ class ReportsAnalyticsChart extends StatelessWidget {
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min, // Allow column to shrink
         children: [
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    "Chat Activity",
-                    style: AppTextStyle.setpoppinsSecondaryBlack(
-                      fontSize: 18,
-                      fontWeight: FontWeight.w700,
+              Expanded( // Wrap in Expanded to prevent overflow
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      "Chat Activity",
+                      style: AppTextStyle.setpoppinsSecondaryBlack(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w700,
+                      ),
+                      overflow: TextOverflow.ellipsis, // Add ellipsis
                     ),
-                  ),
-                  SizedBox(height: 4.h),
-                  Text(
-                    "Real-time overview",
-                    style: AppTextStyle.setipoppinssecondaryGery(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w400,
+                    SizedBox(height: 4.h),
+                    Text(
+                      "Real-time overview",
+                      style: AppTextStyle.setipoppinssecondaryGery(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w400,
+                      ),
+                      overflow: TextOverflow.ellipsis, // Add ellipsis
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
+              SizedBox(width: 8.w), // Add spacing
               Container(
                 padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
                 decoration: BoxDecoration(
@@ -103,7 +108,8 @@ class ReportsAnalyticsChart extends StatelessWidget {
             ],
           ),
           SizedBox(height: 24.h),
-          Expanded(
+          SizedBox( // Constrain height of chart if needed, or let it expand
+            height: 250.h, 
             child: SfCartesianChart(
               margin: EdgeInsets.zero,
               plotAreaBorderWidth: 0,

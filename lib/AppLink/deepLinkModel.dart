@@ -3,13 +3,15 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:app_links/app_links.dart';
 import 'package:admin_app/config/router/routes.dart';
-import 'package:admin_app/core/network/local_data.dart'; // Import LocalData
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:admin_app/core/network/local_data.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 class DeepLinkHandler {
   static final AppLinks _appLinks = AppLinks();
   static StreamSubscription<Uri>? _sub;
   static bool _initialized = false;
+  static const _storage = FlutterSecureStorage();
+  static const _lastHandledTokenKey = 'LAST_HANDLED_DEEP_LINK_TOKEN';
 
   static Future<void> init(BuildContext context) async {
     if (_initialized) return;
@@ -31,10 +33,8 @@ class DeepLinkHandler {
             return; 
           }
 
-          final prefs = await SharedPreferences.getInstance();
-          // Removed prefs.reload() as it can cause sync issues on some devices
-          
-          final lastToken = prefs.getString('last_handled_token');
+          // 🔐 Use FlutterSecureStorage instead of SharedPreferences
+          final lastToken = await _storage.read(key: _lastHandledTokenKey);
 
           print("🔍 DeepLink Check:");
           print("   💾 Last Token:    '$lastToken'");
@@ -48,7 +48,7 @@ class DeepLinkHandler {
 
           // 3. New Link: Save and Navigate
           print("✅ New Link Detected - Saving...");
-          await prefs.setString('last_handled_token', currentToken);
+          await _storage.write(key: _lastHandledTokenKey, value: currentToken);
           
           if (context.mounted) {
              _navigateToTokenPage(context, currentToken);

@@ -3,6 +3,7 @@ import 'package:admin_app/core/network/local_data.dart';
 import 'package:admin_app/core/theme/app_text_style.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 class TokenHandlerPage extends StatefulWidget {
   final String token;
@@ -75,6 +76,12 @@ class _TokenHandlerPageState extends State<TokenHandlerPage> {
           userRole: role,
           permissions: apiPermissions, 
         );
+
+        // 🔥 FIX: Clear the saved deep link token to prevent reprocessing on app restart
+        // 🔐 Using FlutterSecureStorage for better security
+        const storage = FlutterSecureStorage();
+        await storage.delete(key: 'LAST_HANDLED_DEEP_LINK_TOKEN');
+        print("✅ Cleared last_handled_token to prevent reprocessing");
 
         if (!mounted) return;
         setState(() => _message = "Welcome, $userName! Redirecting...");

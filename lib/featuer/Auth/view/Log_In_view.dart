@@ -2,6 +2,7 @@ import 'package:admin_app/config/router/routes.dart';
 import 'package:admin_app/core/theme/app_color.dart';
 import 'package:admin_app/core/theme/app_text_style.dart';
 import 'package:admin_app/core/utils/App_assets_utils.dart';
+import 'package:admin_app/core/utils/responsive_layout.dart';
 import 'package:admin_app/core/widgets/cusstom_btn_widget.dart';
 import 'package:admin_app/core/widgets/custom_textField_widget.dart';
 import 'package:admin_app/featuer/Auth/manager/cubit/auth_cubit.dart';
@@ -39,191 +40,286 @@ class _LogInViewState extends State<LogInView> {
       );
     }
   }
-@override
-Widget build(BuildContext context) {
-  return BlocConsumer<AuthCubit, AuthState>(
-    listener: (context, state) {
-      if (state is LoginSuccess) {
-        Navigator.pushNamed(context, Routes.home);
-      } else if (state is LoginError) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(state.message),
-            backgroundColor: Colors.red,
+
+  @override
+  Widget build(BuildContext context) {
+    return BlocConsumer<AuthCubit, AuthState>(
+      listener: (context, state) {
+        if (state is LoginSuccess) {
+          Navigator.pushNamed(context, Routes.home);
+        } else if (state is LoginError) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(state.message),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+      },
+      builder: (context, state) {
+        final isLoading = state is LoginLoading;
+
+        return Scaffold(
+          backgroundColor: const Color(0xFF0E87F8),
+          body: ResponsiveLayout(
+            mobile: _buildMobileLayout(isLoading),
+            tablet: _buildTabletLayout(isLoading),
+            desktop: _buildDesktopLayout(isLoading),
           ),
         );
-      }
-    },
-    builder: (context, state) {
-      final isLoading = state is LoginLoading;
+      },
+    );
+  }
 
-      return Scaffold(
-        backgroundColor: const Color(0xFF0E87F8),
-        body: Column(
+  Widget _buildMobileLayout(bool isLoading) {
+    return Column(
+      children: [
+        Expanded(
+          flex: 5,
+          child: SizedBox.expand(
+            child: Stack(
+              clipBehavior: Clip.none,
+              children: [
+                Positioned(
+                  top: 8.h,
+                  left: 25.w,
+                  child: Opacity(
+                    opacity: 1,
+                    child: SvgPicture.asset(
+                      AppAssetsUtils.personalemail,
+                      width: 327.w,
+                      height: 256.h,
+                      fit: BoxFit.contain,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+        Expanded(
+          flex: 12,
+          child: Container(
+            height: 716.h,
+            width: double.infinity,
+            decoration: BoxDecoration(
+              color: AppColor.mainWhite,
+              borderRadius: BorderRadius.only(
+                topLeft: Radius.circular(50.r),
+                topRight: Radius.circular(50.r),
+              ),
+            ),
+            child: SingleChildScrollView(
+              padding: EdgeInsets.symmetric(
+                horizontal: 30.w,
+                vertical: 40.h,
+              ),
+              child: _buildForm(isLoading),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildTabletLayout(bool isLoading) {
+    return ScreenUtilInit(
+      designSize: const Size(768, 1024), // Tablet Design Size
+      builder: (context, child) {
+        return Center(
+          child: Container(
+            width: 600,
+            height: double.infinity,
+            decoration: BoxDecoration(
+              color: AppColor.mainWhite,
+              borderRadius: BorderRadius.circular(20.r),
+            ),
+            margin: EdgeInsets.symmetric(vertical: 40.h, horizontal: 20.w),
+            child: SingleChildScrollView(
+              padding: EdgeInsets.symmetric(
+                horizontal: 30.w,
+                vertical: 40.h,
+              ),
+              child: Column(
+                children: [
+                  SvgPicture.asset(
+                    AppAssetsUtils.personalemail,
+                    width: 200.w,
+                    height: 150.h,
+                    fit: BoxFit.contain,
+                  ),
+                  SizedBox(height: 30.h),
+                  _buildForm(isLoading),
+                ],
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildDesktopLayout(bool isLoading) {
+    return ScreenUtilInit(
+      designSize: const Size(1440, 900), // Desktop Design Size
+      builder: (context, child) {
+        return Row(
           children: [
             Expanded(
-              flex: 5,
-              child: SizedBox.expand(
-                child: Stack(
-                  clipBehavior: Clip.none,
-                  children: [
-                    Positioned(
-                      top: 8.h,
-                      left: 25.w,
-                      child: Opacity(
-                        opacity: 1,
-                        child: SvgPicture.asset(
-                          AppAssetsUtils.personalemail,
-                          width: 327.w,
-                          height: 256.h,
-                          fit: BoxFit.contain,
-                        ),
-                      ),
-                    ),
-                  ],
+              flex: 1,
+              child: Container(
+                color: const Color(0xFF0E87F8),
+                child: Center(
+                  child: SvgPicture.asset(
+                    AppAssetsUtils.personalemail,
+                    width: 400.w,
+                    height: 400.h,
+                    fit: BoxFit.contain,
+                  ),
                 ),
               ),
             ),
             Expanded(
-              flex: 12,
+              flex: 1,
               child: Container(
-                height: 716.h,
-                width: double.infinity,
-                decoration: BoxDecoration(
-                  color: AppColor.mainWhite,
-                  borderRadius: BorderRadius.only(
-                    topLeft: Radius.circular(50.r),
-                    topRight: Radius.circular(50.r),
-                  ),
-                ),
-                child: SingleChildScrollView(
-                  padding: EdgeInsets.symmetric(
-                    horizontal: 30.w,
-                    vertical: 40.h,
-                  ),
-                  child: Form(
-                    key: _formKey,
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Sign in',
-                          style: AppTextStyle.setpoppinsBlack(
-                            fontSize: 32,
-                            fontWeight: FontWeight.w700,
-                          ),
-                        ),
-                        SizedBox(height: 8.h),
-                        Text(
-                          'Create an account, it is free',
-                          style: AppTextStyle.setpoppinsBlack(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w400,
-                          ),
-                        ),
-                        SizedBox(height: 32.h),
-                        Text(
-                          'Email',
-                          style: AppTextStyle.setpoppinsBlack(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                        SizedBox(height: 8.h),
-                        CustomTextFormField(
-                          controller: _emailController,
-                          hintText: 'Enter your email',
-                          keyboardType: TextInputType.emailAddress,
-                          validator: FieldValidator.email,
-                          textInputAction: TextInputAction.next,
-                        ),
-                        SizedBox(height: 20.h),
-                        Text(
-                          'Password',
-                          style: AppTextStyle.setpoppinsBlack(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                        SizedBox(height: 8.h),
-                        CustomTextFormField(
-                          controller: _passwordController,
-                          hintText: 'Enter Your Password',
-                          obscureText: _obscurePassword,
-                          suffixIcon: IconButton(
-                            onPressed: () {
-                              setState(() =>
-                                  _obscurePassword = !_obscurePassword);
-                            },
-                            icon: _obscurePassword
-                                ? SvgPicture.asset(
-                                    'assets/svg/eye-slash.svg',
-                                    width: 20.w,
-                                    height: 20.h,
-                                    color: const Color(0xFF9E9E9E),
-                                  )
-                                : SvgPicture.asset(
-                                    'assets/svg/eye_open.svg',
-                                    width: 20.w,
-                                    height: 20.h,
-                                    color: const Color(0xFF9E9E9E),
-                                  ),
-                          ),
-                          validator: FieldValidator.password,
-                          textInputAction: TextInputAction.done,
-                        ),
-                        SizedBox(height: 16.h),
-                        Align(
-                          alignment: Alignment.centerRight,
-                          child: GestureDetector(
-                            onTap: () {
-                              Navigator.pushNamed(
-                                  context, Routes.forgetPassword);
-                            },
-                            child: Text(
-                              'Forgot password',
-                              style: AppTextStyle.setpoppinsSecondaryBlack(
-                                fontSize: 12,
-                                fontWeight: FontWeight.w500,
-                              ),
-                            ),
-                          ),
-                        ),
-                        SizedBox(height: 24.h),
-
-                        /// 🔹 Show loading on button when logging in
-                        CustomButton(
-                          text: isLoading ? '' : 'Sign in',
-                          onPressed: isLoading ? null : _handleLogin,
-                          width: double.infinity,
-                          backgroundColor: const Color(0xFF1A1A1A),
-                          child: isLoading
-                              ? const SizedBox(
-                                  width: 22,
-                                  height: 22,
-                                  child: CircularProgressIndicator(
-                                    color: Colors.white,
-                                    strokeWidth: 2,
-                                  ),
-                                )
-                              : null,
-                        ),
-                        Align(
-                          alignment: AlignmentGeometry.center,
-                          child: TextButton(onPressed: (){
-                            Navigator.pushNamed(context, Routes.notAdminView);
-                          }, child: Text('Not Admin',style: AppTextStyle.setpoppinsBlack(fontSize: 12, fontWeight: FontWeight.w400, ))),
-                        )
-                      ],
+                color: AppColor.mainWhite,
+                child: Center(
+                  child: Container(
+                    constraints: const BoxConstraints(maxWidth: 500),
+                    padding: const EdgeInsets.all(40),
+                    child: SingleChildScrollView(
+                      child: _buildForm(isLoading),
                     ),
                   ),
                 ),
               ),
             ),
           ],
-        ),
-      );
-    },
-  );
-}
+        );
+      },
+    );
+  }
+
+  Widget _buildForm(bool isLoading) {
+    return Form(
+      key: _formKey,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Sign in',
+            style: AppTextStyle.setpoppinsBlack(
+              fontSize: 32,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+          SizedBox(height: 8.h),
+          Text(
+            'Create an account, it is free',
+            style: AppTextStyle.setpoppinsBlack(
+              fontSize: 14,
+              fontWeight: FontWeight.w400,
+            ),
+          ),
+          SizedBox(height: 32.h),
+          Text(
+            'Email',
+            style: AppTextStyle.setpoppinsBlack(
+              fontSize: 12,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+          SizedBox(height: 8.h),
+          CustomTextFormField(
+            controller: _emailController,
+            hintText: 'Enter your email',
+            keyboardType: TextInputType.emailAddress,
+            validator: FieldValidator.email,
+            textInputAction: TextInputAction.next,
+          ),
+          SizedBox(height: 20.h),
+          Text(
+            'Password',
+            style: AppTextStyle.setpoppinsBlack(
+              fontSize: 12,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+          SizedBox(height: 8.h),
+          CustomTextFormField(
+            controller: _passwordController,
+            hintText: 'Enter Your Password',
+            obscureText: _obscurePassword,
+            suffixIcon: IconButton(
+              onPressed: () {
+                setState(() => _obscurePassword = !_obscurePassword);
+              },
+              icon: _obscurePassword
+                  ? SvgPicture.asset(
+                      'assets/svg/eye-slash.svg',
+                      width: 20.w,
+                      height: 20.h,
+                      color: const Color(0xFF9E9E9E),
+                    )
+                  : SvgPicture.asset(
+                      'assets/svg/eye_open.svg',
+                      width: 20.w,
+                      height: 20.h,
+                      color: const Color(0xFF9E9E9E),
+                    ),
+            ),
+            validator: FieldValidator.password,
+            textInputAction: TextInputAction.done,
+          ),
+          SizedBox(height: 16.h),
+          Align(
+            alignment: Alignment.centerRight,
+            child: GestureDetector(
+              onTap: () {
+                Navigator.pushNamed(context, Routes.forgetPassword);
+              },
+              child: Text(
+                'Forgot password',
+                style: AppTextStyle.setpoppinsSecondaryBlack(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ),
+          ),
+          SizedBox(height: 24.h),
+
+          /// 🔹 Show loading on button when logging in
+          CustomButton(
+            text: isLoading ? '' : 'Sign in',
+            onPressed: isLoading ? null : _handleLogin,
+            width: double.infinity,
+            backgroundColor: const Color(0xFF1A1A1A),
+            child: isLoading
+                ? const SizedBox(
+                    width: 22,
+                    height: 22,
+                    child: CircularProgressIndicator(
+                      color: Colors.white,
+                      strokeWidth: 2,
+                    ),
+                  )
+                : null,
+          ),
+          Align(
+            alignment: AlignmentGeometry.center,
+            child: TextButton(
+                onPressed: () {
+                  Navigator.pushNamed(context, Routes.notAdminView);
+                },
+                child: Text('Not Admin',
+                    style: AppTextStyle.setpoppinsBlack(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w400,
+                    ))),
+          )
+        ],
+      ),
+    );
+  }
 }

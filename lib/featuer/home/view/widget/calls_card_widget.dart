@@ -54,8 +54,7 @@ class _CallsTodayCardState extends State<CallsTodayCard>
       child: SlideTransition(
         position: _slideAnimation,
         child: Container(
-          width: 330.w,
-         
+          // Removed fixed width
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(12),
             color: AppColor.mainWhite,

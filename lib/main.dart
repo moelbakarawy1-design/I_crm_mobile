@@ -8,68 +8,65 @@ import 'package:admin_app/featuer/Task/manager/task_cubit.dart';
 import 'package:admin_app/featuer/User/manager/user_cubit.dart';
 import 'package:admin_app/featuer/chat/manager/chat_cubit.dart';
 import 'package:admin_app/featuer/chat/manager/message_cubit.dart';
+import 'package:admin_app/featuer/getAllRole/manager/role_cubit.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_native_splash/flutter_native_splash.dart';
-import 'featuer/getAllRole/manager/role_cubit.dart';
 
 Future<void> main() async {
-  WidgetsFlutterBinding.ensureInitialized(); 
   WidgetsBinding widgetsBinding = WidgetsFlutterBinding.ensureInitialized();
-  FlutterNativeSplash.preserve(widgetsBinding: widgetsBinding); 
-  
-  await LocalData.init();
-  
-  // 👇 ADD THIS LINE HERE to see permissions in the console on startup
-  await LocalData.debugPrintAllPermissions(); 
-
-  await DependencyInjection.init(); 
-  await APIHelper.init();
+  FlutterNativeSplash.preserve(widgetsBinding: widgetsBinding);
+  await LocalData.init(); 
+  await LocalData.debugPrintAllPermissions();
+  await DependencyInjection.init();
+  await APIHelper.init();  
   runApp(const MyApp());
 }
+
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
   @override
   Widget build(BuildContext context) {
     FlutterNativeSplash.remove();
+
     return ScreenUtilInit(
-    designSize: Size(375, 812),
+      designSize: const Size(400, 812),
       minTextAdapt: true,
       splitScreenMode: true,
-      builder: (context, _) {
+      builder: (context, child) {
         return MultiBlocProvider(
           providers: [
             BlocProvider<AuthCubit>(
-                create: (context) => getIt<AuthCubit>(),
-                 ),
-             BlocProvider<InvitationCubit>(create:(context)=> getIt<InvitationCubit>(),
-
-              ),
-               BlocProvider<MessagesCubit>(
-             create: (context) => getIt<MessagesCubit>(),
-           ),
-           BlocProvider<TaskCubit>(
+              create: (context) => getIt<AuthCubit>(),
+            ),
+            BlocProvider<InvitationCubit>(
+              create: (context) => getIt<InvitationCubit>(),
+            ),
+            BlocProvider<MessagesCubit>(
+              create: (context) => getIt<MessagesCubit>(),
+            ),
+            BlocProvider<TaskCubit>(
               create: (context) => getIt<TaskCubit>(),
             ),
             BlocProvider<GetAllUserCubit>(
               create: (context) => getIt<GetAllUserCubit>(),
             ),
-           BlocProvider<ChatCubit>(
+            BlocProvider<ChatCubit>(
               create: (context) => getIt<ChatCubit>(),
             ),
-                      ],
+          ],
           child: MaterialApp(
+            title: 'Admin App',
+            debugShowCheckedModeBanner: false,
             onGenerateRoute: AppRouter().onGenerateRoute,
             initialRoute: Routes.splashScreen,
-            debugShowCheckedModeBanner: false,
-            title: 'Admin App',
             theme: ThemeData(
               primarySwatch: Colors.blue,
               useMaterial3: true,
+              visualDensity: VisualDensity.adaptivePlatformDensity,
             ),
-          
           ),
         );
       },

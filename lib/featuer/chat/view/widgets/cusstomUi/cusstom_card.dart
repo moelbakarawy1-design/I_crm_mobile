@@ -126,7 +126,7 @@ class CusstomCard extends StatelessWidget {
         maxLines: 1,
         overflow: TextOverflow.ellipsis,
         style: AppTextStyle.setpoppinsTextStyle(
-          fontSize: 10.sp,
+          fontSize: 11.sp,
           fontWeight: hasUnread ? FontWeight.w700 : FontWeight.w500,
           color: textColor,
         ),

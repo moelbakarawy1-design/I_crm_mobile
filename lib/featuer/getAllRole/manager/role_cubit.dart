@@ -28,35 +28,33 @@ class InvitationCubit extends Cubit<InvitationState> {
   }
 
   Future<void> fetchRoles() async {
+    if (isClosed) return; // Safety check
     emit(RolesLoading());
+    
     try {
       final response = await _repository.getRoles();
-   
-    if (isClosed) return;
+
+      // ✅ FIX: Check if closed after await
+      if (isClosed) return;
 
       if (response.status) {
         if (response.data != null && response.data is List) {
-    
           final rolesData = response.data as List;
           _cachedRoles = rolesData.map((role) => RoleModel.fromJson(role)).toList();
           emit(RolesSuccess(_cachedRoles));
-
         } else if (response.data != null && response.data is Map && response.data['data'] is List) {
-          final rolesData = response.data['data'] as List; 
+          final rolesData = response.data['data'] as List;
           _cachedRoles = rolesData.map((role) => RoleModel.fromJson(role)).toList();
           emit(RolesSuccess(_cachedRoles));
-
         } else {
           _cachedRoles = [];
           emit(RolesSuccess(_cachedRoles));
         }
       } else {
-            if (isClosed) return;
-
-        emit(RolesFailure(response.message ));
+        emit(RolesFailure(response.message));
       }
     } catch (e) {
-      // This 'catch' block handles failed refreshes or other exceptions
+      if (isClosed) return; // ✅ FIX: Check inside catch too
       emit(RolesFailure('Failed to fetch roles: $e'));
     }
   }
@@ -67,7 +65,9 @@ class InvitationCubit extends Cubit<InvitationState> {
     required String email,
     required String roleName,
   }) async {
+    if (isClosed) return;
     emit(InvitationSending());
+    
     try {
       final invitation = InvitationModel(
         name: name,
@@ -76,12 +76,16 @@ class InvitationCubit extends Cubit<InvitationState> {
       );
       final response = await _repository.sendInvitation(invitation);
 
+      // ✅ FIX: Check if closed after await
+      if (isClosed) return;
+
       if (response.status) {
-        emit(InvitationSent(response.message ));
+        emit(InvitationSent(response.message));
       } else {
-        emit(InvitationFailure(response.message ));
+        emit(InvitationFailure(response.message));
       }
     } catch (e) {
+      if (isClosed) return;
       emit(InvitationFailure('Failed to send invitation: $e'));
     }
   }
@@ -91,20 +95,27 @@ class InvitationCubit extends Cubit<InvitationState> {
     required String name,
     required List<String> permissions,
   }) async {
+    if (isClosed) return;
     emit(CreateRoleLoading());
+    
     try {
       final response = await _repository.createRole(
         name: name,
         permissions: permissions,
       );
 
+      // ✅ FIX: Check if closed after await
+      if (isClosed) return;
+
       if (response.status) {
         emit(CreateRoleSuccess());
-        fetchRoles(); // Refresh the list after success
+        // Note: fetchRoles handles its own isClosed checks internally now
+        fetchRoles(); 
       } else {
-        emit(CreateRoleFailure(response.message ));
+        emit(CreateRoleFailure(response.message));
       }
     } catch (e) {
+      if (isClosed) return;
       emit(CreateRoleFailure('An error occurred: $e'));
     }
   }
@@ -115,7 +126,9 @@ class InvitationCubit extends Cubit<InvitationState> {
     required String name,
     required List<String> permissions,
   }) async {
+    if (isClosed) return;
     emit(UpdateRoleLoading());
+    
     try {
       final response = await _repository.updateRole(
         roleId: roleId,
@@ -123,30 +136,40 @@ class InvitationCubit extends Cubit<InvitationState> {
         permissions: permissions,
       );
 
+      // ✅ FIX: Check if closed after await
+      if (isClosed) return;
+
       if (response.status) {
         emit(UpdateRoleSuccess());
-        fetchRoles(); // Refresh the list after success
+        fetchRoles();
       } else {
-        emit(UpdateRoleFailure(response.message ));
+        emit(UpdateRoleFailure(response.message));
       }
     } catch (e) {
+      if (isClosed) return;
       emit(UpdateRoleFailure('An error occurred: $e'));
     }
   }
 
   // Delete Role
   Future<void> deleteRole({required String roleId}) async {
+    if (isClosed) return;
     emit(DeleteRoleLoading());
+    
     try {
       final response = await _repository.deleteRole(roleId: roleId);
 
+      // ✅ FIX: Check if closed after await
+      if (isClosed) return;
+
       if (response.status) {
         emit(DeleteRoleSuccess());
-        fetchRoles(); // Refresh the list after success
+        fetchRoles();
       } else {
-        emit(DeleteRoleFailure(response.message ));
+        emit(DeleteRoleFailure(response.message));
       }
     } catch (e) {
+      if (isClosed) return;
       emit(DeleteRoleFailure('An error occurred: $e'));
     }
   }
