@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:video_player/video_player.dart';
 
-// 🎥 Video Widget
+//  Video Widget
 class VideoMessageWidget extends StatefulWidget {
   final String videoUrl; // This will receive the ID (Content)
   final String? caption;
@@ -29,25 +29,15 @@ class _VideoMessageWidgetState extends State<VideoMessageWidget> {
 
   Future<void> _initializePlayer() async {
     try {
-      // ✅ Construct the full URL by passing content at the end of endpoint
-      String finalUrl;
-      
-      // Check if it's already a full link (starts with http/https)
+      String finalUrl;     
       if (widget.videoUrl.startsWith('http') || widget.videoUrl.startsWith('https')) {
         finalUrl = widget.videoUrl;
       } else {
-        // 🔥 THIS IS THE KEY PART YOU ASKED FOR:
-        // Append the content (ID) to the end of the media endpoint
         finalUrl = '${EndPoints.baseUrl}/chats/media/${widget.videoUrl}';
       }
-
       debugPrint("🎥 Final Video URL: $finalUrl");
-
-      // 2. Init Video Controller
       _videoPlayerController = VideoPlayerController.networkUrl(Uri.parse(finalUrl));
       await _videoPlayerController!.initialize();
-
-      // 3. Init Chewie Controller
       _chewieController = ChewieController(
         videoPlayerController: _videoPlayerController!,
         aspectRatio: _videoPlayerController!.value.aspectRatio,
@@ -82,6 +72,21 @@ class _VideoMessageWidgetState extends State<VideoMessageWidget> {
       if (mounted) {
         setState(() => _isError = true);
       }
+    }
+  }
+
+  @override
+  void didUpdateWidget(VideoMessageWidget oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.videoUrl != widget.videoUrl) {
+      debugPrint("🔄 Video URL changed, reinitializing player...");
+      _videoPlayerController?.dispose();
+      _chewieController?.dispose();
+      setState(() {
+        _isInitialized = false;
+        _isError = false;
+      });
+      _initializePlayer();
     }
   }
 

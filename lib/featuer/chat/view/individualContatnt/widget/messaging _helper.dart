@@ -38,6 +38,10 @@ Widget buildMessageContent(OrderedMessages msg , BuildContext context) {
      else if (msg.content != null && msg.content!.contains('"formatted_name"')) {
        type = 'contacts';
      }
+     // ✅ Check for sticker file extensions
+     else if (c.endsWith('.webp') || c.contains('sticker')) {
+       type = 'sticker';
+     }
   }
 
   //  CONTACTS (New)
@@ -118,6 +122,49 @@ Widget buildMessageContent(OrderedMessages msg , BuildContext context) {
     ],
   );
 }
+
+  // ✅ STICKER (WhatsApp-style)
+  else if (type == 'sticker') {
+    return GestureDetector(
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (_) => FullScreenImage(imageUrl: fullUrl),
+          ),
+        );
+      },
+      child: Hero(
+        tag: fullUrl,
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(8),
+          child: ConstrainedBox(
+            constraints: BoxConstraints(
+              maxWidth: 150.w,  // Smaller than images for sticker effect
+              maxHeight: 150.h,
+            ),
+            child: Image.network(
+              fullUrl,
+              fit: BoxFit.contain,  // Contain to preserve sticker aspect ratio
+              errorBuilder: (context, error, stackTrace) =>
+                  Icon(Icons.emoji_emotions_outlined, size: 80.sp, color: Colors.grey),
+              loadingBuilder: (context, child, loadingProgress) {
+                if (loadingProgress == null) return child;
+                return Container(
+                  width: 150.w,
+                  height: 150.h,
+                  color: Colors.transparent,
+                  child: const Center(
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  ),
+                );
+              },
+            ),
+          ),
+        ),
+      ),
+    );
+  }
 
 
 

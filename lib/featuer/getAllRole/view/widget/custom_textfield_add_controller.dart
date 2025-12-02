@@ -11,8 +11,8 @@ class CustomTextFieldAddController extends StatelessWidget {
   final TextInputType keyboardType;
   final bool obscureText;
   final String? Function(String?)? validator;
-  final String? prefixSvgIcon; // <-- changed to SVG path
-  final String? suffixSvgIcon; // <-- changed to SVG path
+  final String? prefixSvgIcon; 
+  final String? suffixSvgIcon; 
   final VoidCallback? onSuffixTap;
   final bool readOnly;
 

@@ -6,13 +6,13 @@ import 'package:admin_app/core/widgets/CustomAppBar_widget.dart';
 import 'package:admin_app/featuer/User/data/model/getAllUser_model.dart';
 import 'package:admin_app/featuer/User/manager/user_cubit.dart';
 import 'package:admin_app/featuer/User/manager/user_state.dart';
+import 'package:admin_app/featuer/getAllRole/view/widget/user_search_header.dart';
 import 'package:admin_app/featuer/getAllRole/view/widget/user_table_row.dart';
 import 'package:admin_app/core/helper/enum_permission.dart';
-import 'package:admin_app/featuer/role/helper/Function_helper.dart';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 
 class InvitationPage extends StatefulWidget {
   const InvitationPage({super.key});
@@ -38,146 +38,135 @@ class _InvitationPageState extends State<InvitationPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: CustomAppBar(
-        title: 'Send Invite',
-        onMenuPressed: () => Navigator.pop(context),
-      ),
-      backgroundColor: const Color(0xFFF8FAFC),
-      body: Padding(
-        padding: EdgeInsets.all(16.w),
-        child: Column(
+    return BlocListener<GetAllUserCubit, GetAllUserState>(
+      listener: (context, state) {
+        // Show error messages in snackbar
+        if (state is GetAllUserFailure) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(state.message),
+              backgroundColor: Colors.red,
+              duration: const Duration(seconds: 3),
+            ),
+          );
+        }
+        // Show success message when user is deleted
+        else if (state is UserDeleteSuccess) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(state.message),
+              backgroundColor: Colors.green,
+              duration: const Duration(seconds: 2),
+            ),
+          );
+        }
+      },
+      child: Scaffold(
+        appBar: CustomAppBar(
+          title: 'Send Invite',
+          onMenuPressed: () => Navigator.pop(context),
+        ),
+        backgroundColor: const Color(0xFFF8FAFC),
+        body: Column(
           children: [
-            // Search and Add Controller Button
-            Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Expanded(
-                  child: Container(
-                    height: 38.h,
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(8.r),
-                      border: Border.all(color: const Color(0xFFD1D5DB)),
-                    ),
-                    child: TextField(
-                      controller: _searchController,
-                      style: AppTextStyle.setpoppinsTextStyle(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w400,
-                          color: AppColor.gray70),
-                      onChanged: (_) => setState(() {}),
-                      decoration: InputDecoration(
-                        filled: true,
-                        fillColor: const Color(0xFFEAEEF4),
-                        hintText: 'Search Name',
-                        hintStyle: AppTextStyle.setpoppinsTextStyle(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w400,
-                            color: AppColor.gray70),
-                        prefixIcon: SvgPicture.asset(
-                          'assets/svg/Vector.svg',
-                          width: 16.w,
-                          height: 16.h,
-                          fit: BoxFit.scaleDown,
-                          colorFilter: const ColorFilter.mode(
-                              Color(0xFF9CA3AF), BlendMode.srcIn),
+            UserSearchHeader(
+              searchController: _searchController,
+              onChanged: () {},
+            ),
+
+            FutureBuilder<bool>(
+              future: LocalData.hasEnumPermission(Permission.CREATE_USER),
+              builder: (context, snapshot) {
+                if (snapshot.hasData && snapshot.data == true) {
+                  return Padding(
+                    padding: EdgeInsets.fromLTRB(16.w, 12.h, 16.w, 4.h),
+                    child: Align(
+                      alignment: Alignment.centerRight,
+                      child: ElevatedButton.icon(
+                        onPressed: () {
+                          Navigator.pushNamed(context, Routes.addControllerPage);
+                        },
+                        icon: Icon(Icons.add, size: 16.w, color: Colors.white),
+                        label: Text(
+                          'Add Controller',
+                          style: AppTextStyle.setpoppinsWhite(fontSize: 12, fontWeight: FontWeight.w500)
                         ),
-                        border: InputBorder.none,
-                        contentPadding: EdgeInsets.symmetric(
-                          horizontal: 12.w,
-                          vertical: 10.h,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFF3B82F6),
+                          elevation: 0,
+                          padding: EdgeInsets.symmetric(
+                              horizontal: 16.w, vertical: 10.h),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8.r),
+                          ),
                         ),
                       ),
                     ),
-                  ),
-                ),                
-                FutureBuilder<bool>(
-                  future: LocalData.hasEnumPermission(Permission.CREATE_USER),
-                  builder: (context, snapshot) {
-                    if (!snapshot.hasData || snapshot.data == false) {
-                      return const SizedBox.shrink();
-                    }
-                    
-                    // If Permission Granted, Show Button
-                    return Row(
-                      children: [
-                        SizedBox(width: 6.w),
-                        ElevatedButton.icon(
-                          onPressed: () {
-                            Navigator.pushNamed(context, Routes.addControllerPage);
-                          },
-                          icon: Icon(Icons.add, size: 16.w, color: Colors.white),
-                          label: Text(
-                            'Add Controller',
-                            style: TextStyle(
-                                fontSize: 12.sp,
-                                fontWeight: FontWeight.w500,
-                                color: Colors.white),
-                          ),
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: const Color(0xFF3B82F6),
-                            elevation: 0,
-                            padding: EdgeInsets.symmetric(
-                                horizontal: 16.w, vertical: 10.h),
-                            minimumSize: Size(122.w, 38.h),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(8.r),
+                  );
+                }
+                return const SizedBox.shrink();
+              },
+            ),
+
+            SizedBox(height: 12.h),
+
+            // 3. Users Table Content
+            Expanded(
+              child: Padding(
+                padding: EdgeInsets.symmetric(horizontal: 16.w),
+                child: BlocBuilder<GetAllUserCubit, GetAllUserState>(
+                  builder: (context, state) {
+                    if (state is GetAllUserLoading || state is GetAllUserInitial) {
+                      return const Center(child: CircularProgressIndicator());
+                    } else if (state is GetAllUserFailure) {
+                      return Center(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(Icons.error_outline, size: 64, color: Colors.red[300]),
+                            SizedBox(height: 16.h),
+                            Text(
+                              'Failed to load users',
+                              style: AppTextStyle.setpoppinsTextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w600,
+                                color: AppColor.mainBlack,
+                              ),
                             ),
-                          ),
+                            SizedBox(height: 8.h),
+                            ElevatedButton.icon(
+                              onPressed: () => context.read<GetAllUserCubit>().fetchAllUsers(),
+                              icon: const Icon(Icons.refresh),
+                              label: const Text('Retry'),
+                            ),
+                          ],
                         ),
-                      ],
-                    );
+                      );
+                    } else if (state is GetAllUserSuccess) {
+                      final users = state.userModel.data ?? [];
+
+                      if (users.isEmpty) {
+                        return const Center(child: Text("No users found"));
+                      }
+
+                      // Apply local search filtering
+                      final filteredUsers = _searchController.text.isEmpty
+                          ? users
+                          : users.where((user) {
+                              final name = user.name?.toLowerCase() ?? '';
+                              final email = user.email?.toLowerCase() ?? '';
+                              final query = _searchController.text.toLowerCase();
+                              return name.contains(query) || email.contains(query);
+                            }).toList();
+
+                      return _buildUsersTable(filteredUsers);
+                    }
+                    return const SizedBox();
                   },
                 ),
-
-                IconButton(
-                    onPressed: () {
-                      context.read<GetAllUserCubit>().fetchAllUsers();
-                    },
-                    icon: Icon(
-                      Icons.refresh,
-                      color: AppColor.mainBlue,
-                    )),
-              ],
-            ),
-            SizedBox(height: 16.h),
-
-            // Users Table
-            Expanded(
-              child: BlocBuilder<GetAllUserCubit, GetAllUserState>(
-                builder: (context, state) {
-                  if (state is GetAllUserLoading || state is GetAllUserInitial) {
-                    return const Center(child: CircularProgressIndicator());
-                  } else if (state is GetAllUserFailure) {
-                    return Center(child: buildError("Error: ${state.message}", context));
-                  } else if (state is GetAllUserSuccess) {
-                    final users = state.userModel.data ?? [];
-
-                    if (users.isEmpty) {
-                      return const Center(child: Text("No users found"));
-                    }
-
-                    // Apply search filter
-                    final filteredUsers = _searchController.text.isEmpty
-                        ? users
-                        : users
-                            .where((user) =>
-                                user.name!
-                                    .toLowerCase()
-                                    .contains(_searchController.text.toLowerCase()) ||
-                                user.email!
-                                    .toLowerCase()
-                                    .contains(_searchController.text.toLowerCase()))
-                            .toList();
-
-                    return _buildUsersTable(filteredUsers);
-                  }
-
-                  return const SizedBox();
-                },
               ),
             ),
+            SizedBox(height: 16.h),
           ],
         ),
       ),
@@ -221,10 +210,12 @@ class _InvitationPageState extends State<InvitationPage> {
             ),
           ),
 
-          // Table Content
+          // Table Content List
           Expanded(
-            child: ListView.builder(
+            child: ListView.separated(
               itemCount: users.length,
+              separatorBuilder: (context, index) =>
+                  Divider(color: Colors.grey.shade200, height: 1),
               itemBuilder: (context, index) {
                 final user = users[index];
                 return TableRowWidget(user: user);

@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:admin_app/core/widgets/CustomAppBar_widget.dart';
 import 'package:admin_app/featuer/Auth/data/model/User_profile_model.dart';
 import 'package:admin_app/core/theme/app_color.dart';
@@ -6,6 +7,7 @@ import 'package:admin_app/featuer/home/view/pages/widget/profile_error_state.dar
 import 'package:admin_app/featuer/home/view/pages/widget/profile_header_card.dart';
 import 'package:admin_app/featuer/home/view/pages/widget/profile_permissions_section.dart';
 import 'package:admin_app/featuer/home/view/pages/widget/profile_quick_stats.dart';
+import 'package:admin_app/featuer/chat/service/Socetserver.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -22,12 +24,26 @@ class _ProfilePageState extends State<ProfilePage> with SingleTickerProviderStat
   late AnimationController _controller;
   late Animation<double> _fadeAnimation;
   late Animation<Offset> _slideAnimation;
+  StreamSubscription<dynamic>? _roleUpdateSubscription;
 
   @override
   void initState() {
     super.initState();
     context.read<AuthCubit>().getUserProfile();
     _initAnimations();
+    _listenToRoleUpdates();
+  }
+
+  void _listenToRoleUpdates() {
+    // Listen for role updates from socket
+    final socketService = SocketService();
+    _roleUpdateSubscription = socketService.roleUpdatedStream.listen((data) {
+      print('👑 [ProfilePage] Role updated, refreshing profile...');
+      // Refresh the profile to show new role
+      if (mounted) {
+        context.read<AuthCubit>().getUserProfile();
+      }
+    });
   }
 
   void _initAnimations() {
@@ -51,6 +67,7 @@ class _ProfilePageState extends State<ProfilePage> with SingleTickerProviderStat
   @override
   void dispose() {
     _controller.dispose();
+    _roleUpdateSubscription?.cancel();
     super.dispose();
   }
 

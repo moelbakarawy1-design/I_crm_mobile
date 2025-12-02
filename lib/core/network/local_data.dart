@@ -69,7 +69,20 @@ class LocalData {
     }
   }
 
-  // 🟢 NEW HELPER: Call this anywhere to check what's currently saved
+  // � Update only role and permissions (for real-time role updates)
+  static Future<void> updateRoleAndPermissions({
+    required String userRole,
+    required List<String> permissions,
+  }) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(_userRoleKey, userRole);
+    await prefs.setStringList(_userPermissionsKey, permissions);
+    
+    print("🔄 [LocalData] Role updated to: $userRole");
+    print("🔑 [LocalData] Permissions updated: $permissions");
+  }
+
+  // �🟢 NEW HELPER: Call this anywhere to check what's currently saved
   static Future<void> debugPrintAllPermissions() async {
     final prefs = await SharedPreferences.getInstance();
     final List<String>? storedPermissions = prefs.getStringList(_userPermissionsKey);

@@ -45,7 +45,6 @@ class UserSearchHeader extends StatelessWidget {
                   hintStyle: AppTextStyle.setipoppinssecondaryGery(fontSize: 12, fontWeight: FontWeight.w400),
                   prefixIcon: Icon(Icons.search_rounded, color: AppColor.gray70, size: 20.sp),
                   border: InputBorder.none,
-                  contentPadding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 11.h),
                 ),
               ),
             ),

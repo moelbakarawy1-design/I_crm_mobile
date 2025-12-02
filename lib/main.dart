@@ -30,7 +30,6 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     FlutterNativeSplash.remove();
-
     return ScreenUtilInit(
       designSize: const Size(400, 812),
       minTextAdapt: true,

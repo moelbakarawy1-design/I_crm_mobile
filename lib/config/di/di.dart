@@ -30,7 +30,7 @@ class DependencyInjection {
     getIt.registerLazySingleton<InvitationRepository>(() => InvitationRepository());
     getIt.registerFactory<InvitationCubit>(() => InvitationCubit(getIt<InvitationRepository>()));
 
-    // --- 💬 CHAT FEATURE ---
+    // ---  CHAT FEATURE ---
 
     // 1. Socket Service (Singleton) ✅
     // This ensures the same socket connection is used everywhere
@@ -46,19 +46,19 @@ class DependencyInjection {
           getIt<SocketService>(),
         ));
 
-    // 4. Chat Cubit (Inject Repos + Socket) ✅
+    // 4. Chat Cubit (Inject Repos + Socket) 
     getIt.registerFactory<ChatCubit>(() => ChatCubit(
           getIt<ChatRepository>(),
           getIt<MessagesRepository>(),
           getIt<SocketService>(),
         ));
 
-    // --- 📝 TASKS ---
+    // ---  TASKS ---
     getIt.registerLazySingleton<BaseTasksRepository>(
         () => TasksRepository(getIt<APIHelper>()));
     getIt.registerFactory<TaskCubit>(() => TaskCubit(getIt<BaseTasksRepository>()));
 
-    // --- 👤 USERS ---
+    // --- USERS ---
     getIt.registerLazySingleton<GetAllUserRepo>(
         () => GetAllUserRepo(getIt<APIHelper>()));
     getIt.registerFactory<GetAllUserCubit>(
