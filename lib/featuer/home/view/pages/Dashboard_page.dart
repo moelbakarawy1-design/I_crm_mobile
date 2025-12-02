@@ -27,7 +27,8 @@ class DashboardPage extends StatelessWidget {
         }
 
         final String? userRole = snapshot.data;
-        final bool isAllowed = userRole != null &&
+        final bool isAllowed =
+            userRole != null &&
             (userRole.toLowerCase() == 'admin' ||
                 userRole.toLowerCase() == 'manager');
 
@@ -52,7 +53,9 @@ class DashboardPage extends StatelessWidget {
                     "Current Role: ${userRole ?? 'None'}\nOnly Admins & Managers allowed.",
                     textAlign: TextAlign.center,
                     style: AppTextStyle.setpoppinsSecondaryBlack(
-                        fontSize: 14.sp, fontWeight: FontWeight.normal),
+                      fontSize: 14.sp,
+                      fontWeight: FontWeight.normal,
+                    ),
                   ),
                 ],
               ),
@@ -75,8 +78,9 @@ class DashboardPage extends StatelessWidget {
                 } else if (state is DashboardSuccess) {
                   final data = state.data;
                   final cubit = context.read<DashboardCubit>();
-                  final chatActivityData =
-                      cubit.getChatsPerDay(data.latestChats);
+                  final chatActivityData = cubit.getChatsPerDay(
+                    data.latestChats,
+                  );
 
                   return SingleChildScrollView(
                     child: Column(

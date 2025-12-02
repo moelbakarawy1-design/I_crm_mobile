@@ -13,18 +13,15 @@ class AuthCubit extends Cubit<AuthState> {
   static AuthCubit get(context) => BlocProvider.of(context);
 
   // Login
-  Future<void> login({
-    required String email,
-    required String password,
-  }) async {
+  Future<void> login({required String email, required String password}) async {
     emit(LoginLoading());
     try {
       final request = LoginRequest(email: email, password: password);
-      final loginData = await _authRepository.login(request);    
+      final loginData = await _authRepository.login(request);
       List<String> apiPermissions = [];
       if (loginData.user?.role?.permissions != null) {
         apiPermissions = loginData.user!.role!.permissions
-            .map((permission) => permission.name) 
+            .map((permission) => permission.name)
             .toList();
       }
 
@@ -34,9 +31,9 @@ class AuthCubit extends Cubit<AuthState> {
       await LocalData.saveUserData(
         userId: loginData.user?.id ?? '',
         userName: loginData.user?.name ?? '',
-        userEmail: email, 
+        userEmail: email,
         userRole: loginData.user?.role?.name ?? '',
-        permissions: apiPermissions, 
+        permissions: apiPermissions,
       );
 
       // 3. Save Tokens
@@ -45,27 +42,24 @@ class AuthCubit extends Cubit<AuthState> {
         refreshToken: loginData.refreshToken,
       );
 
-      emit(LoginSuccess(
-        message: loginData.message,
-        user: loginData.user,
-      ));
+      emit(LoginSuccess(message: loginData.message, user: loginData.user));
     } catch (e) {
       print("Login Error: $e");
       emit(LoginError(message: e.toString()));
     }
   }
 
-  Future<void> forgetPassword({
-    required String email,
-  }) async {
+  Future<void> forgetPassword({required String email}) async {
     emit(ForgetPasswordLoading());
     try {
       final request = ForgetPasswordRequest(email: email);
       final response = await _authRepository.forgetPassword(request);
-      emit(ForgetPasswordSuccess(
-        message: response.message,
-        resendCodeToken: response.resendCodeToken,
-      ));
+      emit(
+        ForgetPasswordSuccess(
+          message: response.message,
+          resendCodeToken: response.resendCodeToken,
+        ),
+      );
     } catch (e) {
       emit(ForgetPasswordError(message: e.toString()));
     }
@@ -84,10 +78,7 @@ class AuthCubit extends Cubit<AuthState> {
         throw Exception("Verification token is missing!");
       }
 
-      emit(VerifyOtpSuccess(
-        message: message,
-        token: token,
-      ));
+      emit(VerifyOtpSuccess(message: message, token: token));
     } catch (e) {
       emit(VerifyOtpError(message: e.toString()));
     }
@@ -117,6 +108,19 @@ class AuthCubit extends Cubit<AuthState> {
     emit(GetProfileLoading());
     try {
       final Data user = await _authRepository.getUserProfile();
+
+      // 🔄 Sync fetched profile data with LocalData
+      // This ensures role/permissions are updated everywhere when profile refreshes
+      if (user.role != null && user.role!.permissions != null) {
+        await LocalData.updateRoleAndPermissions(
+          userRole: user.role!.name ?? '',
+          permissions: user.role!.permissions!,
+        );
+        print('✅ [AuthCubit] Synced profile data with LocalData');
+        print('   Role: ${user.role!.name}');
+        print('   Permissions: ${user.role!.permissions!.length}');
+      }
+
       emit(GetProfileSuccess(user: user));
     } catch (e) {
       emit(GetProfileError(message: e.toString()));
@@ -126,8 +130,9 @@ class AuthCubit extends Cubit<AuthState> {
   Future<void> resendOtp({required String resendCodeToken}) async {
     emit(ResendOtpLoading());
     try {
-      final message =
-          await _authRepository.resendOtp(resendCodeToken: resendCodeToken);
+      final message = await _authRepository.resendOtp(
+        resendCodeToken: resendCodeToken,
+      );
       emit(ResendOtpSuccess(message: message));
     } catch (e) {
       print('$e');
@@ -160,7 +165,7 @@ class AuthCubit extends Cubit<AuthState> {
       emit(LogoutSuccess());
     } catch (e) {
       await LocalData.clear(); // Ensure clear happens even if API fails
-      emit(LogoutSuccess()); 
+      emit(LogoutSuccess());
     }
   }
 
@@ -205,10 +210,9 @@ class AuthCubit extends Cubit<AuthState> {
 
       final response = await _authRepository.createAdmin(request);
 
-      emit(CreateAdminSuccess(
-        message: response.message,
-        adminData: response.data,
-      ));
+      emit(
+        CreateAdminSuccess(message: response.message, adminData: response.data),
+      );
     } catch (e) {
       emit(CreateAdminError(message: e.toString()));
     }
