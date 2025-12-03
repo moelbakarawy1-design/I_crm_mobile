@@ -253,7 +253,7 @@ class _EditUserScreenState extends State<EditUserScreen> {
                         if (state is UserUpdateSuccess) {
                           ScaffoldMessenger.of(context).showSnackBar(
                             SnackBar(
-                              content: Text('User updated successfully!'),
+                              content: Text(state.message),
                               backgroundColor: Colors.green,
                             ),
                           );

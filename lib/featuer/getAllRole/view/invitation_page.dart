@@ -44,6 +44,9 @@ class _InvitationPageState extends State<InvitationPage> {
         if (state is GetAllUserFailure) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8.r),
+              ),
               content: Text(state.message),
               backgroundColor: Colors.red,
               duration: const Duration(seconds: 3),
@@ -71,7 +74,9 @@ class _InvitationPageState extends State<InvitationPage> {
           children: [
             UserSearchHeader(
               searchController: _searchController,
-              onChanged: () {},
+              onChanged: () {
+                setState(() {}); // Trigger rebuild to filter users
+              },
             ),
 
             FutureBuilder<bool>(
@@ -84,18 +89,26 @@ class _InvitationPageState extends State<InvitationPage> {
                       alignment: Alignment.centerRight,
                       child: ElevatedButton.icon(
                         onPressed: () {
-                          Navigator.pushNamed(context, Routes.addControllerPage);
+                          Navigator.pushNamed(
+                            context,
+                            Routes.addControllerPage,
+                          );
                         },
                         icon: Icon(Icons.add, size: 16.w, color: Colors.white),
                         label: Text(
                           'Add Controller',
-                          style: AppTextStyle.setpoppinsWhite(fontSize: 12, fontWeight: FontWeight.w500)
+                          style: AppTextStyle.setpoppinsWhite(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w500,
+                          ),
                         ),
                         style: ElevatedButton.styleFrom(
                           backgroundColor: const Color(0xFF3B82F6),
                           elevation: 0,
                           padding: EdgeInsets.symmetric(
-                              horizontal: 16.w, vertical: 10.h),
+                            horizontal: 16.w,
+                            vertical: 10.h,
+                          ),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(8.r),
                           ),
@@ -116,14 +129,19 @@ class _InvitationPageState extends State<InvitationPage> {
                 padding: EdgeInsets.symmetric(horizontal: 16.w),
                 child: BlocBuilder<GetAllUserCubit, GetAllUserState>(
                   builder: (context, state) {
-                    if (state is GetAllUserLoading || state is GetAllUserInitial) {
+                    if (state is GetAllUserLoading ||
+                        state is GetAllUserInitial) {
                       return const Center(child: CircularProgressIndicator());
                     } else if (state is GetAllUserFailure) {
                       return Center(
                         child: Column(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            Icon(Icons.error_outline, size: 64, color: Colors.red[300]),
+                            Icon(
+                              Icons.error_outline,
+                              size: 64,
+                              color: Colors.red[300],
+                            ),
                             SizedBox(height: 16.h),
                             Text(
                               'Failed to load users',
@@ -135,7 +153,9 @@ class _InvitationPageState extends State<InvitationPage> {
                             ),
                             SizedBox(height: 8.h),
                             ElevatedButton.icon(
-                              onPressed: () => context.read<GetAllUserCubit>().fetchAllUsers(),
+                              onPressed: () => context
+                                  .read<GetAllUserCubit>()
+                                  .fetchAllUsers(),
                               icon: const Icon(Icons.refresh),
                               label: const Text('Retry'),
                             ),
@@ -155,8 +175,10 @@ class _InvitationPageState extends State<InvitationPage> {
                           : users.where((user) {
                               final name = user.name?.toLowerCase() ?? '';
                               final email = user.email?.toLowerCase() ?? '';
-                              final query = _searchController.text.toLowerCase();
-                              return name.contains(query) || email.contains(query);
+                              final query = _searchController.text
+                                  .toLowerCase();
+                              return name.contains(query) ||
+                                  email.contains(query);
                             }).toList();
 
                       return _buildUsersTable(filteredUsers);

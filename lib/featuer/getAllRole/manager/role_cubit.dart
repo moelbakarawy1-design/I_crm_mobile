@@ -136,7 +136,7 @@ class InvitationCubit extends Cubit<InvitationState> {
         permissions: permissions,
       );
 
-      // ✅ FIX: Check if closed after await
+      //  Check if closed after await
       if (isClosed) return;
 
       if (response.status) {
@@ -147,6 +147,7 @@ class InvitationCubit extends Cubit<InvitationState> {
       }
     } catch (e) {
       if (isClosed) return;
+      
       emit(UpdateRoleFailure('An error occurred: $e'));
     }
   }
