@@ -45,22 +45,38 @@ class _EditUserScreenState extends State<EditUserScreen> {
 
   void _submitUpdate() {
     if (_formKey.currentState!.validate()) {
-      if (_selectedRole == null) {
+      // Track which fields have changed
+      String? updatedName;
+      String? updatedRoleId;
+
+      // Check if name has changed
+      if (_nameController.text.trim() != (widget.user.name ?? '')) {
+        updatedName = _nameController.text.trim();
+      }
+
+      // Check if role has changed
+      if (_selectedRole != null &&
+          _selectedRole!.id.toString() != widget.user.role?.id?.toString()) {
+        updatedRoleId = _selectedRole!.id.toString();
+      }
+
+      // Validate that at least one field has changed
+      if (updatedName == null && updatedRoleId == null) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text("Please select a role"),
+            content: Text("No changes detected"),
             backgroundColor: Colors.orange,
           ),
         );
         return;
       }
 
+      // Send only the changed fields (email is excluded as it's read-only)
       context.read<GetAllUserCubit>().updateUser(
-            userId: widget.user.id!,
-            name: _nameController.text.trim(),
-            email: _emailController.text.trim(),
-            roleId: _selectedRole!.id.toString(),
-          );
+        userId: widget.user.id!,
+        name: updatedName,
+        roleId: updatedRoleId,
+      );
     }
   }
 
@@ -125,8 +141,7 @@ class _EditUserScreenState extends State<EditUserScreen> {
                       controller: _nameController,
                       hintText: 'Enter name',
                       labelText: 'Name',
-                      validator: (v) =>
-                          v!.isEmpty ? 'Name is required' : null,
+                      validator: (v) => v!.isEmpty ? 'Name is required' : null,
                     ),
                     SizedBox(height: 20.h),
 
@@ -146,8 +161,8 @@ class _EditUserScreenState extends State<EditUserScreen> {
                       hintText: 'Enter email',
                       labelText: 'Email',
                       keyboardType: TextInputType.emailAddress,
-                      validator: (v) =>
-                          v!.isEmpty ? 'Email is required' : null,
+                      readOnly: true,
+                      validator: (v) => v!.isEmpty ? 'Email is required' : null,
                     ),
                     SizedBox(height: 15.h),
 
@@ -190,21 +205,24 @@ class _EditUserScreenState extends State<EditUserScreen> {
                               hintText: isLoading
                                   ? 'Loading roles...'
                                   : hasError
-                                      ? 'Failed to load roles'
-                                      : hasNoRoles
-                                          ? 'No roles available'
-                                          : 'Select a role',
+                                  ? 'Failed to load roles'
+                                  : hasNoRoles
+                                  ? 'No roles available'
+                                  : 'Select a role',
                               hintStyle: AppTextStyle.setpoppinsTextStyle(
                                 fontSize: 10,
                                 fontWeight: FontWeight.w500,
                                 color: Colors.grey.shade500,
                               ),
                               contentPadding: EdgeInsets.symmetric(
-                                  horizontal: 16.w, vertical: 14.h),
+                                horizontal: 16.w,
+                                vertical: 14.h,
+                              ),
                               border: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(12.r),
-                                borderSide:
-                                    const BorderSide(color: Color(0xFFEAEEF4)),
+                                borderSide: const BorderSide(
+                                  color: Color(0xFFEAEEF4),
+                                ),
                               ),
                             ),
                             items: roles.map((role) {

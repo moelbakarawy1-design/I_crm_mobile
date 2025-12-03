@@ -11,7 +11,7 @@ class GetAllUserRepo {
   Future<ApiResponse> getAllUsers() async {
     try {
       final response = await apiHelper.getRequest(
-        endPoint: EndPoints.getAllUsers
+        endPoint: EndPoints.getAllUsers,
       );
 
       return ApiResponse(
@@ -26,21 +26,23 @@ class GetAllUserRepo {
       return ApiResponse.fromError(error);
     }
   }
+
   Future<ApiResponse> updateUser({
     required String userId,
-    required String name,
-    required String email,
-    required String roleId,
+    String? name,
+    String? email,
+    String? roleId,
   }) async {
     try {
-      final body = {
-        "name": name,
-        "email": email,
-        "roleId": roleId,
-      };
+      final body = <String, dynamic>{};
+
+      // Only add fields that are not null (i.e., have been changed)
+      if (name != null) body["name"] = name;
+      if (email != null) body["email"] = email;
+      if (roleId != null) body["roleId"] = roleId;
 
       // Assuming 'EndPoints.users' is "users"
-      final String endpoint = '${EndPoints.getAllUsers}/$userId'; 
+      final String endpoint = '${EndPoints.getAllUsers}/$userId';
 
       final response = await apiHelper.patchRequest(
         endPoint: endpoint,
@@ -58,23 +60,21 @@ class GetAllUserRepo {
       return ApiResponse.fromError(error);
     }
   }
+
   Future<ApiResponse> deleteUser(String userId) async {
-  try {
-    final String endpoint = '${EndPoints.getAllUsers}/$userId';
+    try {
+      final String endpoint = '${EndPoints.getAllUsers}/$userId';
 
-    final response = await apiHelper.deleteRequest(
-      endPoint: endpoint,
-    );
+      final response = await apiHelper.deleteRequest(endPoint: endpoint);
 
-    return ApiResponse(
-      status: response.status,
-      statusCode: response.statusCode,
-      data: response.data,
-      message: response.message,
-    );
-  } catch (error) {
-    return ApiResponse.fromError(error);
+      return ApiResponse(
+        status: response.status,
+        statusCode: response.statusCode,
+        data: response.data,
+        message: response.message,
+      );
+    } catch (error) {
+      return ApiResponse.fromError(error);
+    }
   }
-}
-
 }
