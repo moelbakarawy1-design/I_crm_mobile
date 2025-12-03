@@ -29,14 +29,17 @@ class _VideoMessageWidgetState extends State<VideoMessageWidget> {
 
   Future<void> _initializePlayer() async {
     try {
-      String finalUrl;     
-      if (widget.videoUrl.startsWith('http') || widget.videoUrl.startsWith('https')) {
+      String finalUrl;
+      if (widget.videoUrl.startsWith('http') ||
+          widget.videoUrl.startsWith('https')) {
         finalUrl = widget.videoUrl;
       } else {
         finalUrl = '${EndPoints.baseUrl}/chats/media/${widget.videoUrl}';
       }
       debugPrint("🎥 Final Video URL: $finalUrl");
-      _videoPlayerController = VideoPlayerController.networkUrl(Uri.parse(finalUrl));
+      _videoPlayerController = VideoPlayerController.networkUrl(
+        Uri.parse(finalUrl),
+      );
       await _videoPlayerController!.initialize();
       _chewieController = ChewieController(
         videoPlayerController: _videoPlayerController!,
@@ -46,9 +49,7 @@ class _VideoMessageWidgetState extends State<VideoMessageWidget> {
         allowFullScreen: true,
         allowPlaybackSpeedChanging: false,
         errorBuilder: (context, errorMessage) {
-          return const Center(
-            child: Icon(Icons.error, color: Colors.white),
-          );
+          return const Center(child: Icon(Icons.error, color: Colors.white));
         },
         materialProgressColors: ChewieProgressColors(
           playedColor: const Color(0xff075E54),
@@ -58,7 +59,9 @@ class _VideoMessageWidgetState extends State<VideoMessageWidget> {
         ),
         placeholder: Container(
           color: Colors.black,
-          child: const Center(child: CircularProgressIndicator(color: Colors.white)),
+          child: const Center(
+            child: CircularProgressIndicator(color: Colors.white),
+          ),
         ),
       );
 
@@ -80,8 +83,7 @@ class _VideoMessageWidgetState extends State<VideoMessageWidget> {
     super.didUpdateWidget(oldWidget);
     if (oldWidget.videoUrl != widget.videoUrl) {
       debugPrint("🔄 Video URL changed, reinitializing player...");
-      _videoPlayerController?.dispose();
-      _chewieController?.dispose();
+      _disposeControllers();
       setState(() {
         _isInitialized = false;
         _isError = false;
@@ -90,10 +92,16 @@ class _VideoMessageWidgetState extends State<VideoMessageWidget> {
     }
   }
 
+  void _disposeControllers() {
+    _chewieController?.dispose();
+    _chewieController = null;
+    _videoPlayerController?.dispose();
+    _videoPlayerController = null;
+  }
+
   @override
   void dispose() {
-    _videoPlayerController?.dispose();
-    _chewieController?.dispose();
+    _disposeControllers();
     super.dispose();
   }
 
@@ -116,17 +124,24 @@ class _VideoMessageWidgetState extends State<VideoMessageWidget> {
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Icon(Icons.broken_image, color: Colors.white54, size: 30),
+                        Icon(
+                          Icons.broken_image,
+                          color: Colors.white54,
+                          size: 30,
+                        ),
                         SizedBox(height: 5),
-                        Text("Video Error", style: TextStyle(color: Colors.white, fontSize: 12)),
+                        Text(
+                          "Video Error",
+                          style: TextStyle(color: Colors.white, fontSize: 12),
+                        ),
                       ],
                     ),
                   )
                 : _isInitialized
-                    ? Chewie(controller: _chewieController!)
-                    : const Center(
-                        child: CircularProgressIndicator(color: Colors.white),
-                      ),
+                ? Chewie(controller: _chewieController!)
+                : const Center(
+                    child: CircularProgressIndicator(color: Colors.white),
+                  ),
           ),
         ),
         if (widget.caption != null && widget.caption!.isNotEmpty)
