@@ -10,11 +10,7 @@ class DrawerMenu extends StatelessWidget {
   final Function(int)? onNavigate;
   final int currentIndex;
 
-  const DrawerMenu({
-    super.key,
-    this.onNavigate,
-    this.currentIndex = 0,
-  });
+  const DrawerMenu({super.key, this.onNavigate, this.currentIndex = 0});
 
   Widget buildMenuItem({
     required String title,
@@ -56,7 +52,9 @@ class DrawerMenu extends StatelessWidget {
                   style: AppTextStyle.setpoppinsTextStyle(
                     fontSize: 12,
                     fontWeight: FontWeight.w400,
-                    color: isSelected ? AppColor.primaryWhite : AppColor.mainBlue,
+                    color: isSelected
+                        ? AppColor.primaryWhite
+                        : AppColor.mainBlue,
                   ),
                 ),
               ),
@@ -86,7 +84,8 @@ class DrawerMenu extends StatelessWidget {
             // Menu Items
             buildMenuItem(
               title: 'Dashboard',
-              iconPath: 'assets/svg/Home.svg', // Assuming you have this or similar
+              iconPath:
+                  'assets/svg/Home.svg', // Assuming you have this or similar
               isSelected: currentIndex == 0,
               onTap: () {
                 if (onNavigate != null) {

@@ -27,11 +27,14 @@ class SocketService {
   final _connectionStatusController = StreamController<bool>.broadcast();
   final _roleUpdatedController = StreamController<dynamic>.broadcast();
 
+  final _chatResetController = StreamController<dynamic>.broadcast();
+
   // Getters for Streams
   Stream<dynamic> get newMessageStream => _newMessageController.stream;
   Stream<dynamic> get messageStatusStream => _messageStatusController.stream;
   Stream<bool> get connectionStatusStream => _connectionStatusController.stream;
   Stream<dynamic> get roleUpdatedStream => _roleUpdatedController.stream;
+  Stream<dynamic> get chatResetStream => _chatResetController.stream;
 
   IO.Socket? get socket => _socket;
   bool get isConnected => _socket?.connected ?? false;
@@ -59,7 +62,7 @@ class SocketService {
 
     try {
       print('🔗 [SocketService] Connecting to: ${EndPoints.socketUrl}');
-      
+
       // Cleanup previous instance if exists
       _socket?.dispose();
 
@@ -85,7 +88,7 @@ class SocketService {
           print('⚠️ [SocketService] Connection timed out');
           _isConnecting = false;
           if (_socket != null && !_socket!.connected) {
-             _socket!.disconnect();
+            _socket!.disconnect();
           }
           return false;
         },
@@ -109,7 +112,7 @@ class SocketService {
       print('✅ [SocketService] Connected: ${_socket!.id}');
       _isConnecting = false;
       _connectionStatusController.add(true);
-      
+
       if (_connectionCompleter != null && !_connectionCompleter!.isCompleted) {
         _connectionCompleter!.complete(true);
       }
@@ -131,11 +134,11 @@ class SocketService {
 
     // --- Debug: Print all events ---
     _socket!.onAny((event, data) {
-       // print('📡 [SOCKET RAW] $event'); 
+      // print('📡 [SOCKET RAW] $event');
     });
 
     // --- Data Events (Feed to Streams) ---
-    
+
     // 1. New Message
     _socket!.on('newMessage', (data) {
       print('📥 [SocketService] New Message: $data');
@@ -144,8 +147,8 @@ class SocketService {
 
     // 2. Receive Message (Alternative name)
     _socket!.on('receive_message', (data) {
-       print('📥 [SocketService] Receive Message: $data');
-       _newMessageController.add(data);
+      print('📥 [SocketService] Receive Message: $data');
+      _newMessageController.add(data);
     });
 
     // 3. Status Update
@@ -160,6 +163,12 @@ class SocketService {
       _roleUpdatedController.add(data);
       // Automatically handle role update
       handleRoleUpdate();
+    });
+
+    // 5. Chat Reset (Unread count cleared)
+    _socket!.on('chatReset', (data) {
+      print('🔄 [SocketService] Chat Reset: $data');
+      _chatResetController.add(data);
     });
   }
 
@@ -187,49 +196,56 @@ class SocketService {
       if (!success) return;
     }
 
-    _socket!.emit('send_message', {
-      'chatId': chatId,
-      'message': message,
-    });
+    _socket!.emit('send_message', {'chatId': chatId, 'message': message});
     print('📤 [SocketService] Sent: $message');
+  }
+
+  /// 📖 Emit Chat Opened
+  void emitChatOpened(String chatId) {
+    if (isConnected) {
+      _socket!.emit('chatOpened', chatId);
+      print('📖 [SocketService] Chat Opened: $chatId');
+    }
   }
 
   /// 🔄 Handle Role Update
   Future<void> handleRoleUpdate() async {
     try {
       print('🔄 [SocketService] Handling role update...');
-      
+
       // 1. Fetch updated user data from /users/me
       final authRepo = AuthRepository();
       final updatedUser = await authRepo.getUserProfile();
-      
+
       print('📥 [SocketService] Fetched updated user data');
-      
+
       // 2. Extract new role and permissions
       final newRole = updatedUser.role?.name ?? '';
       final newPermissions = updatedUser.role?.permissions ?? [];
-      
+
       print('👑 [SocketService] New Role: $newRole');
       print('🔑 [SocketService] New Permissions: $newPermissions');
-      
+
       // 3. Update only role and permissions in local storage
       await LocalData.updateRoleAndPermissions(
         userRole: newRole,
         permissions: newPermissions,
       );
-      
-      print('✅ [SocketService] Updated local storage with new role and permissions');
-      
+
+      print(
+        '✅ [SocketService] Updated local storage with new role and permissions',
+      );
+
       // 4. Disconnect and reconnect socket to use new token/role
       print('🔌 [SocketService] Disconnecting socket...');
       disconnect();
-      
+
       // Wait a bit before reconnecting
       await Future.delayed(const Duration(milliseconds: 500));
-      
+
       print('🔗 [SocketService] Reconnecting socket with new role...');
       await connect();
-      
+
       print('✅ [SocketService] Role update complete!');
     } catch (e) {
       print('❌ [SocketService] Error handling role update: $e');
@@ -243,7 +259,5 @@ class SocketService {
     _socket?.dispose();
     _socket = null;
     _isConnecting = false;
-    // Note: We do NOT close the StreamControllers here because 
-    // the app might reconnect later (e.g., logout -> login).
   }
 }

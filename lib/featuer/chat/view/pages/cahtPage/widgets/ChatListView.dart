@@ -40,10 +40,7 @@ class _ChatListViewState extends State<ChatListView> {
       builder: (context, value, child) {
         return Transform.translate(
           offset: Offset(0, 20 * (1 - value)),
-          child: Opacity(
-            opacity: value,
-            child: child,
-          ),
+          child: Opacity(opacity: value, child: child),
         );
       },
       child: _buildChatCard(context, chat),
@@ -63,9 +60,10 @@ class _ChatListViewState extends State<ChatListView> {
     );
 
     final String assignedToName = chat.user?.name ?? 'Unassigned';
-    final int unreadCount = (chat.id.hashCode % 4 == 0)
-        ? (chat.id.hashCode % 3) + 1
-        : 0;
+    final int unreadCount = chat.unReadCount ?? 0;
+    print(
+      '📊 [ChatListView] Chat: ${chat.customer?.name}, Unread: $unreadCount',
+    );
 
     final String? messageStatus = (unreadCount > 0)
         ? null
@@ -77,9 +75,10 @@ class _ChatListViewState extends State<ChatListView> {
       background: _buildDismissBackground(),
       confirmDismiss: (direction) async {
         widget.onChatDelete(chat.id ?? '');
-        return false; 
+        return false;
       },
       child: CusstomCard(
+        unreadCount: unreadCount,
         name: chat.customer?.name ?? 'Unknown',
         assignedTo: assignedToName,
         message: messageContent,
@@ -101,11 +100,7 @@ class _ChatListViewState extends State<ChatListView> {
           colors: [Colors.red.withOpacity(0.8), Colors.red],
         ),
       ),
-      child: const Icon(
-        Icons.delete_outline,
-        color: Colors.white,
-        size: 32,
-      ),
+      child: const Icon(Icons.delete_outline, color: Colors.white, size: 32),
     );
   }
 }

@@ -1,9 +1,8 @@
-import 'package:admin_app/core/network/api_endpoiont.dart';
 import 'package:admin_app/featuer/chat/data/model/ChatMessagesModel.dart';
-import 'package:admin_app/featuer/chat/view/individualContatnt/widget/video_gallery_viewer.dart';
+import 'package:admin_app/featuer/chat/view/video/widget/video_gallery_viewer.dart';
+import 'package:admin_app/featuer/chat/view/video/widget/video_thumbnail.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:video_player/video_player.dart';
 
 /// WhatsApp-style video album widget for grouped videos
 class VideoAlbumWidget extends StatelessWidget {
@@ -64,7 +63,7 @@ class VideoAlbumWidget extends StatelessWidget {
   ) {
     return GestureDetector(
       onTap: () => _openVideoGallery(context, index),
-      child: _VideoThumbnail(
+      child: VideoThumbnail(
         videoUrl: video.content?.toString() ?? '',
         aspectRatio: 1.5,
       ),
@@ -77,7 +76,7 @@ class VideoAlbumWidget extends StatelessWidget {
         Expanded(
           child: GestureDetector(
             onTap: () => _openVideoGallery(context, 0),
-            child: _VideoThumbnail(
+            child: VideoThumbnail(
               videoUrl: videos[0].content?.toString() ?? '',
               aspectRatio: 1.0,
             ),
@@ -87,7 +86,7 @@ class VideoAlbumWidget extends StatelessWidget {
         Expanded(
           child: GestureDetector(
             onTap: () => _openVideoGallery(context, 1),
-            child: _VideoThumbnail(
+            child: VideoThumbnail(
               videoUrl: videos[1].content?.toString() ?? '',
               aspectRatio: 1.0,
             ),
@@ -105,7 +104,7 @@ class VideoAlbumWidget extends StatelessWidget {
             Expanded(
               child: GestureDetector(
                 onTap: () => _openVideoGallery(context, 0),
-                child: _VideoThumbnail(
+                child: VideoThumbnail(
                   videoUrl: videos[0].content?.toString() ?? '',
                   aspectRatio: 1.0,
                 ),
@@ -115,7 +114,7 @@ class VideoAlbumWidget extends StatelessWidget {
             Expanded(
               child: GestureDetector(
                 onTap: () => _openVideoGallery(context, 1),
-                child: _VideoThumbnail(
+                child: VideoThumbnail(
                   videoUrl: videos[1].content?.toString() ?? '',
                   aspectRatio: 1.0,
                 ),
@@ -126,7 +125,7 @@ class VideoAlbumWidget extends StatelessWidget {
         SizedBox(height: 2.h),
         GestureDetector(
           onTap: () => _openVideoGallery(context, 2),
-          child: _VideoThumbnail(
+          child: VideoThumbnail(
             videoUrl: videos[2].content?.toString() ?? '',
             aspectRatio: 2.0,
           ),
@@ -143,7 +142,7 @@ class VideoAlbumWidget extends StatelessWidget {
             Expanded(
               child: GestureDetector(
                 onTap: () => _openVideoGallery(context, 0),
-                child: _VideoThumbnail(
+                child: VideoThumbnail(
                   videoUrl: videos[0].content?.toString() ?? '',
                   aspectRatio: 1.0,
                 ),
@@ -153,7 +152,7 @@ class VideoAlbumWidget extends StatelessWidget {
             Expanded(
               child: GestureDetector(
                 onTap: () => _openVideoGallery(context, 1),
-                child: _VideoThumbnail(
+                child: VideoThumbnail(
                   videoUrl: videos[1].content?.toString() ?? '',
                   aspectRatio: 1.0,
                 ),
@@ -167,7 +166,7 @@ class VideoAlbumWidget extends StatelessWidget {
             Expanded(
               child: GestureDetector(
                 onTap: () => _openVideoGallery(context, 2),
-                child: _VideoThumbnail(
+                child: VideoThumbnail(
                   videoUrl: videos[2].content?.toString() ?? '',
                   aspectRatio: 1.0,
                 ),
@@ -177,7 +176,7 @@ class VideoAlbumWidget extends StatelessWidget {
             Expanded(
               child: GestureDetector(
                 onTap: () => _openVideoGallery(context, 3),
-                child: _VideoThumbnail(
+                child: VideoThumbnail(
                   videoUrl: videos[3].content?.toString() ?? '',
                   aspectRatio: 1.0,
                 ),
@@ -199,7 +198,7 @@ class VideoAlbumWidget extends StatelessWidget {
             Expanded(
               child: GestureDetector(
                 onTap: () => _openVideoGallery(context, 0),
-                child: _VideoThumbnail(
+                child: VideoThumbnail(
                   videoUrl: videos[0].content?.toString() ?? '',
                   aspectRatio: 1.0,
                 ),
@@ -209,7 +208,7 @@ class VideoAlbumWidget extends StatelessWidget {
             Expanded(
               child: GestureDetector(
                 onTap: () => _openVideoGallery(context, 1),
-                child: _VideoThumbnail(
+                child: VideoThumbnail(
                   videoUrl: videos[1].content?.toString() ?? '',
                   aspectRatio: 1.0,
                 ),
@@ -223,7 +222,7 @@ class VideoAlbumWidget extends StatelessWidget {
             Expanded(
               child: GestureDetector(
                 onTap: () => _openVideoGallery(context, 2),
-                child: _VideoThumbnail(
+                child: VideoThumbnail(
                   videoUrl: videos[2].content?.toString() ?? '',
                   aspectRatio: 1.0,
                 ),
@@ -235,7 +234,7 @@ class VideoAlbumWidget extends StatelessWidget {
                 onTap: () => _openVideoGallery(context, 3),
                 child: Stack(
                   children: [
-                    _VideoThumbnail(
+                    VideoThumbnail(
                       videoUrl: videos[3].content?.toString() ?? '',
                       aspectRatio: 1.0,
                     ),
@@ -261,96 +260,6 @@ class VideoAlbumWidget extends StatelessWidget {
           ],
         ),
       ],
-    );
-  }
-}
-
-/// Video thumbnail tile with play icon overlay
-class _VideoThumbnail extends StatefulWidget {
-  final String videoUrl;
-  final double aspectRatio;
-
-  const _VideoThumbnail({required this.videoUrl, required this.aspectRatio});
-
-  @override
-  State<_VideoThumbnail> createState() => _VideoThumbnailState();
-}
-
-class _VideoThumbnailState extends State<_VideoThumbnail> {
-  VideoPlayerController? _controller;
-  bool _isInitialized = false;
-
-  @override
-  void initState() {
-    super.initState();
-    _initializeThumbnail();
-  }
-
-  Future<void> _initializeThumbnail() async {
-    try {
-      String finalUrl;
-      if (widget.videoUrl.startsWith('http') ||
-          widget.videoUrl.startsWith('https')) {
-        finalUrl = widget.videoUrl;
-      } else {
-        finalUrl = '${EndPoints.baseUrl}/chats/media/${widget.videoUrl}';
-      }
-
-      _controller = VideoPlayerController.networkUrl(Uri.parse(finalUrl));
-      await _controller!.initialize();
-      // Seek to a very small position to ensure we have a frame, then pause
-      await _controller!.seekTo(const Duration(milliseconds: 100));
-      await _controller!.pause();
-
-      if (mounted) {
-        setState(() {
-          _isInitialized = true;
-        });
-      }
-    } catch (e) {
-      debugPrint("Error loading thumbnail: $e");
-    }
-  }
-
-  @override
-  void dispose() {
-    _controller?.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return AspectRatio(
-      aspectRatio: widget.aspectRatio,
-      child: Stack(
-        fit: StackFit.expand,
-        children: [
-          // Thumbnail or Placeholder
-          if (_isInitialized && _controller != null)
-            VideoPlayer(_controller!)
-          else
-            Container(
-              color: Colors.grey.shade300,
-              child: Icon(
-                Icons.videocam,
-                color: Colors.grey.shade600,
-                size: 40.sp,
-              ),
-            ),
-
-          // Play button overlay
-          Center(
-            child: Container(
-              padding: EdgeInsets.all(12.w),
-              decoration: BoxDecoration(
-                color: Colors.black.withOpacity(0.6),
-                shape: BoxShape.circle,
-              ),
-              child: Icon(Icons.play_arrow, color: Colors.white, size: 32.sp),
-            ),
-          ),
-        ],
-      ),
     );
   }
 }

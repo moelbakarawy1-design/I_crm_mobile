@@ -9,6 +9,7 @@ class ChatRepository {
   Future<ChatModelNEW> getAllChats() async {
     try {
       final response = await _apiHelper.getRequest(endPoint: EndPoints.getAllChat);
+      print('Fetching all chats from API...${ response.data}');
       return ChatModelNEW.fromJson(response.data);
     } catch (e) {
       throw Exception('Failed to fetch chats: $e');

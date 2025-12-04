@@ -1,5 +1,7 @@
 import 'package:admin_app/config/router/routes.dart';
 import 'package:admin_app/core/network/local_data.dart';
+import 'package:admin_app/core/theme/app_color.dart';
+import 'package:admin_app/core/theme/app_text_style.dart';
 import 'package:admin_app/featuer/chat/data/model/chat_model12.dart';
 import 'package:admin_app/featuer/chat/data/repo/MessagesRepository.dart';
 import 'package:admin_app/featuer/chat/manager/message_cubit.dart';
@@ -142,15 +144,11 @@ class _IndividualScreenState extends State<IndividualScreen>
                           child: Row(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
-                              Icon(Icons.lock_outline, color: Colors.grey[600], size: 20),
+                              Icon(Icons.lock_outline, color: AppColor.secondaryBlack, size: 20),
                               SizedBox(width: 10.w),
                               Text(
                                 "You have read-only access to this chat.",
-                                style: TextStyle(
-                                  color: Colors.grey[700],
-                                  fontSize: 14.sp,
-                                  fontWeight: FontWeight.w500,
-                                ),
+                                style: AppTextStyle.setpoppinsSecondaryBlack(fontSize: 10, fontWeight: FontWeight.w400)
                               ),
                             ],
                           ),

@@ -101,11 +101,10 @@ class CahtPage extends StatelessWidget {
   }
 
   void _navigateToChat(BuildContext context, Data chat) {
-    Navigator.pushNamed(
-      context,
-      Routes.individualScreen,
-      arguments: chat,
-    );
+    if (chat.id != null) {
+      context.read<ChatCubit>().openChat(chat.id!);
+    }
+    Navigator.pushNamed(context, Routes.individualScreen, arguments: chat);
   }
 
   void _confirmDelete(BuildContext context, String chatId) {

@@ -77,7 +77,9 @@ class CusstomCard extends StatelessWidget {
 
     // Fallback detection from message text if type is missing
     if (type.isEmpty || type == 'text') {
-       if (message.toLowerCase() == 'audio' || RegExp(r'^\d+$').hasMatch(message)) type = 'audio';
+      if (message.toLowerCase() == 'audio' ||
+          RegExp(r'^\d+$').hasMatch(message))
+        type = 'audio';
     }
 
     if (type == 'audio') {
@@ -91,7 +93,7 @@ class CusstomCard extends StatelessWidget {
       text = "Image"; // or "Photo"
     } else if (type == 'file' || type == 'document') {
       icon = Icons.insert_drive_file;
-      text = "Document"; 
+      text = "Document";
     } else if (type == 'location') {
       icon = Icons.location_on;
       text = "Location";
@@ -140,11 +142,17 @@ class CusstomCard extends StatelessWidget {
     return Container(
       width: 20.r,
       height: 20.r,
-      decoration: BoxDecoration(color: AppColor.lightBlue, shape: BoxShape.circle),
+      decoration: BoxDecoration(
+        color: AppColor.lightBlue,
+        shape: BoxShape.circle,
+      ),
       child: Center(
         child: Text(
           '$unreadCount',
-          style: AppTextStyle.setpoppinsWhite(fontSize: 10.sp, fontWeight: FontWeight.w700),
+          style: AppTextStyle.setpoppinsWhite(
+            fontSize: 10.sp,
+            fontWeight: FontWeight.w700,
+          ),
         ),
       ),
     );
@@ -160,7 +168,9 @@ class CusstomCard extends StatelessWidget {
       contentPadding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 4.h),
       leading: CircleAvatar(
         radius: 25.r,
-        backgroundImage: profilePicUrl != null ? NetworkImage(profilePicUrl!) : null,
+        backgroundImage: profilePicUrl != null
+            ? NetworkImage(profilePicUrl!)
+            : null,
         backgroundColor: AppColor.lightBlue.withOpacity(0.3),
         child: profilePicUrl == null
             ? Icon(Icons.person, color: AppColor.mainWhite, size: 30.r)
@@ -168,7 +178,10 @@ class CusstomCard extends StatelessWidget {
       ),
       title: Text(
         name,
-        style: AppTextStyle.setpoppinsBlack(fontSize: 12.sp, fontWeight: FontWeight.w600),
+        style: AppTextStyle.setpoppinsBlack(
+          fontSize: 12.sp,
+          fontWeight: FontWeight.w600,
+        ),
       ),
       subtitle: Row(
         children: [
@@ -177,17 +190,24 @@ class CusstomCard extends StatelessWidget {
         ],
       ),
       trailing: Column(
+        mainAxisSize: MainAxisSize.min, // ✅ Use min size to avoid expanding
         mainAxisAlignment: MainAxisAlignment.center,
         crossAxisAlignment: CrossAxisAlignment.end,
         children: [
           if (isAssigned)
-            Text(
-              ' $assignedTo',
-              style: AppTextStyle.setpoppinsTextStyle(
-                fontSize: 11.sp, fontWeight: FontWeight.w600, color: Colors.green,
+            Flexible(
+              // ✅ Allow text to shrink if needed
+              child: Text(
+                ' $assignedTo',
+                style: AppTextStyle.setpoppinsTextStyle(
+                  fontSize: 11.sp,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.green,
+                ),
+                overflow: TextOverflow.ellipsis,
               ),
             ),
-          if (isAssigned) SizedBox(height: 5.h),
+          if (isAssigned) SizedBox(height: 2.h), // Reduced spacing
           Text(
             displayTime,
             style: AppTextStyle.setpoppinsTextStyle(
@@ -196,8 +216,11 @@ class CusstomCard extends StatelessWidget {
               color: hasUnread ? AppColor.lightBlue : Colors.grey.shade600,
             ),
           ),
-          SizedBox(height: 5.h),
-          _buildUnreadBadge(),
+          if (unreadCount > 0) ...[
+            // Only add spacing if badge exists
+            SizedBox(height: 2.h),
+            _buildUnreadBadge(),
+          ],
         ],
       ),
       onTap: onTap,

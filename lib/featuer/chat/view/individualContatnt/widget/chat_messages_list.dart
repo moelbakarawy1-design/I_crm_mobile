@@ -1,7 +1,7 @@
 import 'package:admin_app/featuer/chat/view/individualContatnt/Utils/message_grouping_helper.dart';
-import 'package:admin_app/featuer/chat/view/individualContatnt/widget/image_album_widget.dart';
-import 'package:admin_app/featuer/chat/view/individualContatnt/widget/video_album_widget.dart';
+import 'package:admin_app/featuer/chat/view/image/widget/image_album_widget.dart';
 import 'package:admin_app/featuer/chat/view/individualContatnt/widget/message_bubble.dart';
+import 'package:admin_app/featuer/chat/view/video/widget/video_album_widget.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:admin_app/featuer/chat/manager/message_cubit.dart';

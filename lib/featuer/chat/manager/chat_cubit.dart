@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:admin_app/featuer/chat/data/model/ChatMessagesModel.dart' hide Data;
+import 'package:admin_app/featuer/chat/data/model/ChatMessagesModel.dart'
+    hide Data;
 import 'package:admin_app/featuer/chat/data/model/chat_model12.dart';
 import 'package:admin_app/featuer/chat/data/repo/chat_repo.dart';
 import 'package:admin_app/featuer/chat/data/repo/MessagesRepository.dart';
@@ -15,7 +16,7 @@ class ChatCubit extends Cubit<ChatState> {
   StreamSubscription? _messageSubscription;
 
   ChatCubit(this.chatRepository, this.messagesRepository, this.socketService)
-      : super(ChatInitial());
+    : super(ChatInitial());
 
   ChatModelNEW? allChats;
   List<Data> filteredChats = [];
@@ -27,14 +28,14 @@ class ChatCubit extends Cubit<ChatState> {
       final chatModel = await chatRepository.getAllChats();
       if (isClosed) return;
       allChats = chatModel;
-      filteredChats = chatModel.data ?? [];      
+      filteredChats = chatModel.data ?? [];
       // 🔍 If there's an active search, reapply it
       if (currentSearchQuery.isNotEmpty) {
         searchChats(currentSearchQuery);
       } else {
         emit(ChatListLoaded(chatModel));
       }
-      
+
       _setupSocketListeners();
     } catch (e) {
       if (isClosed) return;
@@ -86,12 +87,58 @@ class ChatCubit extends Cubit<ChatState> {
     }
   }
 
+  StreamSubscription? _chatResetSubscription;
+
   void _setupSocketListeners() async {
     await socketService.connect();
+
     _messageSubscription?.cancel();
     _messageSubscription = socketService.newMessageStream.listen((data) {
       _handleNewMessage(data);
     });
+
+    _chatResetSubscription?.cancel();
+    _chatResetSubscription = socketService.chatResetStream.listen((data) {
+      _handleChatReset(data);
+    });
+  }
+
+  void openChat(String chatId) {
+    socketService.emitChatOpened(chatId);
+  }
+
+  void _handleChatReset(dynamic data) {
+    if (isClosed || allChats?.data == null) return;
+
+    try {
+      final chatId = data['chatId'];
+      final index = allChats!.data!.indexWhere((c) => c.id == chatId);
+
+      if (index != -1) {
+        var chatToUpdate = allChats!.data![index];
+        chatToUpdate.unReadCount = 0; // Reset unread count
+
+        allChats!.data![index] = chatToUpdate;
+
+        // Refresh UI
+        if (currentSearchQuery.isNotEmpty) {
+          searchChats(currentSearchQuery);
+        } else {
+          filteredChats = List.from(allChats!.data!);
+          emit(
+            ChatListLoaded(
+              ChatModelNEW(
+                message: allChats!.message,
+                data: List.from(allChats!.data!),
+                success: allChats!.success,
+              ),
+            ),
+          );
+        }
+      }
+    } catch (e) {
+      print("❌ Error handling chat reset: $e");
+    }
   }
 
   void _handleNewMessage(dynamic data) {
@@ -101,12 +148,27 @@ class ChatCubit extends Cubit<ChatState> {
       dynamic processedData = data;
       if (data is List && data.isNotEmpty) processedData = data[0];
 
-      final jsonPayload = (processedData is Map && processedData.containsKey('data'))
+      final jsonPayload =
+          (processedData is Map && processedData.containsKey('data'))
           ? processedData['data']
           : processedData;
 
       final newMessage = OrderedMessages.fromJson(jsonPayload);
       final chatId = newMessage.chatId;
+
+      // Safely parse unReadCount
+      int? unReadCount;
+      if (jsonPayload['unReadCount'] != null) {
+        if (jsonPayload['unReadCount'] is int) {
+          unReadCount = jsonPayload['unReadCount'];
+        } else if (jsonPayload['unReadCount'] is String) {
+          unReadCount = int.tryParse(jsonPayload['unReadCount']);
+        }
+      }
+
+      print(
+        "📥 [ChatCubit] New Message for Chat: $chatId, Unread: $unReadCount",
+      );
 
       final index = allChats!.data!.indexWhere((c) => c.id == chatId);
 
@@ -114,12 +176,19 @@ class ChatCubit extends Cubit<ChatState> {
         var chatToUpdate = allChats!.data![index];
 
         chatToUpdate.messages ??= [];
-        chatToUpdate.messages!.add(Messages(
-          id: newMessage.id,
-          content: newMessage.content,
-          timestamp: newMessage.timestamp,
-          type: newMessage.type,
-        ));
+        chatToUpdate.messages!.add(
+          Messages(
+            id: newMessage.id,
+            content: newMessage.content,
+            timestamp: newMessage.timestamp,
+            type: newMessage.type,
+          ),
+        );
+
+        // Update unread count if provided
+        if (unReadCount != null) {
+          chatToUpdate.unReadCount = unReadCount;
+        }
 
         allChats!.data!.removeAt(index);
         allChats!.data!.insert(0, chatToUpdate);
@@ -129,11 +198,15 @@ class ChatCubit extends Cubit<ChatState> {
           searchChats(currentSearchQuery);
         } else {
           filteredChats = List.from(allChats!.data!);
-          emit(ChatListLoaded(ChatModelNEW(
-            message: allChats!.message,
-            data: List.from(allChats!.data!),
-            success: allChats!.success,
-          )));
+          emit(
+            ChatListLoaded(
+              ChatModelNEW(
+                message: allChats!.message,
+                data: List.from(allChats!.data!),
+                success: allChats!.success,
+              ),
+            ),
+          );
         }
       } else {
         fetchAllChats();
@@ -146,31 +219,36 @@ class ChatCubit extends Cubit<ChatState> {
   //  Improved Search logic
   void searchChats(String query) {
     currentSearchQuery = query; // Save current search query
-    
+
     if (allChats == null || allChats!.data == null) {
       return;
     }
 
     if (query.trim().isEmpty) {
       filteredChats = List.from(allChats!.data!);
-      emit(ChatListLoaded(ChatModelNEW(
-        message: allChats!.message,
-        data: filteredChats,
-        success: allChats!.success,
-      )));
+      emit(
+        ChatListLoaded(
+          ChatModelNEW(
+            message: allChats!.message,
+            data: filteredChats,
+            success: allChats!.success,
+          ),
+        ),
+      );
     } else {
       final lowerQuery = query.toLowerCase().trim();
-      
+
       filteredChats = allChats!.data!.where((chat) {
         final customerName = chat.customer?.name?.toLowerCase() ?? '';
         final customerPhone = chat.customer?.phone?.toLowerCase() ?? '';
-        final matches = customerName.contains(lowerQuery) || customerPhone.contains(lowerQuery);
-        
-        if (matches) {
-        }
+        final matches =
+            customerName.contains(lowerQuery) ||
+            customerPhone.contains(lowerQuery);
+
+        if (matches) {}
         return matches;
       }).toList();
-      
+
       emit(ChatSearchResult(filteredChats));
     }
   }
@@ -180,17 +258,22 @@ class ChatCubit extends Cubit<ChatState> {
     currentSearchQuery = '';
     if (allChats != null) {
       filteredChats = List.from(allChats!.data ?? []);
-      emit(ChatListLoaded(ChatModelNEW(
-        message: allChats!.message,
-        data: filteredChats,
-        success: allChats!.success,
-      )));
+      emit(
+        ChatListLoaded(
+          ChatModelNEW(
+            message: allChats!.message,
+            data: filteredChats,
+            success: allChats!.success,
+          ),
+        ),
+      );
     }
   }
 
   @override
   Future<void> close() {
     _messageSubscription?.cancel();
+    _chatResetSubscription?.cancel();
     return super.close();
   }
 }

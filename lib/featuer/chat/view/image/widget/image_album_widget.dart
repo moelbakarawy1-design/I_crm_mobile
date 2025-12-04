@@ -1,5 +1,6 @@
 import 'package:admin_app/featuer/chat/data/model/ChatMessagesModel.dart';
-import 'package:admin_app/featuer/chat/view/individualContatnt/widget/image_gallery_viewer.dart';
+import 'package:admin_app/featuer/chat/view/image/widget/image_gallery_viewer.dart';
+import 'package:admin_app/featuer/chat/view/image/widget/image_tile.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
@@ -63,7 +64,7 @@ class ImageAlbumWidget extends StatelessWidget {
   ) {
     return GestureDetector(
       onTap: () => _openGallery(context, index),
-      child: _ImageTile(
+      child: ImageTile(
         imageUrl: image.content?.toString() ?? '',
         aspectRatio: 1.5,
       ),
@@ -77,7 +78,7 @@ class ImageAlbumWidget extends StatelessWidget {
         Expanded(
           child: GestureDetector(
             onTap: () => _openGallery(context, 0),
-            child: _ImageTile(
+            child: ImageTile(
               imageUrl: images[0].content?.toString() ?? '',
               aspectRatio: 1.0,
             ),
@@ -87,7 +88,7 @@ class ImageAlbumWidget extends StatelessWidget {
         Expanded(
           child: GestureDetector(
             onTap: () => _openGallery(context, 1),
-            child: _ImageTile(
+            child: ImageTile(
               imageUrl: images[1].content?.toString() ?? '',
               aspectRatio: 1.0,
             ),
@@ -106,7 +107,7 @@ class ImageAlbumWidget extends StatelessWidget {
             Expanded(
               child: GestureDetector(
                 onTap: () => _openGallery(context, 0),
-                child: _ImageTile(
+                child: ImageTile(
                   imageUrl: images[0].content?.toString() ?? '',
                   aspectRatio: 1.0,
                 ),
@@ -116,7 +117,7 @@ class ImageAlbumWidget extends StatelessWidget {
             Expanded(
               child: GestureDetector(
                 onTap: () => _openGallery(context, 1),
-                child: _ImageTile(
+                child: ImageTile(
                   imageUrl: images[1].content?.toString() ?? '',
                   aspectRatio: 1.0,
                 ),
@@ -127,7 +128,7 @@ class ImageAlbumWidget extends StatelessWidget {
         SizedBox(height: 2.h),
         GestureDetector(
           onTap: () => _openGallery(context, 2),
-          child: _ImageTile(
+          child: ImageTile(
             imageUrl: images[2].content?.toString() ?? '',
             aspectRatio: 2.0,
           ),
@@ -145,7 +146,7 @@ class ImageAlbumWidget extends StatelessWidget {
             Expanded(
               child: GestureDetector(
                 onTap: () => _openGallery(context, 0),
-                child: _ImageTile(
+                child: ImageTile(
                   imageUrl: images[0].content?.toString() ?? '',
                   aspectRatio: 1.0,
                 ),
@@ -155,7 +156,7 @@ class ImageAlbumWidget extends StatelessWidget {
             Expanded(
               child: GestureDetector(
                 onTap: () => _openGallery(context, 1),
-                child: _ImageTile(
+                child: ImageTile(
                   imageUrl: images[1].content?.toString() ?? '',
                   aspectRatio: 1.0,
                 ),
@@ -169,7 +170,7 @@ class ImageAlbumWidget extends StatelessWidget {
             Expanded(
               child: GestureDetector(
                 onTap: () => _openGallery(context, 2),
-                child: _ImageTile(
+                child: ImageTile(
                   imageUrl: images[2].content?.toString() ?? '',
                   aspectRatio: 1.0,
                 ),
@@ -179,7 +180,7 @@ class ImageAlbumWidget extends StatelessWidget {
             Expanded(
               child: GestureDetector(
                 onTap: () => _openGallery(context, 3),
-                child: _ImageTile(
+                child: ImageTile(
                   imageUrl: images[3].content?.toString() ?? '',
                   aspectRatio: 1.0,
                 ),
@@ -202,7 +203,7 @@ class ImageAlbumWidget extends StatelessWidget {
             Expanded(
               child: GestureDetector(
                 onTap: () => _openGallery(context, 0),
-                child: _ImageTile(
+                child: ImageTile(
                   imageUrl: images[0].content?.toString() ?? '',
                   aspectRatio: 1.0,
                 ),
@@ -212,7 +213,7 @@ class ImageAlbumWidget extends StatelessWidget {
             Expanded(
               child: GestureDetector(
                 onTap: () => _openGallery(context, 1),
-                child: _ImageTile(
+                child: ImageTile(
                   imageUrl: images[1].content?.toString() ?? '',
                   aspectRatio: 1.0,
                 ),
@@ -226,7 +227,7 @@ class ImageAlbumWidget extends StatelessWidget {
             Expanded(
               child: GestureDetector(
                 onTap: () => _openGallery(context, 2),
-                child: _ImageTile(
+                child: ImageTile(
                   imageUrl: images[2].content?.toString() ?? '',
                   aspectRatio: 1.0,
                 ),
@@ -238,7 +239,7 @@ class ImageAlbumWidget extends StatelessWidget {
                 onTap: () => _openGallery(context, 3),
                 child: Stack(
                   children: [
-                    _ImageTile(
+                    ImageTile(
                       imageUrl: images[3].content?.toString() ?? '',
                       aspectRatio: 1.0,
                     ),
@@ -264,49 +265,6 @@ class ImageAlbumWidget extends StatelessWidget {
           ],
         ),
       ],
-    );
-  }
-}
-
-/// Individual image tile
-class _ImageTile extends StatelessWidget {
-  final String imageUrl;
-  final double aspectRatio;
-
-  const _ImageTile({required this.imageUrl, required this.aspectRatio});
-
-  @override
-  Widget build(BuildContext context) {
-    return AspectRatio(
-      aspectRatio: aspectRatio,
-      child: Image.network(
-        imageUrl,
-        fit: BoxFit.cover,
-        loadingBuilder: (context, child, loadingProgress) {
-          if (loadingProgress == null) return child;
-          return Container(
-            color: Colors.grey.shade300,
-            child: Center(
-              child: CircularProgressIndicator(
-                strokeWidth: 2,
-                value: loadingProgress.expectedTotalBytes != null
-                    ? loadingProgress.cumulativeBytesLoaded /
-                          loadingProgress.expectedTotalBytes!
-                    : null,
-                valueColor: AlwaysStoppedAnimation<Color>(Colors.grey.shade600),
-              ),
-            ),
-          );
-        },
-        errorBuilder: (context, error, stackTrace) => Container(
-          color: Colors.grey.shade300,
-          child: Icon(
-            Icons.broken_image,
-            color: Colors.grey.shade600,
-            size: 40.sp,
-          ),
-        ),
-      ),
     );
   }
 }

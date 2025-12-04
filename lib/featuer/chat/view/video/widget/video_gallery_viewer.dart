@@ -1,37 +1,64 @@
 import 'package:admin_app/featuer/chat/data/model/ChatMessagesModel.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:video_player/video_player.dart';
 
-/// Fullscreen image gallery viewer for albums
-class ImageGalleryViewer extends StatefulWidget {
-  final List<OrderedMessages> images;
+import 'package:admin_app/featuer/chat/view/video/widget/video_player_control_widget.dart';
+
+/// Fullscreen video gallery viewer for albums
+class VideoGalleryViewer extends StatefulWidget {
+  final List<OrderedMessages> videos;
   final int initialIndex;
 
-  const ImageGalleryViewer({
+  const VideoGalleryViewer({
     super.key,
-    required this.images,
+    required this.videos,
     this.initialIndex = 0,
   });
 
   @override
-  State<ImageGalleryViewer> createState() => _ImageGalleryViewerState();
+  State<VideoGalleryViewer> createState() => _VideoGalleryViewerState();
 }
 
-class _ImageGalleryViewerState extends State<ImageGalleryViewer> {
+class _VideoGalleryViewerState extends State<VideoGalleryViewer> {
   late PageController _pageController;
   late int _currentIndex;
+  VideoPlayerController? _currentVideoController;
 
   @override
   void initState() {
     super.initState();
     _currentIndex = widget.initialIndex;
     _pageController = PageController(initialPage: widget.initialIndex);
+    _initializeVideoPlayer(_currentIndex);
+  }
+
+  void _initializeVideoPlayer(int index) {
+    _currentVideoController?.dispose();
+
+    final videoUrl = widget.videos[index].content?.toString() ?? '';
+    _currentVideoController =
+        VideoPlayerController.networkUrl(Uri.parse(videoUrl))
+          ..initialize().then((_) {
+            if (mounted) {
+              setState(() {});
+              _currentVideoController?.play();
+            }
+          });
   }
 
   @override
   void dispose() {
+    _currentVideoController?.dispose();
     _pageController.dispose();
     super.dispose();
+  }
+
+  void _onPageChanged(int index) {
+    setState(() {
+      _currentIndex = index;
+    });
+    _initializeVideoPlayer(index);
   }
 
   @override
@@ -46,76 +73,36 @@ class _ImageGalleryViewerState extends State<ImageGalleryViewer> {
           onPressed: () => Navigator.pop(context),
         ),
         title: Text(
-          '${_currentIndex + 1} / ${widget.images.length}',
+          '${_currentIndex + 1} / ${widget.videos.length}',
           style: TextStyle(color: Colors.white, fontSize: 16.sp),
         ),
         centerTitle: true,
       ),
       body: PageView.builder(
         controller: _pageController,
-        itemCount: widget.images.length,
-        onPageChanged: (index) {
-          setState(() {
-            _currentIndex = index;
-          });
-        },
+        itemCount: widget.videos.length,
+        onPageChanged: _onPageChanged,
         itemBuilder: (context, index) {
-          final imageUrl = widget.images[index].content?.toString() ?? '';
+          if (index == _currentIndex && _currentVideoController != null) {
+            return VideoPlayerControlWidget(
+              controller: _currentVideoController!,
+            );
+          }
 
-          return Center(
-            child: InteractiveViewer(
-              minScale: 0.5,
-              maxScale: 4.0,
-              child: Image.network(
-                imageUrl,
-                fit: BoxFit.contain,
-                loadingBuilder: (context, child, loadingProgress) {
-                  if (loadingProgress == null) return child;
-                  return Center(
-                    child: CircularProgressIndicator(
-                      value: loadingProgress.expectedTotalBytes != null
-                          ? loadingProgress.cumulativeBytesLoaded /
-                                loadingProgress.expectedTotalBytes!
-                          : null,
-                      color: Colors.white,
-                    ),
-                  );
-                },
-                errorBuilder: (context, error, stackTrace) => Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(
-                        Icons.broken_image,
-                        color: Colors.white54,
-                        size: 64.sp,
-                      ),
-                      SizedBox(height: 16.h),
-                      Text(
-                        'Failed to load image',
-                        style: TextStyle(
-                          color: Colors.white54,
-                          fontSize: 14.sp,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ),
-          );
+          // Placeholder for non-current videos
+          return Center(child: CircularProgressIndicator(color: Colors.white));
         },
       ),
-      bottomNavigationBar: widget.images.length > 1
+      bottomNavigationBar: widget.videos.length > 1
           ? Container(
               color: Colors.black,
               padding: EdgeInsets.symmetric(vertical: 16.h),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: List.generate(
-                  widget.images.length > 5 ? 5 : widget.images.length,
+                  widget.videos.length > 5 ? 5 : widget.videos.length,
                   (index) {
-                    if (widget.images.length > 5 && index == 4) {
+                    if (widget.videos.length > 5 && index == 4) {
                       return Padding(
                         padding: EdgeInsets.symmetric(horizontal: 4.w),
                         child: Text(
@@ -128,7 +115,6 @@ class _ImageGalleryViewerState extends State<ImageGalleryViewer> {
                       );
                     }
 
-                    final dotIndex = index;
                     return Padding(
                       padding: EdgeInsets.symmetric(horizontal: 4.w),
                       child: Container(
@@ -136,7 +122,7 @@ class _ImageGalleryViewerState extends State<ImageGalleryViewer> {
                         height: 8.h,
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
-                          color: _currentIndex == dotIndex
+                          color: _currentIndex == index
                               ? Colors.white
                               : Colors.white38,
                         ),

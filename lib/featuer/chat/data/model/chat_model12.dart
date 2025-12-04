@@ -33,8 +33,16 @@ class Data {
   Customer? customer;
   User? user;
   List<Messages>? messages;
+  int? unReadCount;
 
-  Data({this.id, this.createdAt, this.customer, this.user, this.messages});
+  Data({
+    this.id,
+    this.createdAt,
+    this.customer,
+    this.user,
+    this.messages,
+    this.unReadCount,
+  });
 
   Data.fromJson(Map<String, dynamic> json) {
     id = json['id'];
@@ -49,6 +57,13 @@ class Data {
         messages!.add(Messages.fromJson(v));
       });
     }
+    // Parse unReadCount from direct field OR _count object
+    if (json['unReadCount'] != null) {
+      unReadCount = json['unReadCount'];
+    } else if (json['_count'] != null && json['_count']['messages'] != null) {
+      unReadCount = json['_count']['messages'];
+    }
+    print('📦 [ChatModel] Parsed Chat ID: $id, UnreadCount: $unReadCount');
   }
 
   Map<String, dynamic> toJson() {
@@ -64,6 +79,7 @@ class Data {
     if (messages != null) {
       data['messages'] = messages!.map((v) => v.toJson()).toList();
     }
+    data['unReadCount'] = unReadCount;
     return data;
   }
 }
@@ -113,23 +129,17 @@ class Messages {
   String? id;
   String? content;
   String? timestamp;
-  String? type; 
-  String? caption; 
+  String? type;
+  String? caption;
 
-  Messages({
-    this.id, 
-    this.content, 
-    this.timestamp, 
-    this.type, 
-    this.caption,
-  });
+  Messages({this.id, this.content, this.timestamp, this.type, this.caption});
 
   Messages.fromJson(Map<String, dynamic> json) {
     id = json['id'];
     content = json['content'];
     timestamp = json['timestamp'];
-    type = json['type']; 
-    caption = json['caption']; 
+    type = json['type'];
+    caption = json['caption'];
   }
 
   Map<String, dynamic> toJson() {
