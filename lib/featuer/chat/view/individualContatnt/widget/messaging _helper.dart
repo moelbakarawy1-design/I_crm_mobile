@@ -1,11 +1,10 @@
-import 'package:admin_app/core/network/api_endpoiont.dart';
 import 'package:admin_app/core/theme/app_color.dart';
 import 'package:admin_app/core/theme/app_text_style.dart';
 import 'package:admin_app/featuer/chat/data/model/ChatMessagesModel.dart';
 import 'package:admin_app/featuer/chat/view/Audio/message_content_helper.dart';
 import 'package:admin_app/featuer/chat/view/contacts/contact_message_widget.dart';
 import 'package:admin_app/featuer/chat/view/individualContatnt/Utils/FullScreenImage.dart';
-import 'package:admin_app/featuer/chat/view/maps/special_message_widgets.dart'; 
+import 'package:admin_app/featuer/chat/view/maps/special_message_widgets.dart';
 import 'package:admin_app/featuer/chat/view/video/widget/DocumentMessageWidget.dart';
 import 'package:admin_app/featuer/chat/view/video/widget/VideoMessageWidget.dart';
 import 'package:flutter/material.dart';
@@ -13,35 +12,42 @@ import 'package:flutter_linkify/flutter_linkify.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+/// استخدام الرابط المباشر من الرسالة
+/// السيرفر بيبعت الرابط كامل، مش محتاجين نبنيه
 String _getMediaUrl(String? content) {
   if (content == null || content.isEmpty) return '';
-  if (content.startsWith('http') || content.startsWith('https')) {
-    return content;
-  }
-  return '${EndPoints.baseUrl}/chats/media/$content';
+  // نرجع الرابط كما هو من السيرفر
+  return content;
 }
 
-Widget buildMessageContent(OrderedMessages msg , BuildContext context) {
+Widget buildMessageContent(OrderedMessages msg, BuildContext context) {
   final String fullUrl = _getMediaUrl(msg.content);
-  
+
   String type = (msg.type ?? '').toLowerCase();
-  
+
   if (type == 'text' || type.isEmpty) {
-     final c = msg.content?.toLowerCase() ?? '';
-     if (c.endsWith('.mp4') || c.endsWith('.mov') || c.endsWith('.avi') || c.endsWith('.mkv')) {
-       type = 'video';
-     } else if (c.endsWith('.jpg') || c.endsWith('.png') || c.endsWith('.jpeg')) {
-       type = 'image';
-     } else if (c.endsWith('.pdf') || c.endsWith('.doc') || c.endsWith('.docx')) {
-       type = 'file';
-     }
-     else if (msg.content != null && msg.content!.contains('"formatted_name"')) {
-       type = 'contacts';
-     }
-     // ✅ Check for sticker file extensions
-     else if (c.endsWith('.webp') || c.contains('sticker')) {
-       type = 'sticker';
-     }
+    final c = msg.content?.toLowerCase() ?? '';
+    if (c.endsWith('.mp4') ||
+        c.endsWith('.mov') ||
+        c.endsWith('.avi') ||
+        c.endsWith('.mkv')) {
+      type = 'video';
+    } else if (c.endsWith('.jpg') ||
+        c.endsWith('.png') ||
+        c.endsWith('.jpeg')) {
+      type = 'image';
+    } else if (c.endsWith('.pdf') ||
+        c.endsWith('.doc') ||
+        c.endsWith('.docx')) {
+      type = 'file';
+    } else if (msg.content != null &&
+        msg.content!.contains('"formatted_name"')) {
+      type = 'contacts';
+    }
+    // ✅ Check for sticker file extensions
+    else if (c.endsWith('.webp') || c.contains('sticker')) {
+      type = 'sticker';
+    }
   }
 
   //  CONTACTS (New)
@@ -50,88 +56,73 @@ Widget buildMessageContent(OrderedMessages msg , BuildContext context) {
       content: msg.content ?? '[]', // Pass the JSON string
     );
   }
-
   // LOCATION
   else if (type == 'location') {
-    return LocationMessageWidget(
-      locationContent: msg.content ?? '', 
-    );
+    return LocationMessageWidget(locationContent: msg.content ?? '');
   }
-
   // VIDEO
   else if (type == 'video') {
-    return VideoMessageWidget(
-      videoUrl: fullUrl, 
-      caption: msg.caption,
+    return VideoMessageWidget(videoUrl: fullUrl, caption: msg.caption);
+  } else if (type == 'image') {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        GestureDetector(
+          onTap: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) => FullScreenImage(imageUrl: fullUrl),
+              ),
+            );
+          },
+          child: Hero(
+            tag: fullUrl,
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(8),
+              child: ConstrainedBox(
+                constraints: BoxConstraints(maxWidth: 300.w, maxHeight: 500.h),
+                child: Image.network(
+                  fullUrl,
+                  fit: BoxFit.fitWidth,
+                  errorBuilder: (context, error, stackTrace) =>
+                      const Icon(Icons.broken_image, color: Colors.grey),
+                  loadingBuilder: (context, child, loadingProgress) {
+                    if (loadingProgress == null) return child;
+                    return Container(
+                      width: 200.w,
+                      height: 200.h,
+                      color: Colors.grey[200],
+                      child: const Center(child: CircularProgressIndicator()),
+                    );
+                  },
+                ),
+              ),
+            ),
+          ),
+        ),
+        if (msg.caption != null && msg.caption!.isNotEmpty)
+          Padding(
+            padding: const EdgeInsets.only(top: 6.0),
+            child: Text(
+              msg.caption!,
+              style: AppTextStyle.setpoppinsTextStyle(
+                fontSize: 12,
+                color: AppColor.mainBlack,
+                fontWeight: FontWeight.w400,
+              ),
+            ),
+          ),
+      ],
     );
   }
-
- else if (type == 'image') {
-  return Column(
-    crossAxisAlignment: CrossAxisAlignment.start,
-    children: [
-      GestureDetector(
-        onTap: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (_) => FullScreenImage(imageUrl: fullUrl),
-            ),
-          );
-        },
-        child: Hero(
-          tag: fullUrl,
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(8),
-            child: ConstrainedBox(
-              constraints: BoxConstraints(
-                maxWidth: 300.w,
-                maxHeight: 500.h,
-              ),
-              child: Image.network(
-                fullUrl,
-                fit: BoxFit.fitWidth,
-                errorBuilder: (context, error, stackTrace) =>
-                    const Icon(Icons.broken_image, color: Colors.grey),
-                loadingBuilder: (context, child, loadingProgress) {
-                  if (loadingProgress == null) return child;
-                  return Container(
-                    width: 200.w,
-                    height: 200.h,
-                    color: Colors.grey[200],
-                    child: const Center(child: CircularProgressIndicator()),
-                  );
-                },
-              ),
-            ),
-          ),
-        ),
-      ),
-      if (msg.caption != null && msg.caption!.isNotEmpty)
-        Padding(
-          padding: const EdgeInsets.only(top: 6.0),
-          child: Text(
-            msg.caption!,
-            style: AppTextStyle.setpoppinsTextStyle(
-              fontSize: 12,
-              color: AppColor.mainBlack,
-              fontWeight: FontWeight.w400,
-            ),
-          ),
-        ),
-    ],
-  );
-}
-
   // ✅ STICKER (WhatsApp-style)
   else if (type == 'sticker') {
     return GestureDetector(
       onTap: () {
         Navigator.push(
           context,
-          MaterialPageRoute(
-            builder: (_) => FullScreenImage(imageUrl: fullUrl),
-          ),
+          MaterialPageRoute(builder: (_) => FullScreenImage(imageUrl: fullUrl)),
         );
       },
       child: Hero(
@@ -140,14 +131,17 @@ Widget buildMessageContent(OrderedMessages msg , BuildContext context) {
           borderRadius: BorderRadius.circular(8),
           child: ConstrainedBox(
             constraints: BoxConstraints(
-              maxWidth: 150.w,  // Smaller than images for sticker effect
+              maxWidth: 150.w, // Smaller than images for sticker effect
               maxHeight: 150.h,
             ),
             child: Image.network(
               fullUrl,
-              fit: BoxFit.contain,  // Contain to preserve sticker aspect ratio
-              errorBuilder: (context, error, stackTrace) =>
-                  Icon(Icons.emoji_emotions_outlined, size: 80.sp, color: Colors.grey),
+              fit: BoxFit.contain, // Contain to preserve sticker aspect ratio
+              errorBuilder: (context, error, stackTrace) => Icon(
+                Icons.emoji_emotions_outlined,
+                size: 80.sp,
+                color: Colors.grey,
+              ),
               loadingBuilder: (context, child, loadingProgress) {
                 if (loadingProgress == null) return child;
                 return Container(
@@ -165,43 +159,35 @@ Widget buildMessageContent(OrderedMessages msg , BuildContext context) {
       ),
     );
   }
-
-
-
   //  AUDIO
   else if (type == 'audio') {
-    msg.content = fullUrl; 
-    return AudioMessageWidget(message: msg); 
-  } 
-
+    msg.content = fullUrl;
+    return AudioMessageWidget(message: msg);
+  }
   //  FILE / DOCUMENT
   else if (type == 'file' || type == 'document') {
-    return DocumentMessageWidget(
-      fileName: "Document", 
-      fileUrl: fullUrl, 
+    return DocumentMessageWidget(fileName: "Document", fileUrl: fullUrl);
+  }
+  //  TEXT
+  else {
+    return Linkify(
+      text: msg.content ?? '',
+      style: AppTextStyle.setpoppinsTextStyle(
+        fontSize: 12,
+        fontWeight: FontWeight.w400,
+        color: AppColor.mainBlack,
+      ),
+      linkStyle: AppTextStyle.setpoppinsTextStyle(
+        fontSize: 12,
+        fontWeight: FontWeight.w400,
+        color: Colors.blue,
+      ),
+      onOpen: (link) async {
+        final url = Uri.parse(link.url);
+        if (await canLaunchUrl(url)) {
+          await launchUrl(url, mode: LaunchMode.externalApplication);
+        }
+      },
     );
   }
-
-  //  TEXT 
- else {
-  return Linkify(
-    text: msg.content ?? '',
-    style: AppTextStyle.setpoppinsTextStyle(
-      fontSize: 12,
-      fontWeight: FontWeight.w400,
-      color: AppColor.mainBlack,
-    ),
-    linkStyle: AppTextStyle.setpoppinsTextStyle(
-      fontSize: 12,
-      fontWeight: FontWeight.w400,
-      color: Colors.blue,
-    ),
-    onOpen: (link) async {
-      final url = Uri.parse(link.url);
-      if (await canLaunchUrl(url)) {
-        await launchUrl(url, mode: LaunchMode.externalApplication);
-      }
-    },
-  );
-}
 }

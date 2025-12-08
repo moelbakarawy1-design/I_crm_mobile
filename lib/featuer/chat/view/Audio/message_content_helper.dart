@@ -4,7 +4,6 @@ import 'package:flutter/material.dart';
 import 'package:just_audio/just_audio.dart';
 import 'package:http/http.dart' as http;
 import 'package:path_provider/path_provider.dart';
-import 'package:admin_app/core/network/api_endpoiont.dart';
 import 'package:admin_app/featuer/chat/data/model/ChatMessagesModel.dart';
 
 class AudioMessageWidget extends StatefulWidget {
@@ -16,9 +15,10 @@ class AudioMessageWidget extends StatefulWidget {
   State<AudioMessageWidget> createState() => _AudioMessageWidgetState();
 }
 
-class _AudioMessageWidgetState extends State<AudioMessageWidget> with AutomaticKeepAliveClientMixin {
+class _AudioMessageWidgetState extends State<AudioMessageWidget>
+    with AutomaticKeepAliveClientMixin {
   final AudioPlayer _player = AudioPlayer();
-  
+
   bool _isPlaying = false;
   bool _isLoading = true;
   bool _fileReady = false;
@@ -73,19 +73,17 @@ class _AudioMessageWidgetState extends State<AudioMessageWidget> with AutomaticK
       String content = widget.message.content ?? '';
       if (content.isEmpty) return;
 
+      // استخدام الرابط المباشر من content
       String url = content;
-      if (!url.startsWith('http')) {
-        url = "${EndPoints.baseUrl}/chats/media/$url";
-      }
 
       // 1. Download/Check Cache
       final file = await _downloadFile(url);
-      
+
       if (file == null || !mounted) {
         if (mounted) setState(() => _isLoading = false);
         return;
       }
-      
+
       _localPath = file.path;
 
       // 2. Set file to player
@@ -97,7 +95,6 @@ class _AudioMessageWidgetState extends State<AudioMessageWidget> with AutomaticK
           _fileReady = true;
         });
       }
-
     } catch (e) {
       debugPrint("❌ Error loading audio: $e");
       if (mounted) setState(() => _isLoading = false);
@@ -126,7 +123,7 @@ class _AudioMessageWidgetState extends State<AudioMessageWidget> with AutomaticK
 
   Future<void> _togglePlay() async {
     if (_isLoading || !_fileReady) return;
-    
+
     if (_isPlaying) {
       await _player.pause();
     } else {
@@ -136,7 +133,7 @@ class _AudioMessageWidgetState extends State<AudioMessageWidget> with AutomaticK
 
   @override
   Widget build(BuildContext context) {
-    super.build(context); 
+    super.build(context);
 
     const backgroundColor = Color(0xFF075E54);
 
@@ -156,13 +153,16 @@ class _AudioMessageWidgetState extends State<AudioMessageWidget> with AutomaticK
             decoration: BoxDecoration(
               shape: BoxShape.circle,
               color: Colors.white.withOpacity(0.2),
-              border: Border.all(color: Colors.white.withOpacity(0.3), width: 1),
+              border: Border.all(
+                color: Colors.white.withOpacity(0.3),
+                width: 1,
+              ),
             ),
             child: const Center(
               child: Icon(Icons.person, color: Colors.white, size: 20),
             ),
           ),
-          
+
           const SizedBox(width: 8),
 
           // Play Button
@@ -175,16 +175,19 @@ class _AudioMessageWidgetState extends State<AudioMessageWidget> with AutomaticK
                 shape: BoxShape.circle,
                 color: Colors.white.withOpacity(0.25),
               ),
-              child: _isLoading 
-                ? const Padding(
-                    padding: EdgeInsets.all(8.0),
-                    child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
-                  )
-                : Icon(
-                    _isPlaying ? Icons.pause : Icons.play_arrow_rounded,
-                    color: Colors.white,
-                    size: 22,
-                  ),
+              child: _isLoading
+                  ? const Padding(
+                      padding: EdgeInsets.all(8.0),
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: Colors.white,
+                      ),
+                    )
+                  : Icon(
+                      _isPlaying ? Icons.pause : Icons.play_arrow_rounded,
+                      color: Colors.white,
+                      size: 22,
+                    ),
             ),
           ),
 
@@ -196,14 +199,21 @@ class _AudioMessageWidgetState extends State<AudioMessageWidget> with AutomaticK
                 child: SliderTheme(
                   data: SliderThemeData(
                     trackHeight: 3,
-                    thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 6),
-                    overlayShape: const RoundSliderOverlayShape(overlayRadius: 14),
+                    thumbShape: const RoundSliderThumbShape(
+                      enabledThumbRadius: 6,
+                    ),
+                    overlayShape: const RoundSliderOverlayShape(
+                      overlayRadius: 14,
+                    ),
                     activeTrackColor: Colors.white,
                     inactiveTrackColor: Colors.white.withOpacity(0.3),
                     thumbColor: Colors.white,
                   ),
                   child: Slider(
-                    value: _position.inMilliseconds.toDouble().clamp(0.0, _duration.inMilliseconds.toDouble()),
+                    value: _position.inMilliseconds.toDouble().clamp(
+                      0.0,
+                      _duration.inMilliseconds.toDouble(),
+                    ),
                     max: _duration.inMilliseconds.toDouble(),
                     onChanged: (value) {
                       _player.seek(Duration(milliseconds: value.toInt()));
@@ -217,18 +227,18 @@ class _AudioMessageWidgetState extends State<AudioMessageWidget> with AutomaticK
               child: Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 10),
                 child: LinearProgressIndicator(
-                  color: Colors.white.withOpacity(0.3), 
+                  color: Colors.white.withOpacity(0.3),
                   backgroundColor: Colors.transparent,
                 ),
               ),
             ),
-            
+
           // Duration Text
           Padding(
             padding: const EdgeInsets.only(right: 8, left: 4),
             child: Text(
-               _formatDuration(_position.inSeconds > 0 ? _position : _duration),
-               style: const TextStyle(color: Colors.white70, fontSize: 11),
+              _formatDuration(_position.inSeconds > 0 ? _position : _duration),
+              style: const TextStyle(color: Colors.white70, fontSize: 11),
             ),
           ),
         ],

@@ -2,7 +2,6 @@
 
 import 'dart:async';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:admin_app/core/network/api_endpoiont.dart';
 import 'package:admin_app/featuer/chat/data/model/ChatMessagesModel.dart';
 import 'package:admin_app/featuer/chat/data/repo/MessagesRepository.dart';
 import 'package:admin_app/featuer/chat/service/Socetserver.dart';
@@ -45,17 +44,10 @@ class MessagesCubit extends Cubit<MessagesState> {
   MessagesCubit(this.messagesRepository, this.socketService)
     : super(MessagesInitial());
 
-  /// Helper: Fix Media URLs
+  /// Helper: Use Direct URL from Message
+  /// السيرفر بيبعت الرابط كامل في content، مش محتاجين نبنيه
   OrderedMessages _fixMessageUrl(OrderedMessages msg) {
-    if (msg.content == null) return msg;
-    if (['image', 'video', 'audio', 'file', 'document'].contains(msg.type)) {
-      final content = msg.content.toString();
-      if (content.isNotEmpty &&
-          !content.startsWith('http') &&
-          !content.startsWith('/')) {
-        msg.content = '${EndPoints.baseUrl}/chats/media/$content';
-      }
-    }
+    // نرجع الرسالة زي ما هي لأن content فيه الرابط الكامل من السيرفر
     return msg;
   }
 

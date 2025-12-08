@@ -1,4 +1,3 @@
-import 'package:admin_app/core/network/api_endpoiont.dart';
 import 'package:admin_app/core/utils/video_player_manager.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -38,13 +37,8 @@ class _VideoThumbnailState extends State<VideoThumbnail> {
     _hasAcquiredSlot = true;
 
     try {
-      String finalUrl;
-      if (widget.videoUrl.startsWith('http') ||
-          widget.videoUrl.startsWith('https')) {
-        finalUrl = widget.videoUrl;
-      } else {
-        finalUrl = '${EndPoints.baseUrl}/chats/media/${widget.videoUrl}';
-      }
+      // استخدام الرابط المباشر من content
+      String finalUrl = widget.videoUrl;
 
       _controller = VideoPlayerController.networkUrl(Uri.parse(finalUrl));
       await _controller!.initialize();

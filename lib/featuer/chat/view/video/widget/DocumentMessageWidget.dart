@@ -1,4 +1,3 @@
-import 'package:admin_app/core/network/api_endpoiont.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -8,44 +7,53 @@ class DocumentMessageWidget extends StatelessWidget {
   final String fileUrl;
 
   const DocumentMessageWidget({
-    super.key, 
-    required this.fileName, 
-    required this.fileUrl
+    super.key,
+    required this.fileName,
+    required this.fileUrl,
   });
 
   // 🎨 Helper: Get Color based on extension
   Color _getFileColor(String extension) {
     switch (extension.toLowerCase()) {
-      case 'pdf': return const Color(0xFFE57373); // Red
+      case 'pdf':
+        return const Color(0xFFE57373); // Red
       case 'doc':
-      case 'docx': return const Color(0xFF64B5F6); // Blue
+      case 'docx':
+        return const Color(0xFF64B5F6); // Blue
       case 'xls':
-      case 'xlsx': return const Color(0xFF81C784); // Green
+      case 'xlsx':
+        return const Color(0xFF81C784); // Green
       case 'jpg':
       case 'png':
-      case 'jpeg': return const Color(0xFFBA68C8); // Purple
-      default: return const Color(0xFF90A4AE); // Grey
+      case 'jpeg':
+        return const Color(0xFFBA68C8); // Purple
+      default:
+        return const Color(0xFF90A4AE); // Grey
     }
   }
 
   // 📂 Helper: Get Icon based on extension
   IconData _getFileIcon(String extension) {
     switch (extension.toLowerCase()) {
-      case 'pdf': return Icons.picture_as_pdf_rounded;
+      case 'pdf':
+        return Icons.picture_as_pdf_rounded;
       case 'doc':
-      case 'docx': return Icons.description_rounded;
+      case 'docx':
+        return Icons.description_rounded;
       case 'xls':
-      case 'xlsx': return Icons.table_chart_rounded;
+      case 'xlsx':
+        return Icons.table_chart_rounded;
       case 'jpg':
-      case 'png': return Icons.image_rounded;
-      default: return Icons.insert_drive_file_rounded;
+      case 'png':
+        return Icons.image_rounded;
+      default:
+        return Icons.insert_drive_file_rounded;
     }
   }
 
   Future<void> _openDocument() async {
-    final String fullUrl = fileUrl.startsWith('http')
-        ? fileUrl
-        : '${EndPoints.baseUrl}/chats/media/$fileUrl';
+    // استخدام الرابط المباشر من content
+    final String fullUrl = fileUrl;
 
     final Uri uri = Uri.parse(fullUrl);
     try {
@@ -138,7 +146,7 @@ class DocumentMessageWidget extends StatelessWidget {
                   Icons.arrow_forward_ios_rounded,
                   size: 14.sp,
                   color: Colors.grey.shade300,
-                )
+                ),
               ],
             ),
           ),

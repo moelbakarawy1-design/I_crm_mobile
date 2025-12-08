@@ -1,4 +1,3 @@
-import 'package:admin_app/core/network/api_endpoiont.dart';
 import 'package:chewie/chewie.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -29,13 +28,9 @@ class _VideoMessageWidgetState extends State<VideoMessageWidget> {
 
   Future<void> _initializePlayer() async {
     try {
-      String finalUrl;
-      if (widget.videoUrl.startsWith('http') ||
-          widget.videoUrl.startsWith('https')) {
-        finalUrl = widget.videoUrl;
-      } else {
-        finalUrl = '${EndPoints.baseUrl}/chats/media/${widget.videoUrl}';
-      }
+      // استخدام الرابط المباشر من content
+      String finalUrl = widget.videoUrl;
+
       debugPrint("🎥 Final Video URL: $finalUrl");
       _videoPlayerController = VideoPlayerController.networkUrl(
         Uri.parse(finalUrl),
