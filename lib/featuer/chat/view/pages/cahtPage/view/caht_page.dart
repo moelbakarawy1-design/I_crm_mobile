@@ -1,9 +1,11 @@
 import 'package:admin_app/config/router/routes.dart';
 import 'package:admin_app/core/helper/enum_permission.dart';
 import 'package:admin_app/core/network/local_data.dart';
+import 'package:admin_app/featuer/chat/data/model/chat_model12.dart';
+import 'package:admin_app/featuer/chat/manager/BroadcastCubit.dart';
 import 'package:admin_app/featuer/chat/manager/chat_cubit.dart';
 import 'package:admin_app/featuer/chat/manager/chat_state.dart';
-import 'package:admin_app/featuer/chat/data/model/chat_model12.dart';
+import 'package:admin_app/featuer/chat/view/pages/cahtPage/view/Broadcast_dialoge.dart';
 import 'package:admin_app/featuer/chat/view/pages/cahtPage/widgets/AnimatedFAB_widgets.dart';
 import 'package:admin_app/featuer/chat/view/pages/cahtPage/widgets/ChatListView.dart';
 import 'package:admin_app/featuer/chat/view/pages/cahtPage/widgets/EmptyChatsState_widgets.dart';
@@ -14,12 +16,31 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 class CahtPage extends StatelessWidget {
   const CahtPage({super.key});
 
+  void _showBroadcastDialog(BuildContext context) {
+    // Capture Cubits from the current context
+    final broadcastCubit = context.read<BroadcastCubit>();
+    final chatCubit = context.read<ChatCubit>();
+
+    showDialog(
+      context: context,
+      builder: (_) {
+        // Pass providers to the Dialog
+        return MultiBlocProvider(
+          providers: [
+            BlocProvider.value(value: broadcastCubit),
+            BlocProvider.value(value: chatCubit),
+          ],
+          child: const BroadcastDialog(),
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       body: Stack(
         children: [
-          // Main Content
           BlocBuilder<ChatCubit, ChatState>(
             buildWhen: (previous, current) {
               return current is ChatLoading ||
@@ -34,11 +55,30 @@ class CahtPage extends StatelessWidget {
               );
             },
           ),
+
           FutureBuilder<bool>(
             future: LocalData.hasEnumPermission(Permission.READ_WRITE_WHATSAPP),
             builder: (context, snapshot) {
               if (snapshot.hasData && snapshot.data == true) {
-                return const AnimatedFAB();
+                return Positioned(
+                  bottom: 20,
+                  right: 20,
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      FloatingActionButton(
+                        mini: true,
+                        backgroundColor: Colors.orange,
+                        onPressed: () => _showBroadcastDialog(context),
+                        child: const Icon(Icons.campaign, color: Colors.white),
+                      ),
+
+                      const SizedBox(height: 12),
+
+                      const AnimatedFAB(),
+                    ],
+                  ),
+                );
               }
               return const SizedBox.shrink();
             },
@@ -58,7 +98,6 @@ class CahtPage extends StatelessWidget {
       );
     }
 
-    // 🔍 Support both ChatListLoaded and ChatSearchResult
     if (state is ChatListLoaded) {
       chats = state.chatModel.data ?? [];
     } else if (state is ChatSearchResult) {
@@ -86,12 +125,10 @@ class CahtPage extends StatelessWidget {
       );
     }
 
-    // If no chats
     if (chats.isEmpty) {
       return const EmptyChatsState(key: ValueKey('empty'));
     }
 
-    // Display chat list
     return ChatListView(
       key: const ValueKey('loaded'),
       chats: chats,

@@ -356,4 +356,27 @@ class MessagesRepository {
       throw Exception("Failed to send contact");
     }
   }
+
+  Future<Map<String, dynamic>> sendBroadcastMessage(
+    String messageContent,
+  ) async {
+    try {
+      final response = await _apiHelper.postRequest(
+        endPoint: '/chats/prodcast',
+        data: {"content": messageContent},
+        isFormData: false,
+        isAuthorized: true,
+      );
+
+      if (response.status) {
+        print("✅ Broadcast Success: ${response.data}");
+        return response.data;
+      } else {
+        throw Exception(response.message);
+      }
+    } catch (e) {
+      print("❌ Broadcast Exception: $e");
+      rethrow;
+    }
+  }
 }

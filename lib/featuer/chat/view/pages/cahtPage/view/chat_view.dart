@@ -1,5 +1,6 @@
 import 'package:admin_app/featuer/chat/data/repo/MessagesRepository.dart';
 import 'package:admin_app/featuer/chat/data/repo/chat_repo.dart';
+import 'package:admin_app/featuer/chat/manager/BroadcastCubit.dart';
 import 'package:admin_app/featuer/chat/manager/chat_cubit.dart';
 import 'package:admin_app/featuer/chat/service/Socetserver.dart';
 import 'package:admin_app/featuer/chat/view/pages/cahtPage/view/caht_page.dart';
@@ -15,8 +16,7 @@ class ChatScreen extends StatefulWidget {
   State<ChatScreen> createState() => _ChatScreenState();
 }
 
-class _ChatScreenState extends State<ChatScreen>
-    with TickerProviderStateMixin {
+class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
   late TabController _tabController;
   late AnimationController _animationController;
   late Animation<double> _fadeAnimation;
@@ -24,14 +24,9 @@ class _ChatScreenState extends State<ChatScreen>
   @override
   void initState() {
     super.initState();
-    
-    
+
     // Tab Controller
-    _tabController = TabController(
-      length: 2,
-      vsync: this,
-      initialIndex: 0,
-    );
+    _tabController = TabController(length: 2, vsync: this, initialIndex: 0);
 
     // Fade Animation
     _animationController = AnimationController(
@@ -56,15 +51,23 @@ class _ChatScreenState extends State<ChatScreen>
 
   @override
   Widget build(BuildContext context) {
-    
-    return BlocProvider(
-      create: (context) {
-        return ChatCubit(
-          ChatRepository(),
-          MessagesRepository(),
-          SocketService(),
-        )..fetchAllChats();
-      },
+    return MultiBlocProvider(
+      providers: [
+        BlocProvider(
+          create: (context) {
+            return ChatCubit(
+              ChatRepository(),
+              MessagesRepository(),
+              SocketService(),
+            )..fetchAllChats();
+          },
+        ),
+        BlocProvider(
+          create: (context) {
+            return BroadcastCubit(MessagesRepository(), SocketService());
+          },
+        ),
+      ],
       child: Builder(
         builder: (context) {
           return FadeTransition(
@@ -87,10 +90,7 @@ class _ChatScreenState extends State<ChatScreen>
               body: TabBarView(
                 controller: _tabController,
                 physics: const BouncingScrollPhysics(),
-                children: const [
-                  CahtPage(),
-                  CallsPage(),
-                ],
+                children: const [CahtPage(), CallsPage()],
               ),
             ),
           );

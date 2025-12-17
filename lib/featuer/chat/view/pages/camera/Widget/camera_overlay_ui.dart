@@ -56,10 +56,7 @@ class CameraOverlayUI extends StatelessWidget {
                       icon: Icon(Icons.close, color: Colors.white, size: 28.sp),
                       onPressed: onClose,
                     ),
-                    IconButton(
-                      icon: const Icon(Icons.flip_camera_ios, color: Colors.white),
-                      onPressed: onSwitchCamera,
-                    ),
+                   
                   ],
                 ),
               ),

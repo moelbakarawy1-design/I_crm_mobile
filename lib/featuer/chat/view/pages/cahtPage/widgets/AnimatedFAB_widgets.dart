@@ -23,19 +23,15 @@ class _AnimatedFABState extends State<AnimatedFAB>
       vsync: this,
     );
 
-    _scaleAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(
-        parent: _controller,
-        curve: Curves.elasticOut,
-      ),
-    );
+    _scaleAnimation = Tween<double>(
+      begin: 0.0,
+      end: 1.0,
+    ).animate(CurvedAnimation(parent: _controller, curve: Curves.elasticOut));
 
-    _rotationAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(
-        parent: _controller,
-        curve: Curves.easeInOut,
-      ),
-    );
+    _rotationAnimation = Tween<double>(
+      begin: 0.0,
+      end: 1.0,
+    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeInOut));
 
     // Delay the animation slightly for better effect
     Future.delayed(const Duration(milliseconds: 400), () {
@@ -51,46 +47,42 @@ class _AnimatedFABState extends State<AnimatedFAB>
 
   @override
   Widget build(BuildContext context) {
-    return Positioned(
-      bottom: 16,
-      right: 16,
-      child: AnimatedBuilder(
-        animation: _controller,
-        builder: (context, child) {
-          return Transform.scale(
-            scale: _scaleAnimation.value,
-            child: Transform.rotate(
-              angle: _rotationAnimation.value * 3.14159, // 180 degrees
-              child: child,
+    return AnimatedBuilder(
+      animation: _controller,
+      builder: (context, child) {
+        return Transform.scale(
+          scale: _scaleAnimation.value,
+          child: Transform.rotate(
+            angle: _rotationAnimation.value * 3.14159, // 180 degrees
+            child: child,
+          ),
+        );
+      },
+      child: Container(
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          boxShadow: [
+            BoxShadow(
+              color: AppColor.lightBlue.withOpacity(0.4),
+              blurRadius: 20,
+              spreadRadius: 2,
+              offset: const Offset(0, 8),
             ),
-          );
-        },
-        child: Container(
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            boxShadow: [
-              BoxShadow(
-                color: AppColor.lightBlue.withOpacity(0.4),
-                blurRadius: 20,
-                spreadRadius: 2,
-                offset: const Offset(0, 8),
-              ),
-            ],
-          ),
-          child: FloatingActionButton(
-            heroTag: 'chat_fab',
-            backgroundColor: AppColor.lightBlue,
-            elevation: 0,
-            onPressed: () {
-              // Scale down animation on tap
-              _controller.reverse().then((_) {
-                _controller.forward();
-              });
-              
-              Navigator.pushNamed(context, Routes.createChatScreen);
-            },
-            child: Icon(Icons.chat_bubble, color: AppColor.mainWhite, size: 28),
-          ),
+          ],
+        ),
+        child: FloatingActionButton(
+          heroTag: 'chat_fab',
+          backgroundColor: AppColor.lightBlue,
+          elevation: 0,
+          onPressed: () {
+            // Scale down animation on tap
+            _controller.reverse().then((_) {
+              _controller.forward();
+            });
+
+            Navigator.pushNamed(context, Routes.createChatScreen);
+          },
+          child: Icon(Icons.chat_bubble, color: AppColor.mainWhite, size: 28),
         ),
       ),
     );

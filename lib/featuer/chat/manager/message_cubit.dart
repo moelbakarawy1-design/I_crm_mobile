@@ -44,8 +44,6 @@ class MessagesCubit extends Cubit<MessagesState> {
   MessagesCubit(this.messagesRepository, this.socketService)
     : super(MessagesInitial());
 
-  /// Helper: Use Direct URL from Message
-  /// السيرفر بيبعت الرابط كامل في content، مش محتاجين نبنيه
   OrderedMessages _fixMessageUrl(OrderedMessages msg) {
     // نرجع الرسالة زي ما هي لأن content فيه الرابط الكامل من السيرفر
     return msg;
@@ -59,32 +57,50 @@ class MessagesCubit extends Cubit<MessagesState> {
     });
   }
 
+
   void _addOrUpdateMessage(OrderedMessages newMessage) {
     if (isClosed) return;
 
-    final index = allMessages.indexWhere((msg) => msg.id == newMessage.id);
+    // ✅ Ensure the message has an ID
+    if (newMessage.id == null || newMessage.id!.isEmpty) {
+      print("⚠️ Message has no ID, skipping");
+      return;
+    }
 
-    if (index != -1) {
-      // تحديث رسالة موجودة
-      allMessages[index] = newMessage;
+    // 🔍 Search by ID
+    final indexById = allMessages.indexWhere((msg) => msg.id == newMessage.id);
+
+    if (indexById != -1) {
+      // 🔄 UPDATE existing message (preserve position)
+      print("🔄 Updating existing message: ${newMessage.id}");
+      allMessages[indexById] = newMessage;
     } else {
-      // إضافة رسالة جديدة
-      // 👇 التعديل: نتأكد إنها مش في الـ Set ونضيفها
+      // ➕ ADD new message only if it's not in our Set
       if (!_messageIds.contains(newMessage.id)) {
+        print("➕ Adding new message: ${newMessage.id}");
         allMessages.add(newMessage);
-        _messageIds.add(newMessage.id!); // ✅ ضيف الـ ID هنا
+        _messageIds.add(newMessage.id!);
+      } else {
+        print("⏭️ Message already exists, skipping duplicate: ${newMessage.id}");
+        return; // ✅ Don't emit if nothing changed
       }
     }
 
-    _sortMessages(); // ✅ نعيد الترتيب احتياطي
+    _sortMessages();
     emit(MessagesLoaded(List.from(allMessages)));
   }
 
   void _addUniqueMessages(List<OrderedMessages> newMessages) {
     for (var msg in newMessages) {
+      // ✅ Skip if message ID is empty
+      if (msg.id == null || msg.id!.isEmpty) continue;
+
       if (!_messageIds.contains(msg.id)) {
         _messageIds.add(msg.id!);
         allMessages.add(_fixMessageUrl(msg));
+        print("✅ Added message: ${msg.id}");
+      } else {
+        print("⏭️ Skipped duplicate: ${msg.id}");
       }
     }
     _sortMessages();
@@ -120,7 +136,6 @@ class MessagesCubit extends Cubit<MessagesState> {
     }
   }
 
-  // داخل MessagesCubit.dart
 
   Future<void> loadMoreMessages() async {
     // نفس شروط الحماية القديمة
@@ -197,6 +212,12 @@ class MessagesCubit extends Cubit<MessagesState> {
       // Only add if it belongs to THIS chat
       if (newMessage.chatId != _currentChatId) return;
 
+      // ✅ CHECK: إذا كانت الرسالة موجودة بالفعل، فلا تضيفها مرة ثانية
+      if (_messageIds.contains(newMessage.id)) {
+        print("⏭️ Message already exists (from API), skipping socket duplicate: ${newMessage.id}");
+        return;
+      }
+
       newMessage = _fixMessageUrl(newMessage);
       _addOrUpdateMessage(newMessage);
     } catch (e) {
@@ -257,30 +278,49 @@ class MessagesCubit extends Cubit<MessagesState> {
     try {
       Map<String, dynamic> newMsgData;
 
+      // 1. Send to API
       if (type == 'image') {
         newMsgData = await messagesRepository.sendImageMessage(
           chatId,
           path,
           caption,
         );
-      } else if (type == 'video')
+      } else if (type == 'video') {
         newMsgData = await messagesRepository.sendVideoMessage(
           chatId,
           path,
           caption,
         );
-      else if (type == 'file')
+      } else if (type == 'file') {
         newMsgData = await messagesRepository.sendDocumentMessage(chatId, path);
-      else if (type == 'audio')
+      } else if (type == 'audio') {
         newMsgData = await messagesRepository.sendAudioMessage(chatId, path);
-      else
+      } else {
         return;
+      }
 
+      // 2. Parse Response
       final messageJson = newMsgData['data'] ?? newMsgData;
       var newMessage = OrderedMessages.fromJson(messageJson);
       newMessage = _fixMessageUrl(newMessage);
-      newMessage.type = type == 'file' ? 'file' : type;
+      
+      // ✅ Set the correct message type (CRITICAL FIX)
+      // Ensure audio messages are properly marked
+      if (type == 'audio') {
+        newMessage.type = 'audio';
+      } else if (type == 'file') {
+        newMessage.type = 'file';
+      } else {
+        newMessage.type = type;
+      }
 
+      // 3. 🛑 CRITICAL FIX:
+      // We add the message returned by the API to the list.
+      // We MUST ensure the ID is added to `_messageIds` immediately.
+      // This prevents the Socket Listener (which fires milliseconds later)
+      // from thinking this is a "new" unknown message.
+
+      print("📤 API: Message Sent, ID: ${newMessage.id}, Type: ${newMessage.type}");
       _addOrUpdateMessage(newMessage);
     } catch (e) {
       if (!isClosed) emit(MessagesError(e.toString()));
